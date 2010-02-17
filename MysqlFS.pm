@@ -16,24 +16,24 @@ our (@ISA, @EXPORT);
 
 BEGIN {
 	@EXPORT = qw( 
-		mysqlfs_initialize
-		mysqlfs_getdir
-		mysqlfs_getattr
-		mysqlfs_mkdir
-		mysqlfs_rmdir
-		mysqlfs_symlink
-		mysqlfs_readlink
-		mysqlfs_unlink
-		mysqlfs_rename
-		mysqlfs_chmod
-		mysqlfs_open
-		mysqlfs_read
-		mysqlfs_mknod
-		mysqlfs_truncate
-		mysqlfs_write
-		mysqlfs_flush
-		mysqlfs_release
-		mysqlfs_utime
+		initialize
+		getdir
+		getattr
+		mkdir
+		rmdir
+		symlink
+		readlink
+		unlink
+		rename
+		chmod
+		open
+		read
+		mknod
+		truncate
+		write
+		flush
+		release
+		utime
 	);
 }
 
@@ -56,7 +56,7 @@ our $def_engine;
 our $fn_sep;
 
 # host port database user password
-sub mysqlfs_initialize {
+sub initialize {
 	my %options = @_;
 
 	my $dsn = "DBI:mysql:database=$options{database}";
@@ -97,7 +97,7 @@ sub DESTROY {
 	unlink $_ foreach glob("/tmp/".lc(__PACKAGE__)."/*.cache");
 }
 
-sub mysqlfs_chmod {
+sub chmod {
 	my $file = shift;
 	my $mode = shift;
 	my @path = split /\//, $file;
@@ -120,7 +120,7 @@ sub mysqlfs_chmod {
 	return 0;
 }
 
-sub mysqlfs_utime {
+sub utime {
 	my ($file, $atime, $mtime) = @_;
 	my @path = split /\//, $file;
 	return -EACCES() unless $#path == 4 && $path[2] eq 'indeces';
@@ -137,7 +137,7 @@ sub mysqlfs_utime {
 	return 0;
 }
 
-sub mysqlfs_flush {
+sub flush {
 	my $file = shift;
 	my @path = split /\//, $file;
 	if ($#path > 1 && $path[1] ne '.queries') {
@@ -148,7 +148,7 @@ sub mysqlfs_flush {
 }
 
 # get information
-sub mysqlfs_getattr {
+sub getattr {
 	my $file = shift;
 
 	my @fileinfo = (
@@ -247,7 +247,7 @@ sub mysqlfs_getattr {
 	return @fileinfo;
 }
 
-sub mysqlfs_getdir {
+sub getdir {
 	my $dir = shift;
 
 	my @dir_list;
@@ -282,7 +282,7 @@ sub mysqlfs_getdir {
 }
 
 # directories
-sub mysqlfs_mkdir {
+sub mkdir {
 	my $dir = shift;
 	my $mode = shift;
 	my @path = split /\//, $dir;
@@ -302,7 +302,7 @@ sub mysqlfs_mkdir {
 	return 0;
 }
 
-sub mysqlfs_mknod {
+sub mknod {
 	my ($file, $mode) = @_;
 	my @path = split /\//, $file;
 
@@ -341,7 +341,7 @@ sub mysqlfs_mknod {
 }
 
 # file open/read/write
-sub mysqlfs_open {
+sub open {
 	my ($file, $flags) = @_;
 	my @path = split /\//, $file;
 
@@ -355,7 +355,7 @@ sub mysqlfs_open {
 	return 0;
 } 
 
-sub mysqlfs_read {
+sub read {
 	my ($file, $size, $offset) = @_;
 	my @path = split /\//, $file;
 
@@ -398,7 +398,7 @@ sub mysqlfs_read {
 
 }
 
-sub mysqlfs_readlink {
+sub readlink {
 	my $file = shift;
 	my @path = split /\//, $file;
 	return -ENOENT() unless $#path == 4 && $path[2] eq 'indeces';
@@ -406,7 +406,7 @@ sub mysqlfs_readlink {
 	return "../../struct/$name";
 }
 
-sub mysqlfs_release {
+sub release {
 	my ($file, $flags) = @_;
 
 	my @path = split /\//, $file;
@@ -447,7 +447,7 @@ sub mysqlfs_release {
 	return 0;
 }
 
-sub mysqlfs_rename {
+sub rename {
 	my ($file, $nfile) = @_;
 	my @path = split /\//, $file;
 	my @npath = split /\//, $nfile;
@@ -499,7 +499,7 @@ sub mysqlfs_rename {
 	return 0;
 }
 
-sub mysqlfs_rmdir {
+sub rmdir {
 	my $dir = shift;
 	my @path = split /\//, $dir;
 	if ($#path == 1) { # drop table
@@ -520,7 +520,7 @@ sub mysqlfs_rmdir {
 }
 
 # symbolic links
-sub mysqlfs_symlink {
+sub symlink {
 	my ($file, $link) = @_;
 	my @path = split /\//, $file;
 	my @lpath = split /\//, $link;
@@ -553,7 +553,7 @@ sub mysqlfs_symlink {
 	return 0;
 }
 
-sub mysqlfs_truncate {
+sub truncate {
 	my $file = shift;
 
 	my @path = split /\//, $file;
@@ -569,7 +569,7 @@ sub mysqlfs_truncate {
 	return 0;
 }
 
-sub mysqlfs_unlink {
+sub unlink {
 	my $file = shift;
 	return 0 if $file eq '/query';
 	my @path = split /\//, $file;
@@ -610,7 +610,7 @@ sub mysqlfs_unlink {
 	return 0;
 }
 
-sub mysqlfs_write {
+sub write {
 	my ($file, $buffer, $offset) = @_;
 
 	my @path = split /\//, $file;

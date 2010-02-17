@@ -62,7 +62,7 @@ show_help() unless !$options{'help'} && $options{'database'} && $options{'mountp
 
 daemonize($options{'logfile'}) if $options{'daemon'};
 
-MysqlFS::mysqlfs_initialize(
+MysqlFS::initialize(
 	'host'		=> $options{'host'},
 	'port'		=> $options{'port'},
 	'database'	=> $options{'database'},
@@ -80,24 +80,24 @@ Fuse::main(
 	'debug'			=> $options{'debug'},
 	'threaded'		=> $use_threads,
 
-	'getdir'		=> 'MysqlFS::mysqlfs_getdir',
-	'getattr'		=> 'MysqlFS::mysqlfs_getattr',
-	'mkdir'			=> 'MysqlFS::mysqlfs_mkdir',
-	'rmdir'			=> 'MysqlFS::mysqlfs_rmdir',
-	'symlink'		=> 'MysqlFS::mysqlfs_symlink',
-	'readlink'		=> 'MysqlFS::mysqlfs_readlink',
-	'unlink'		=> 'MysqlFS::mysqlfs_unlink',
-	'rename'		=> 'MysqlFS::mysqlfs_rename',
-	'open'			=> 'MysqlFS::mysqlfs_open',
-	'read'			=> 'MysqlFS::mysqlfs_read',
-	'mknod'			=> 'MysqlFS::mysqlfs_mknod',
-	'chmod'			=> 'MysqlFS::mysqlfs_chmod',
-	'truncate'		=> 'MysqlFS::mysqlfs_truncate',
-	'write'			=> 'MysqlFS::mysqlfs_write',
-	'flush'			=> 'MysqlFS::mysqlfs_flush',
-	'fsync'			=> 'MysqlFS::mysqlfs_flush',
-	'release'		=> 'MysqlFS::mysqlfs_release',
-	'utime'			=> 'MysqlFS::mysqlfs_utime',
+	'getdir'		=> 'MysqlFS::getdir',
+	'getattr'		=> 'MysqlFS::getattr',
+	'mkdir'			=> 'MysqlFS::mkdir',
+	'rmdir'			=> 'MysqlFS::rmdir',
+	'symlink'		=> 'MysqlFS::symlink',
+	'readlink'		=> 'MysqlFS::readlink',
+	'unlink'		=> 'MysqlFS::unlink',
+	'rename'		=> 'MysqlFS::rename',
+	'open'			=> 'MysqlFS::open',
+	'read'			=> 'MysqlFS::read',
+	'mknod'			=> 'MysqlFS::mknod',
+	'chmod'			=> 'MysqlFS::chmod',
+	'truncate'		=> 'MysqlFS::truncate',
+	'write'			=> 'MysqlFS::write',
+	'flush'			=> 'MysqlFS::flush',
+	'fsync'			=> 'MysqlFS::flush',
+	'release'		=> 'MysqlFS::release',
+	'utime'			=> 'MysqlFS::utime',
 );
 
 sub daemonize {
