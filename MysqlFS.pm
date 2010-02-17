@@ -640,20 +640,24 @@ sub get_table_info {
 		}
 	}
 
-	my $sth = $dbh->prepare("SHOW COLUMNS FROM $table");
+	my $sth = $dbh->prepare("SHOW FULL COLUMNS FROM $table");
 
 	my %result;
 
 	$sth->execute();
 	$base_rtxtsz{$table} = 4;
 	while (my @row = $sth->fetchrow_array()) {
+                dump(\@row);
 		$base_rtxtsz{$table} += 3 + length($row[0]);
 		next if $field && $row[0] ne $field;
 		$result{$row[0]} = {
-			'Not_null'	=> $row[2] eq 'NO' || 0, # 7
-			'Key'		=> $row[3], # 6
-			'Default'	=> $row[4], # 10
-			'Extra'		=> $row[5]  # 8
+                        'Collation'     => $row[2],
+			'Not_null'	=> $row[3] eq 'NO' || 0, # 7
+			'Key'		=> $row[4], # 6
+			'Default'	=> $row[5], # 10
+			'Extra'		=> $row[6],  # 8
+                        'Privileges'    => [ split(/,/, $row[7]) ],
+                        'Comment'       => $row[8],
 		};
 		my ($type, $info) = (split /\(/, $row[1], 2);
 		$result{$row[0]}->{'Type'} = $type;
