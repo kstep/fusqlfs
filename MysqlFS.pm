@@ -102,7 +102,7 @@ sub mysqlfs_chmod {
 	my $mode = shift;
 	my @path = split /\//, $file;
 
-	return -EACCES() unless $#path == 3 && $path[2] eq '.indeces';
+	return -EACCES() unless $#path == 3 && $path[2] eq 'indeces';
 	unless (exists $new_indexes{$path[1]}->{$path[3]}) {
 		my $indexinfo = get_index_info($path[1], $path[3]);
 		return -ENOENT() unless $indexinfo;
@@ -123,7 +123,7 @@ sub mysqlfs_chmod {
 sub mysqlfs_utime {
 	my ($file, $atime, $mtime) = @_;
 	my @path = split /\//, $file;
-	return -EACCES() unless $#path == 4 && $path[2] eq '.indeces';
+	return -EACCES() unless $#path == 4 && $path[2] eq 'indeces';
 	my $indexinfo = get_index_info($path[1], $path[3]);
 	return -ENOENT() unless $indexinfo;
 	my $tablestat = get_table_stat($path[1]);
@@ -199,15 +199,15 @@ sub mysqlfs_getattr {
 				set_file_info(\@fileinfo, -s get_cache_file_by_path(\@path));
 				$fileinfo[2] &= ~0222;
 			} else {
-				if ($path[2] eq '.indeces'
-					|| $path[2] eq '.struct'
-					|| $path[2] eq '.data')
+				if ($path[2] eq 'indeces'
+					|| $path[2] eq 'struct'
+					|| $path[2] eq 'data')
 				{
 					set_dir_info(\@fileinfo);
-				} elsif ($path[2] eq '.status') {
+				} elsif ($path[2] eq 'status') {
 					set_file_info(\@fileinfo, -s get_cache_file_by_path(\@path) || $base_stxtsz + get_real_size($tablestat));
 					$fileinfo[2] &= ~0222;
-				} elsif ($path[2] eq '.create') {
+				} elsif ($path[2] eq 'create') {
 					set_file_info(\@fileinfo, -s get_cache_file_by_path(\@path) || length get_create_table($path[1]));
 					$fileinfo[2] &= ~0222;
 				} else {
@@ -215,15 +215,15 @@ sub mysqlfs_getattr {
 				}
 			}
 		} elsif ($#path == 3) { # dir-indexes, records, fields
-			if ($path[2] eq '.data') {
+			if ($path[2] eq 'data') {
 				my $record = get_record_by_file_name(\@path, 1);
 				return -ENOENT() unless $record;# && %$record;
 				set_file_info(\@fileinfo, -s get_cache_file_by_path(\@path) || $base_rtxtsz{$path[1]} + get_real_size($record));
-			} elsif ($path[2] eq '.struct') {
+			} elsif ($path[2] eq 'struct') {
 				my $tableinfo = get_table_info($path[1], $path[3]);
 				return -ENOENT() unless $tableinfo;
 				set_file_info(\@fileinfo, -s get_cache_file_by_path(\@path) || ($base_itxtsz{$tableinfo->{'Type'}}||$def_base_itxtsz) + get_real_size($tableinfo));
-			} elsif ($path[2] eq '.indeces') {
+			} elsif ($path[2] eq 'indeces') {
 				unless (exists $new_indexes{$path[1]}->{$path[3]}) {
 					my $indexinfo = get_index_info($path[1], $path[3]);
 					return -ENOENT() unless $indexinfo;
@@ -234,7 +234,7 @@ sub mysqlfs_getattr {
 					set_dir_info(\@fileinfo, 0);
 				}
 			}
-		} elsif ($#path == 4 && $path[2] eq '.indeces') { # field info
+		} elsif ($#path == 4 && $path[2] eq 'indeces') { # field info
 			my @indexinfo = get_index_info($path[1], $path[3]);
 			my $i = $#indexinfo; foreach (@indexinfo) { last if $_ eq $path[4]; $i--; }
 			return -ENOENT() if $i < 0;
@@ -254,25 +254,25 @@ sub mysqlfs_getdir {
 
 	if ($dir eq '/') {
 		@dir_list = ('.query', '.queries', get_table_list());
-	} elsif ($dir eq '/.queries') {
+	} elsif ($dir eq '/queries') {
 		@dir_list = keys %queries;
 	} else {
 		my @path = split /\//, $dir;
 		if ($#path == 1) { # spec dirs list
-			@dir_list = ('.create', '.status', '.struct', '.data', '.indeces');
+			@dir_list = ('create', 'status', 'struct', 'data', 'indeces');
 		} else {
 			if ($#path == 2) { # list of indexes/records/fields
-				if ($path[2] eq '.data') {
+				if ($path[2] eq 'data') {
 					@dir_list = get_table_data($path[1]);
-				} elsif ($path[2] eq '.struct') {
+				} elsif ($path[2] eq 'struct') {
 					@dir_list = get_table_info($path[1]);
-				} elsif ($path[2] eq '.indeces') {
+				} elsif ($path[2] eq 'indeces') {
 					@dir_list = ( get_index_info($path[1]), keys %{ $new_indexes{$path[1]} } );
 				} else {
 					return -ENOENT();
 				}
 			} elsif ($#path == 3) { # list of key fields
-				return -ENOENT() unless $path[2] eq '.indeces';
+				return -ENOENT() unless $path[2] eq 'indeces';
 				@dir_list = get_index_info($path[1], $path[3]);
 			}
 		}
@@ -291,7 +291,7 @@ sub mysqlfs_mkdir {
 		my @tableinfo = get_table_info($path[1]);
 		return -EEXIST() if @tableinfo;
 		create_table($path[1], 'id');
-	} elsif ($#path == 3 && $path[2] eq '.indeces') { # create index
+	} elsif ($#path == 3 && $path[2] eq 'indeces') { # create index
 		return -EEXIST() if exists $new_indexes{$path[1]}->{$path[3]};
 		my @indexinfo = get_index_info($path[1], $path[3]);
 		return -EEXIST() if @indexinfo;
@@ -307,13 +307,13 @@ sub mysqlfs_mknod {
 	my @path = split /\//, $file;
 
 	if ($#path == 3) {
-		if ($path[2] eq '.struct') {
+		if ($path[2] eq 'struct') {
 			my @tableinfo = get_table_info($path[1], $path[3]);
 			return -EEXIST() if @tableinfo;
 			#return -EINVAL() unless defined 
 			create_field($path[1], $path[3]);
 			delete $table_info_cache{$path[1]};
-		} elsif ($path[2] eq '.data') {
+		} elsif ($path[2] eq 'data') {
 			my @record = get_record_by_file_name(\@path, 0);
 			return -EEXIST() if @record;
 			create_record($path[1], $path[3]);
@@ -346,9 +346,9 @@ sub mysqlfs_open {
 	my @path = split /\//, $file;
 
 	return -EACCES() unless
-			($flags > 0 && $file eq '/.query')
+			($flags > 0 && $file eq '/query')
 			||
-			($#path == 3 && ($path[2] eq '.struct' || $path[2] eq '.data'))
+			($#path == 3 && ($path[2] eq 'struct' || $path[2] eq 'data'))
 			||
 			($#path == 2 && ($path[1] eq '.queries' || $path[2] eq '.status' || $path[2] eq '.create'));
 
@@ -371,19 +371,19 @@ sub mysqlfs_read {
 		if (-r $cachefile) {
 			$buffer = get_cache($cachefile);
 		} else {
-			if ($path[2] eq '.struct') {
+			if ($path[2] eq 'struct') {
 				my $tableinfo = get_table_info($path[1], $path[3]);
 				return -ENOENT() unless $tableinfo;
 				$buffer = YAML::Tiny::Dump($tableinfo);
-			} elsif ($path[2] eq '.data') {
+			} elsif ($path[2] eq 'data') {
 				my $record = get_record_by_file_name(\@path, 1);
 				return -ENOENT() unless $record;
 				$buffer = YAML::Tiny::Dump($record);
-			} elsif ($path[2] eq '.status') {
+			} elsif ($path[2] eq 'status') {
 				my $tablestatus = get_table_stat($path[1]);
 				return -ENOENT() unless $tablestatus;
 				$buffer = YAML::Tiny::Dump($tablestatus);
-			} elsif ($path[2] eq '.create') {
+			} elsif ($path[2] eq 'create') {
 				my $createstatement = get_create_table($path[1]);
 				return -ENOENT() unless $createstatement;
 				$buffer = $createstatement;
@@ -401,9 +401,9 @@ sub mysqlfs_read {
 sub mysqlfs_readlink {
 	my $file = shift;
 	my @path = split /\//, $file;
-	return -ENOENT() unless $#path == 4 && $path[2] eq '.indeces';
+	return -ENOENT() unless $#path == 4 && $path[2] eq 'indeces';
 	my ($name) = split /$fn_sep/, $path[4], 2;
-	return "../../.struct/$name";
+	return "../../struct/$name";
 }
 
 sub mysqlfs_release {
@@ -416,7 +416,7 @@ sub mysqlfs_release {
 		my $data;
 		my $buffer = get_cache($cachefile);
 
-		if ($file eq '/.query') {
+		if ($file eq '/query') {
 			#my @statements = map { s/^--.*//gm; s/\/\*.*\*\///gm; s/^\s+//; s/\s+$//gm; s/^;$//gm; } split /;\n/, $buffer;
 			foreach (split /;\n/, $buffer) {
 				s/^\s+//; s/\s+$//;
@@ -430,9 +430,9 @@ sub mysqlfs_release {
 
 			if ($data) {
 				undef $buffer;
-				if ($path[2] eq '.struct') {
+				if ($path[2] eq 'struct') {
 					modify_field($path[1], $path[3], $data->[0])
-				} elsif ($path[2] eq '.data') {
+				} elsif ($path[2] eq 'data') {
 					save_record($path[1], parse_file_name_to_record($path[1], $path[3]), $data->[0]);
 				} else {
 					return -EACCES();
@@ -464,11 +464,11 @@ sub mysqlfs_rename {
 	} else {
 		return -EACCES() unless $path[1] eq $npath[1];
 		if ($#path == 3) { # rename field, index or record
-			if ($path[2] eq '.struct') {
+			if ($path[2] eq 'struct') {
 				my $tableinfo = get_table_info($path[1], $path[3]);
 				return -ENOENT() unless $tableinfo;
 				change_field($path[1], $path[3], $npath[3]);
-			} elsif ($path[2] eq '.data') {
+			} elsif ($path[2] eq 'data') {
 
 				my $record = get_record_by_file_name(\@path, 0);
 				return -ENOENT() unless $record;
@@ -480,13 +480,13 @@ sub mysqlfs_rename {
 				my %nrecord = map { $_ => $nvalues[$i++] } sort keys %$record;
 				update_record($path[1], $record, \%nrecord);
 
-			} elsif ($path[2] eq '.indeces') {
+			} elsif ($path[2] eq 'indeces') {
 				my $indexinfo = get_index_info($path[1], $path[3]);
 				return -ENOENT() unless $indexinfo;
 				drop_index($path[1], $path[3]);
 				create_index($path[1], $npath[3], $indexinfo);
 			}
-		} elsif ($#path == 4 && $path[2] eq '.indeces') { # change field in index
+		} elsif ($#path == 4 && $path[2] eq 'indeces') { # change field in index
 			my $indexinfo = get_index_info($path[1], $path[3]);
 			return -ENOENT() unless $indexinfo;
 			@{ $indexinfo->{'Column_name'} } = map { $_ eq $path[4]? $npath[4]: $_ } @{ $indexinfo->{'Column_name'} };
@@ -534,7 +534,7 @@ sub mysqlfs_symlink {
 	}
 
 	return -EINVAL() unless $#path == 3 && $#lpath == 4
-			&& $path[2] eq '.struct' && $lpath[2] eq '.indeces'
+			&& $path[2] eq 'struct' && $lpath[2] eq 'indeces'
 			&& $path[1] eq $lpath[1];
 
 	my @name = split /$fn_sep/, $lpath[4];
@@ -558,9 +558,9 @@ sub mysqlfs_truncate {
 
 	my @path = split /\//, $file;
 	return -EACCES() unless
-					($file eq '/.queries')
+					($file eq '/queries')
 					||
-					($#path == 3 && ($path[2] eq '.data' || $path[2] eq '.struct'));
+					($#path == 3 && ($path[2] eq 'data' || $path[2] eq 'struct'));
 
 	delete $table_info_cache{$path[1]};
 	delete $index_info_cache{$path[1]};
@@ -571,9 +571,9 @@ sub mysqlfs_truncate {
 
 sub mysqlfs_unlink {
 	my $file = shift;
-	return 0 if $file eq '/.query';
+	return 0 if $file eq '/query';
 	my @path = split /\//, $file;
-	if ($#path == 4 && $path[2] eq '.indeces') {
+	if ($#path == 4 && $path[2] eq 'indeces') {
 		my $indexinfo = get_index_info($path[1], $path[3]);
 		my $ok = 0;
 		return -ENOENT() unless $indexinfo;
@@ -589,11 +589,11 @@ sub mysqlfs_unlink {
 		create_index($path[1], $path[3], $indexinfo);
 		delete $index_info_cache{$path[1]}->{$path[3]};
 	} elsif ($#path == 3) {
-		if ($path[2] eq '.data') {
+		if ($path[2] eq 'data') {
 			my $condition = parse_file_name_to_record($path[1], $path[3]);
 			return -EINVAL() unless $condition;
 			delete_record($path[1], $condition);
-		} elsif ($path[2] eq '.struct') {
+		} elsif ($path[2] eq 'struct') {
 			drop_field($path[1], $path[3]);
 			delete $table_info_cache{$path[1]};
 			delete $index_info_cache{$path[1]};
@@ -614,7 +614,7 @@ sub mysqlfs_write {
 	my ($file, $buffer, $offset) = @_;
 
 	my @path = split /\//, $file;
-	return -EACCES() unless ($file eq '/.query') || ($#path == 3 && ($path[2] eq '.struct' || $path[2] eq '.data'));
+	return -EACCES() unless ($file eq '/query') || ($#path == 3 && ($path[2] eq 'struct' || $path[2] eq 'data'));
 	my $cachefile = get_cache_file_by_path(\@path);
 
 	put_cache($cachefile, $buffer, $offset);
