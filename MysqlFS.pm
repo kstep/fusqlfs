@@ -928,6 +928,12 @@ sub drop_index {
     return $dbh->do("ALTER TABLE $table DROP $index");
 }
 
+##
+# Read data from cache file
+# @param string cachefile
+# @param integer size
+# @param integer offset
+# @return string
 sub get_cache {
     my ($cachefile, $size, $offset) = @_;
     my $buffer;
@@ -943,6 +949,10 @@ sub get_cache {
     return $buffer;
 }
 
+##
+# Get table statistics
+# @param string table
+# @return hashref
 sub get_table_stat {
     my $table = shift;
 
@@ -976,12 +986,22 @@ sub get_table_stat {
     return $table? $result{$table}: \%result;
 }
 
+##
+# Get fields included into primary key
+# @param table
+# @return list
 sub get_primary_key {
     my $table = shift;
     my $tableinfo = get_table_info($table);
     return grep $tableinfo->{$_}->{'Key'} eq 'PRI', sort keys %$tableinfo;
 }
 
+###
+# Get record from database
+# @param string table
+# @param hashref condition
+# @param bool full
+# @return list|hashref
 sub get_record {
     my ($table, $condition, $full) = @_;
     my @keys = keys %$condition;
@@ -990,10 +1010,19 @@ sub get_record {
     return wantarray? $dbh->selectrow_array($sql, undef, values %$condition): $dbh->selectrow_hashref($sql, undef, values %$condition);
 }
 
+##
+# Remove field from table
+# @param string table
+# @param string field
+# @return bool
 sub drop_field {
     return $dbh->do("ALTER TABLE $_[0] DROP $_[1]");
 }
 
+##
+# Get create table clause
+# @param string table
+# @return string
 sub get_create_table {
     my @row = $dbh->selectrow_array("SHOW CREATE TABLE $_[0]");
     return @row? $row[1]: undef;
