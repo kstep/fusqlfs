@@ -412,7 +412,7 @@ sub mysqlfs_release {
 	my @path = split /\//, $file;
 	my $cachefile = get_cache_file_by_path(\@path);
 
-	if ($flags && -r $cachefile) {
+	if (($flags & (O_WRONLY|O_RDWR)) && -r $cachefile) {
 		my $data;
 		my $buffer = get_cache($cachefile);
 
