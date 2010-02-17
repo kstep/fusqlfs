@@ -106,7 +106,7 @@ sub mysqlfs_chmod {
 	unless (exists $new_indexes{$path[1]}->{$path[3]}) {
 		my $indexinfo = get_index_info($path[1], $path[3]);
 		return -ENOENT() unless $indexinfo;
-		my $unique = $mode & S_ISTXT;
+		my $unique = $mode & S_ISVTX;
 
 		if ($unique != $indexinfo->{'Unique'}) {
 			$indexinfo->{'Unique'} = $unique;
@@ -228,7 +228,7 @@ sub mysqlfs_getattr {
 					my $indexinfo = get_index_info($path[1], $path[3]);
 					return -ENOENT() unless $indexinfo;
 					set_dir_info(\@fileinfo, scalar @{ $indexinfo->{'Column_name'} });
-					$fileinfo[2] |= S_ISTXT if $indexinfo->{'Unique'};
+					$fileinfo[2] |= S_ISVTX if $indexinfo->{'Unique'};
 				} else {
 					$fileinfo[2] = $new_indexes{$path[1]}->{$path[3]};
 					set_dir_info(\@fileinfo, 0);
@@ -542,7 +542,7 @@ sub mysqlfs_symlink {
 
 	my $indexinfo;
 	if (exists $new_indexes{$lpath[1]}->{$lpath[3]}) {
-		$indexinfo = { 'Unique' => $new_indexes{$lpath[1]}->{$lpath[3]} & S_ISTXT, 'Column_name' => [ $lpath[4] ] };
+		$indexinfo = { 'Unique' => $new_indexes{$lpath[1]}->{$lpath[3]} & S_ISVTX, 'Column_name' => [ $lpath[4] ] };
 		delete $new_indexes{$lpath[1]}->{$lpath[3]};
 	} else {
 		$indexinfo = get_index_info($lpath[1], $lpath[3]);
