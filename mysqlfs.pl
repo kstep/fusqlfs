@@ -11,43 +11,43 @@ use MysqlFS;
 my $use_threads = 0;
 my $locale = setlocale(LC_CTYPE);
 if ($locale =~ /\.([-A-Za-z0-9]+)$/) {
-	$locale = lc $1;
-	$locale =~ s/-//g;
+    $locale = lc $1;
+    $locale =~ s/-//g;
 } else {
-	$locale = '';
+    $locale = '';
 }
 
 my %options = (
-	'host'			=> 'localhost',
-	'port'			=> '',
-	'database'		=> '',
-	'user'			=> 'root',
-	'password'		=> '',
-	'mountpoint'	=> '',
-	'debug'			=> 0,
-	'help'			=> 0,
-	'charset'		=> $locale,
-	'daemon'		=> 1,
-	'logfile'		=> '',
-	'fnsep'			=> '\.',
-	'innodb'		=> 0,
+    'host'          => 'localhost',
+    'port'          => '',
+    'database'      => '',
+    'user'          => 'root',
+    'password'      => '',
+    'mountpoint'    => '',
+    'debug'         => 0,
+    'help'          => 0,
+    'charset'       => $locale,
+    'daemon'        => 1,
+    'logfile'       => '',
+    'fnsep'         => '\.',
+    'innodb'        => 0,
 );
 
 GetOptions(
-	'o:s'				=> \%options,
-	'host|h:s'			=> \$options{'host'},
-	'port|P:i'			=> \$options{'port'},
-	'database|db|d:s'	=> \$options{'database'},
-	'user|u:s'			=> \$options{'user'},
-	'password|p:s'		=> \$options{'password'},
-	'mountpoint|m:s'	=> \$options{'mountpoint'},
-	'debug|D'			=> \$options{'debug'},
-	'help'				=> \$options{'help'},
-	'charset|C:s'		=> \$options{'charset'},
-	'daemon!'			=> \$options{'daemon'},
-	'logfile|l:s'		=> \$options{'logfile'},
-	'fnsep|s:s'			=> \$options{'fnsep'},
-	'innodb!'			=> \$options{'innodb'},
+    'o:s'             => \%options,
+    'host|h:s'        => \$options{'host'},
+    'port|P:i'        => \$options{'port'},
+    'database|db|d:s' => \$options{'database'},
+    'user|u:s'        => \$options{'user'},
+    'password|p:s'    => \$options{'password'},
+    'mountpoint|m:s'  => \$options{'mountpoint'},
+    'debug|D'         => \$options{'debug'},
+    'help'            => \$options{'help'},
+    'charset|C:s'     => \$options{'charset'},
+    'daemon!'         => \$options{'daemon'},
+    'logfile|l:s'     => \$options{'logfile'},
+    'fnsep|s:s'       => \$options{'fnsep'},
+    'innodb!'         => \$options{'innodb'},
 ) or show_help();
 
 $options{'database'} ||= $ARGV[0];
@@ -63,79 +63,80 @@ show_help() unless !$options{'help'} && $options{'database'} && $options{'mountp
 daemonize($options{'logfile'}) if $options{'daemon'};
 
 MysqlFS::initialize(
-	'host'		=> $options{'host'},
-	'port'		=> $options{'port'},
-	'database'	=> $options{'database'},
-	'user'		=> $options{'user'},
-	'password'	=> $options{'password'},
-	'debug'		=> $options{'debug'},
-	'charset'	=> $options{'charset'},
-	'fnsep'		=> $options{'fnsep'},
-	'useinnodb'	=> $options{'innodb'},
+    'host'      => $options{'host'},
+    'port'      => $options{'port'},
+    'database'  => $options{'database'},
+    'user'      => $options{'user'},
+    'password'  => $options{'password'},
+    'debug'     => $options{'debug'},
+    'charset'   => $options{'charset'},
+    'fnsep'     => $options{'fnsep'},
+    'useinnodb' => $options{'innodb'},
 );
 
 Fuse::main(
-	'mountpoint'	=> $options{'mountpoint'},
-	'mountopts'		=> $options{'allow_other'}? 'allow_other': '',
-	'debug'			=> $options{'debug'},
-	'threaded'		=> $use_threads,
+    'mountpoint' => $options{'mountpoint'},
+    'mountopts'  => $options{'allow_other'}? 'allow_other': '',
+    'debug'      => $options{'debug'},
+    'threaded'   => $use_threads,
 
-	'getdir'		=> 'MysqlFS::getdir',
-	'getattr'		=> 'MysqlFS::getattr',
-	'mkdir'			=> 'MysqlFS::mkdir',
-	'rmdir'			=> 'MysqlFS::rmdir',
-	'symlink'		=> 'MysqlFS::symlink',
-	'readlink'		=> 'MysqlFS::readlink',
-	'unlink'		=> 'MysqlFS::unlink',
-	'rename'		=> 'MysqlFS::rename',
-	'open'			=> 'MysqlFS::open',
-	'read'			=> 'MysqlFS::read',
-	'mknod'			=> 'MysqlFS::mknod',
-	'chmod'			=> 'MysqlFS::chmod',
-	'truncate'		=> 'MysqlFS::truncate',
-	'write'			=> 'MysqlFS::write',
-	'flush'			=> 'MysqlFS::flush',
-	'fsync'			=> 'MysqlFS::flush',
-	'release'		=> 'MysqlFS::release',
-	'utime'			=> 'MysqlFS::utime',
+    'getdir'     => 'MysqlFS::getdir',
+    'getattr'    => 'MysqlFS::getattr',
+    'mkdir'      => 'MysqlFS::mkdir',
+    'rmdir'      => 'MysqlFS::rmdir',
+    'symlink'    => 'MysqlFS::symlink',
+    'readlink'   => 'MysqlFS::readlink',
+    'unlink'     => 'MysqlFS::unlink',
+    'rename'     => 'MysqlFS::rename',
+    'open'       => 'MysqlFS::open',
+    'read'       => 'MysqlFS::read',
+    'mknod'      => 'MysqlFS::mknod',
+    'chmod'      => 'MysqlFS::chmod',
+    'truncate'   => 'MysqlFS::truncate',
+    'write'      => 'MysqlFS::write',
+    'flush'      => 'MysqlFS::flush',
+    'fsync'      => 'MysqlFS::flush',
+    'release'    => 'MysqlFS::release',
+    'utime'      => 'MysqlFS::utime',
 );
 
 sub daemonize {
-	my $logfile = shift;
+    my $logfile = shift;
 
-	if ($logfile) {
-		open \*STDERR, ">>", $logfile;
-		select((select(\*STDERR), $| = 1)[0]);
-	}
+    if ($logfile) {
+        open \*STDERR, ">>", $logfile;
+        select((select(\*STDERR), $| = 1)[0]);
+    }
 
-	my $ppid = $$;
-	my $pid = fork and exit 0;
-	die "Can't daemonize!\n" unless defined $pid;
-	select undef, undef, undef, .001 while (kill 0, $ppid);
-	my $sid = setsid();
-	die() if $sid == -1;
-	chdir '/';
-	umask 00;
-	close \*STDIN or die();
-	close \*STDOUT or die();
-	unless ($logfile) {
-		close STDERR or die();
-	}
-	return $sid;
+    my $ppid = $$;
+    my $pid = fork and exit 0;
+    die "Can't daemonize!\n" unless defined $pid;
+    select undef, undef, undef, .001 while (kill 0, $ppid);
+    my $sid = setsid();
+    die() if $sid == -1;
+    chdir '/';
+    umask 00;
+    close \*STDIN or die();
+    close \*STDOUT or die();
+    unless ($logfile) {
+        close STDERR or die();
+    }
+    return $sid;
 }
 
 sub show_help {
-	my ($myname) = ($0 =~ m#/([^/]+)$#);
-	print "Usage:\n";
-	print "\t$myname [-o <name>=<value> [...]]\n";
-	print "\t\t\{--database=<database>|-d <database>|<database>\}\n";
-	print "\t\t\{--mountpoint=<mountpoint>|-m <mountpoint>|<mountpoint>\}\n";
-	print "\t\t[--host=<hostname>|-h <hostname>] [--port=<port>|-P <port>]\n";
-	print "\t\t[--user=<username>|-u <username>] [--password=<password>|-p <password>]\n";
-	print "\t\t[--charset=<charset>|-C <charset>] [--[no]innodb] [--fnsep=<sep>|-s <sep>]\n";
-	print "\t\t[--debug|-D] [--[no]daemon] [--logfile=<logfile>|-l <logfile>]\n";
-	print "\t$myname --help\n\n";
-	print <<HELP;
+    my ($myname) = ($0 =~ m{/([^/]+)$});
+    print "Usage:\n";
+    print "\t$myname [-o <name>=<value> [...]]\n";
+    print "\t\t\{--database=<database>|-d <database>|<database>\}\n";
+    print "\t\t\{--mountpoint=<mountpoint>|-m <mountpoint>|<mountpoint>\}\n";
+    print "\t\t[--host=<hostname>|-h <hostname>] [--port=<port>|-P <port>]\n";
+    print "\t\t[--user=<username>|-u <username>] [--password=<password>|-p <password>]\n";
+    print "\t\t[--charset=<charset>|-C <charset>] [--[no]innodb] [--fnsep=<sep>|-s <sep>]\n";
+    print "\t\t[--debug|-D] [--[no]daemon] [--logfile=<logfile>|-l <logfile>]\n";
+    print "\t$myname --help\n\n";
+    print <<HELP;
+
 All names are selfexplaining. All parameters can be passed with
 -o option, e.g. -o host=localhost is identical to --host=localhost.
 Mountpoint and database are required parameters, they can be passed
@@ -155,5 +156,5 @@ set it to '\\.', not just '.', and remember to escape backslash
 if you type this command in your shell, so type --fnsep=\\\\. or something.
 
 HELP
-	exit;
+    exit;
 }
