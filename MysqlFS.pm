@@ -346,7 +346,7 @@ sub open {
     my @path = split /\//, $file;
 
     return -EACCES() unless
-    ($flags > 0 && $file eq '/query')
+    ($flags & (O_WRONLY|O_RDWR) && $file eq '/.query')
     ||
     ($#path == 3 && ($path[2] eq 'struct' || $path[2] eq 'data'))
     ||
