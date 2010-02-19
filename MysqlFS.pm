@@ -350,7 +350,7 @@ sub open {
     ||
     ($#path == 3 && ($path[2] eq 'struct' || $path[2] eq 'data'))
     ||
-    ($#path == 2 && ($path[1] eq '.queries' || $path[2] eq '.status' || $path[2] eq '.create'));
+    ($#path == 2 && ($path[1] eq '.queries' || $path[2] eq 'status' || $path[2] eq 'create'));
 
     return 0;
 }
