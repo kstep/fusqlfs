@@ -181,9 +181,9 @@ sub getattr {
         unless ($path[1] eq '.queries') {
             $tablestat = get_table_stat($path[1]);
             return -ENOENT() unless $tablestat;
-            $fileinfo[8] = $tablestat->{'Check_time'};
-            $fileinfo[9] = $tablestat->{'Update_time'};
-            $fileinfo[10] = $tablestat->{'Create_time'};
+            $fileinfo[8] = $tablestat->{'Check_time'} || $def_time;
+            $fileinfo[9] = $tablestat->{'Update_time'} || $def_time;
+            $fileinfo[10] = $tablestat->{'Create_time'} || $def_time;
         }
 
         if ($#path == 1) { # tables
