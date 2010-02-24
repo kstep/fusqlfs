@@ -59,19 +59,7 @@ our $fn_sep;
 sub initialize {
     my %options = @_;
 
-    my $dsn = "DBI:mysql:database=$options{database}";
-    $dsn .= ";host=$options{host}" if ($options{'host'});
-    $dsn .= ";port=$options{port}" if ($options{'port'});
-    $dbh = DBI->connect($dsn, $options{'user'}, $options{'password'});
-
-    if ($options{'charset'}) {
-        $def_charset = $options{'charset'};
-        $dbh->do("SET character_set_results = $def_charset");
-        $dbh->do("SET character_set_client = $def_charset");
-        $dbh->do("SET character_set_connection = $def_charset");
-    }
-
-    $def_engine = $options{'useinnodb'}? 'InnoDB': 'MyISAM';
+    init_db(\%options);
 
     %queries = ();
     %new_indexes = ();
@@ -1026,6 +1014,24 @@ sub drop_field {
 sub get_create_table {
     my @row = $dbh->selectrow_array("SHOW CREATE TABLE $_[0]");
     return @row? $row[1]: undef;
+}
+
+sub init_db {
+    my $options = shift;
+
+    my $dsn = "DBI:mysql:database=$options->{database}";
+    $dsn .= ";host=$options{host}" if ($options->{'host'});
+    $dsn .= ";port=$options{port}" if ($options->{'port'});
+    $dbh = DBI->connect($dsn, $options->{'user'}, $options->{'password'});
+
+    if ($options->{'charset'}) {
+        $def_charset = $options->{'charset'};
+        $dbh->do("SET character_set_results = $def_charset");
+        $dbh->do("SET character_set_client = $def_charset");
+        $dbh->do("SET character_set_connection = $def_charset");
+    }
+
+    $def_engine = $options->{'useinnodb'}? 'InnoDB': 'MyISAM';
 }
 
 1;
