@@ -828,7 +828,7 @@ sub get_record_by_file_name {
     return wantarray? (get_record($path->[1], $condition, $full)): get_record($path->[1], $condition, $full);
 }
 
-sub parse_mysql_time {
+sub parse_sql_time {
     my $time = shift;
     my $result = 0;
     #              1 year  2 month 3 day   4 hour  5 min   6 sec
@@ -972,9 +972,9 @@ sub get_table_stat {
             'Index_length'    => 0 + $row[8],
             'Data_free'       => 0 + $row[9],
             'Auto_increment'  => 0 + $row[10],
-            'Create_time'     => parse_mysql_time($row[11]),
-            'Update_time'     => parse_mysql_time($row[12]),
-            'Check_time'      => parse_mysql_time($row[13]),
+            'Create_time'     => parse_sql_time($row[11]),
+            'Update_time'     => parse_sql_time($row[12]),
+            'Check_time'      => parse_sql_time($row[13]),
             'Collation'       => $row[14],
             'Checksum'        => $row[15],
             'Create_options'  => $row[16],
