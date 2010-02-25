@@ -61,18 +61,8 @@ show_help() unless !$options{'help'} && $options{'database'} && $options{'mountp
 
 daemonize($options{'logfile'}) if $options{'daemon'};
 
-FusqlFS::initialize(
-    'host'      => $options{'host'},
-    'port'      => $options{'port'},
-    'database'  => $options{'database'},
-    'user'      => $options{'user'},
-    'password'  => $options{'password'},
-    'debug'     => $options{'debug'},
-    'charset'   => $options{'charset'},
-    'fnsep'     => $options{'fnsep'},
-    'useinnodb' => $options{'innodb'},
-    'engine'    => 'MySQL',
-);
+$options{'engine'} = 'PgSQL';
+FusqlFS::initialize(%options);
 
 FusqlFS::main(
     'mountpoint' => $options{'mountpoint'},
