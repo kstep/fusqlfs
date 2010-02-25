@@ -3,7 +3,6 @@ package FusqlFS::MySQL;
 use strict;
 
 use DBI;
-use POSIX qw(mktime);
 
 our @ISA;
 require FusqlFS::Base;
