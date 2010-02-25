@@ -25,18 +25,23 @@ sub new {
 
 sub get_table_list {
     my $self = shift;
+    my $result = $self->{'dbh'}->selectcol_arrayref("SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname = 'public'") || [];
+    return @$result;
 }
 
 sub get_table_stat {
     my $self = shift;
+    return {};
 }
 
 sub get_table_info {
     my $self = shift;
+    return {};
 }
 
 sub get_create_table {
     my $self = shift;
+    return "";
 }
 
 sub create_table {
@@ -49,6 +54,7 @@ sub create_table {
 
 sub get_index_info {
     my $self = shift;
+    return {};
 }
 
 sub get_primary_key {
@@ -81,6 +87,7 @@ sub change_field {
 
 sub get_table_data {
     my $self = shift;
+    return {};
 }
 
 # }}}
@@ -89,7 +96,7 @@ sub get_table_data {
 
 # @static
 sub convert_field_to_sql {
-
+    return "";
 }
 
 # }}}
