@@ -43,19 +43,18 @@ our %queries;
 our %new_indexes;
 
 our $def_time;
-our $fn_sep;
 
 # host port database user password
 sub initialize {
     my %options = @_;
 
-    $fusqlh = require 'FusqlFS/'.$options{'engine'}.'.pm';
-    $fusqlh->init(\%options);
+    my $enginename = 'FusqlFS::'.$options{'engine'};
+    my $enginefile = 'FusqlFS/'.$options{'engine'}.'.pm';
+    require $enginefile;
+    $fusqlh = new $enginename (\%options);
 
     %queries = ();
     %new_indexes = ();
-
-    $fn_sep = $options{'fnsep'} || '.';
 
     $def_time = mktime(localtime());
 
@@ -236,7 +235,7 @@ sub getattr {
             my $i = $#indexinfo; foreach (@indexinfo) { last if $_ eq $path[4]; $i--; }
             return -ENOENT() if $i < 0;
             $fileinfo[2] |= S_IFLNK;
-            $fileinfo[7] = 21 + length($path[4]) - index($path[4], $fn_sep);
+            $fileinfo[7] = 21 + length($path[4]) - index($path[4], $fusqlh->{'fn_sep'});
             $fileinfo[9] += 86400 * $i
         }
     }
@@ -398,7 +397,7 @@ sub readlink {
     my $file = shift;
     my @path = split /\//, $file;
     return -ENOENT() unless $#path == 4 && $path[2] eq 'indeces';
-    my ($name) = split /$fn_sep/, $path[4], 2;
+    my ($name) = split /$fusqlh->{fn_sep}/, $path[4], 2;
     return "../../struct/$name";
 }
 
@@ -465,7 +464,7 @@ sub rename {
                 my $record = get_record_by_file_name(\@path, 0);
                 return -ENOENT() unless $record;
 
-                my @nvalues = split /$fn_sep/, $npath[3];
+                my @nvalues = split /$fusqlh->{fn_sep}/, $npath[3];
                 return -EINVAL() unless scalar @nvalues == scalar keys %$record;
 
                 my $i = 0;
@@ -525,7 +524,7 @@ sub symlink {
     && $path[2] eq 'struct' && $lpath[2] eq 'indeces'
     && $path[1] eq $lpath[1];
 
-    my @name = split /$fn_sep/, $lpath[4];
+    my @name = split /$fusqlh->{fn_sep}/, $lpath[4];
     return -EINVAL() unless $#name < 2 && $name[0] eq $path[3];
 
     my $indexinfo;
@@ -621,7 +620,7 @@ sub get_cache_file_by_path {
 sub parse_file_name_to_record {
     my ($table, $filename) = @_;
     my @keys = $fusqlh->get_primary_key($table);
-    my @values = split /$fn_sep/, $filename, scalar @keys;
+    my @values = split /$fusqlh->{fn_sep}/, $filename, scalar @keys;
     return undef unless $#values == $#keys;
     my $i = 0;
     my %result;
@@ -652,7 +651,7 @@ sub create_record {
     unless ($name eq 'auto') {
         my @keys = grep $tableinfo->{$_}->{'Key'} eq 'PRI',
         sort keys %$tableinfo;
-        my @values = split /$fn_sep/, $name;
+        my @values = split /$fusqlh->{fn_sep}/, $name;
         my $i = 0;
         %record = map { $_ => $values[$i++] } @keys;
     }

@@ -5,42 +5,34 @@ use strict;
 use DBI;
 use POSIX qw(mktime);
 
-our $def_engine;
-our $def_charset;
-our $fn_sep;
-
 our @ISA;
 require FusqlFS::Base;
 @ISA = ('FusqlFS::Base');
 
 sub new {
-    my $self = FusqlFS::Base::new($_[0]);
-    $self->{'base_rtxtsz'} = {};
-    $self->{'base_itxtsz'} = { qw(decimal 95 set 63 enum 63 float 46 text 46) };
-    $self->{'base_stxtsz'} = 234;
-    $self->{'def_base_itxtsz'} = 55;
-    return $self;
-}
-
-sub init {
-    my $self = shift;
-    my $options = shift;
-
+    my ($class, $options) = @_;
     my $dsn = "DBI:mysql:database=$options->{database}";
     $dsn .= ";host=$options->{host}" if ($options->{'host'});
     $dsn .= ";port=$options->{port}" if ($options->{'port'});
-    $self->{'dsn'} = $dsn;
-    $self->SUPER::init($options);
+
+    my $self = FusqlFS::Base::new($class, $dsn, $options);
 
     if ($options->{'charset'}) {
-        $def_charset = $options->{'charset'};
+        my $def_charset = $options->{'charset'};
+        $self->{'def_charset'} = $def_charset;
         $self->{'dbh'}->do("SET character_set_results = $def_charset");
         $self->{'dbh'}->do("SET character_set_client = $def_charset");
         $self->{'dbh'}->do("SET character_set_connection = $def_charset");
     }
 
-    $def_engine = $options->{'useinnodb'}? 'InnoDB': 'MyISAM';
-    $fn_sep = $options->{'fnsep'} || '.';
+    $self->{'def_engine'} = $options->{'useinnodb'}? 'InnoDB': 'MyISAM';
+
+    $self->{'base_rtxtsz'} = {};
+    $self->{'base_itxtsz'} = { qw(decimal 95 set 63 enum 63 float 46 text 46) };
+    $self->{'base_stxtsz'} = 234;
+    $self->{'def_base_itxtsz'} = 55;
+
+    return $self;
 }
 
 # Table operations {{{
@@ -153,7 +145,7 @@ sub get_create_table {
 
 sub create_table {
     my $self = shift;
-    return $self->{'dbh'}->do("CREATE TABLE $_[0] ($_[1] int NOT NULL auto_increment, PRIMARY KEY (id))".($def_engine && " ENGINE=$def_engine").($def_charset && " DEFAULT CHARSET=$def_charset"));
+    return $self->{'dbh'}->do("CREATE TABLE $_[0] ($_[1] int NOT NULL auto_increment, PRIMARY KEY (id))".($self->{'def_engine'} && " ENGINE=$self->{def_engine}").($self->{'def_charset'} && " DEFAULT CHARSET=$self->{def_charset}"));
 }
 
 # }}}
@@ -179,11 +171,11 @@ sub get_index_info {
     while (my @row = $sth->fetchrow_array()) {
         next if $index && $row[2] ne $index;
         if (exists $result{$row[2]}) {
-            push @{ $result{$row[2]}->{'Column_name'} }, $row[4].($row[7] && "$fn_sep$row[7]");
+            push @{ $result{$row[2]}->{'Column_name'} }, $row[4].($row[7] && "$self->{fn_sep}$row[7]");
         } else {
             $result{$row[2]} = {
                 'Unique'      => !$row[1] || 0,
-                'Column_name' => [ $row[4].($row[7] && "$fn_sep$row[7]") ],
+                'Column_name' => [ $row[4].($row[7] && "$self->{fn_sep}$row[7]") ],
                 'Collation'   => $row[5],
                 'Cardinality' => 0 + $row[6],
                 'Packed'      => $row[8],
@@ -217,7 +209,7 @@ sub create_index {
     my @fields = @{ $idesc->{'Column_name'} };
     my $index = $index =~ /^PRI/? 'PRIMARY KEY': ($idesc->{'Unique'}? 'UNIQUE ':'')."KEY $index";
     my $sql = "ALTER TABLE $table ADD $index (";
-    $sql .= join(',', map { my ($name, $part) = split /$fn_sep/, $_; $part += 0; $part? "$name($part)": $name } @fields);
+    $sql .= join(',', map { my ($name, $part) = split /$self->{fn_sep}/, $_; $part += 0; $part? "$name($part)": $name } @fields);
     $sql .= ")";
     return $self->{'dbh'}->do($sql);
 }
@@ -243,7 +235,7 @@ sub get_table_data {
     my $table = shift;
     my @keys = $self->get_primary_key($table);
     return () unless @keys;
-    my $result = $self->{'dbh'}->selectcol_arrayref("SELECT CONCAT_WS('$fn_sep',".join(',',@keys).") FROM $table") || [];
+    my $result = $self->{'dbh'}->selectcol_arrayref("SELECT CONCAT_WS('$self->{fn_sep}',".join(',',@keys).") FROM $table") || [];
     return @$result;
 }
 
@@ -298,4 +290,4 @@ sub convert_field_to_sql {
 
 # }}}
 
-new(__PACKAGE__);
+1;

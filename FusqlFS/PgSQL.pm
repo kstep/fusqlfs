@@ -10,17 +10,15 @@ require FusqlFS::Base;
 
 our $fn_sep;
 
-sub init {
-    my $self = shift;
-    my $options = shift;
-
+sub new {
+    my ($class, $options) = @_;
     my $dsn = "DBI:pgsql:database=$options->{database}";
     $dsn .= ";host=$options->{host}" if ($options->{'host'});
     $dsn .= ";port=$options->{port}" if ($options->{'port'});
-    $self->{'dsn'} = $dsn;
-    $self->SUPER::init($options);
 
-    $fn_sep = $options->{'fnsep'} || '.';
+    my $self = FusqlFS::Base::new($class, $dsn, $options);
+
+    return $self;
 }
 
 # Table operations {{{
@@ -96,4 +94,4 @@ sub convert_field_to_sql {
 
 # }}}
 
-new(__PACKAGE__);
+1;

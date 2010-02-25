@@ -7,19 +7,18 @@ use POSIX qw(mktime);
 
 sub new {
     my $class = shift;
+    my ($dsn, $options) = @_;
+
     my $self = {
 	'table_info_cache' => {},
 	'index_info_cache' => {},
+	'fn_sep'           => $options->{'fn_sep'} || '.',
+	'dsn'              => $dsn,
+	'dbh'              => DBI->connect($dsn, $options->{'user'}, $options->{'password'}),
     };
+
     bless $self, $class;
     return $self;
-}
-
-sub init {
-    my $self = shift;
-    my $options = shift;
-
-    $self->{'dbh'} = DBI->connect($self->{'dsn'}, $options->{'user'}, $options->{'password'});
 }
 
 sub DESTROY {
