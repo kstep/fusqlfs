@@ -238,6 +238,40 @@ sub get_table_data {
     return @$result;
 }
 
+sub create_record {
+    my $self = shift;
+    my ($table, $name) = @_;
+    my $tableinfo = $self->get_table_info($table);
+    my %record;
+
+    unless ($name eq 'auto') {
+        my @keys = grep $tableinfo->{$_}->{'Key'} eq 'PRI',
+        sort keys %$tableinfo;
+        my @values = split /$self->{fn_sep}/, $name;
+        my $i = 0;
+        %record = map { $_ => $values[$i++] } @keys;
+    }
+
+    while (my ($key, $field) = each %$tableinfo) {
+        next unless $field->{'Not_null'} && $field->{'Default'} eq '';
+        next if $field->{'Extra'} =~ /auto_increment/;
+
+        if ($field->{'Type'} eq 'set' || $field->{'Type'} eq 'enum')
+        {
+            $record{$key} = $field->{'Enum'}->[0];
+        } elsif ($field->{'Type'} eq 'float' || $field->{'Type'} eq 'decimal'
+            || $field->{'Type'} =~ /int/)
+        {
+            $record{$key} = 0;
+        } else {
+            $record{$key} = '';
+        }
+    }
+
+    return $self->insert_record($table, \%record);
+
+}
+
 # }}}
 
 # Fields operations {{{

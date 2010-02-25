@@ -187,6 +187,9 @@ sub delete_record {
     return $self->{'dbh'}->do($sql, undef, values %$record);
 }
 
+# @abstract
+sub create_record {}
+
 # }}}
 
 # Utility functions {{{
