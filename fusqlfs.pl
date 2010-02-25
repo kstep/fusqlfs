@@ -71,6 +71,7 @@ FusqlFS::initialize(
     'charset'   => $options{'charset'},
     'fnsep'     => $options{'fnsep'},
     'useinnodb' => $options{'innodb'},
+    'engine'    => 'MySQL',
 );
 
 FusqlFS::main(

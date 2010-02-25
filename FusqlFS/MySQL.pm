@@ -5,41 +5,6 @@ use strict;
 use DBI;
 use POSIX qw(mktime);
 
-require Exporter;
-our (@ISA, @EXPORT);
-
-@ISA = qw(Exporter);
-
-BEGIN {
-    @EXPORT = qw(
-    change_field
-    create_field
-    create_index
-    create_table
-    delete_record
-    drop_field
-    drop_index
-    drop_table
-    execute_queries
-    flush_table_cache
-    get_create_table
-    get_index_info
-    get_primary_key
-    get_record
-    get_table_data
-    get_table_info
-    get_table_list
-    get_table_stat
-    init_db
-    insert_record
-    modify_field
-    modify_index
-    rename_table
-    save_record
-    update_record
-    );
-}
-
 our $dbh;
 our $def_engine;
 our $def_charset;
@@ -48,12 +13,20 @@ our $fn_sep;
 our %table_info_cache = ();
 our %index_info_cache = ();
 
-our %base_rtxtsz = ();
-our %base_itxtsz = qw(decimal 95 set 63 enum 63 float 46 text 46);
-our $base_stxtsz = 234;
-our $def_base_itxtsz = 55;
+sub new {
+    my $class = shift;
+    my $self = {
+        'base_rtxtsz' => {},
+        'base_itxtsz' => { qw(decimal 95 set 63 enum 63 float 46 text 46) },
+        'base_stxtsz' => 234,
+        'def_base_itxtsz' => 55,
+    };
+    bless $self, $class;
+    return $self;
+}
 
-sub init_db {
+sub init {
+    my $self = shift;
     my $options = shift;
 
     my $dsn = "DBI:mysql:database=$options->{database}";
@@ -73,12 +46,14 @@ sub init_db {
 }
 
 sub DESTROY {
+    my $self = shift;
     $dbh->disconnect();
 }
 
 # Table operations {{{
 
 sub get_table_list {
+    my $self = shift;
     my $result = $dbh->selectcol_arrayref("SHOW TABLES") || [];
     return @$result;
 }
@@ -88,6 +63,7 @@ sub get_table_list {
 # @param string table
 # @return hashref
 sub get_table_stat {
+    my $self = shift;
     my $table = shift;
 
     my %result;
@@ -121,6 +97,7 @@ sub get_table_stat {
 }
 
 sub get_table_info {
+    my $self = shift;
     my ($table, $field) = @_;
 
     if (exists $table_info_cache{$table} && %{ $table_info_cache{$table} }) {
@@ -138,9 +115,9 @@ sub get_table_info {
     my %result;
 
     $sth->execute();
-    $base_rtxtsz{$table} = 4;
+    $self->{'base_rtxtsz'}->{$table} = 4;
     while (my @row = $sth->fetchrow_array()) {
-        $base_rtxtsz{$table} += 3 + length($row[0]);
+        $self->{'base_rtxtsz'}->{$table} += 3 + length($row[0]);
         next if $field && $row[0] ne $field;
         $result{$row[0]} = {
             'Collation'  => $row[2],
@@ -176,24 +153,28 @@ sub get_table_info {
 # @param string table
 # @return string
 sub get_create_table {
+    my $self = shift;
     my @row = $dbh->selectrow_array("SHOW CREATE TABLE $_[0]");
     return @row? $row[1]: undef;
 }
 
 sub create_table {
+    my $self = shift;
     return $dbh->do("CREATE TABLE $_[0] ($_[1] int NOT NULL auto_increment, PRIMARY KEY (id))".($def_engine && " ENGINE=$def_engine").($def_charset && " DEFAULT CHARSET=$def_charset"));
 }
 
 sub drop_table {
+    my $self = shift;
     if ($dbh->do("DROP TABLE $_[0]"))
     {
-        flush_table_cache($_[0]);
+        $self->flush_table_cache($_[0]);
         return 1;
     }
     return 0;
 }
 
 sub rename_table {
+    my $self = shift;
     $dbh->do("ALTER TABLE $_[0] RENAME TO $_[1]");
 }
 # }}}
@@ -201,6 +182,7 @@ sub rename_table {
 # Index operations {{{
 
 sub get_index_info {
+    my $self = shift;
     my ($table, $index) = @_;
 
     if (exists $index_info_cache{$table}->{$index}) {
@@ -244,12 +226,14 @@ sub get_index_info {
 # @param table
 # @return list
 sub get_primary_key {
+    my $self = shift;
     my $table = shift;
-    my $tableinfo = get_table_info($table);
+    my $tableinfo = $self->get_table_info($table);
     return grep $tableinfo->{$_}->{'Key'} eq 'PRI', sort keys %$tableinfo;
 }
 
 sub create_index {
+    my $self = shift;
     my ($table, $index, $idesc) = @_;
     my @fields = @{ $idesc->{'Column_name'} };
     my $index = $index =~ /^PRI/? 'PRIMARY KEY': ($idesc->{'Unique'}? 'UNIQUE ':'')."KEY $index";
@@ -260,6 +244,7 @@ sub create_index {
 }
 
 sub drop_index {
+    my $self = shift;
     my ($table, $index) = @_;
     my $index = $index =~ /^PRI/? 'PRIMARY KEY': "KEY $index";
     if ($dbh->do("ALTER TABLE $table DROP $index"))
@@ -271,9 +256,10 @@ sub drop_index {
 }
 
 sub modify_index {
+    my $self = shift;
     my ($table, $index, $indexinfo) = @_;
-    drop_index($table, $index);
-    create_index($table, $index, $indexinfo);
+    $self->drop_index($table, $index);
+    $self->create_index($table, $index, $indexinfo);
 }
 
 # }}}
@@ -281,8 +267,9 @@ sub modify_index {
 # Data operations {{{
 
 sub get_table_data {
+    my $self = shift;
     my $table = shift;
-    my @keys = get_primary_key($table);
+    my @keys = $self->get_primary_key($table);
     return () unless @keys;
     my $result = $dbh->selectcol_arrayref("SELECT CONCAT_WS('$fn_sep',".join(',',@keys).") FROM $table") || [];
     return @$result;
@@ -295,6 +282,7 @@ sub get_table_data {
 # @param bool full
 # @return list|hashref
 sub get_record {
+    my $self = shift;
     my ($table, $condition, $full) = @_;
     my @keys = keys %$condition;
     my $sql = "SELECT ". ($full? "*": join(',', @keys));
@@ -303,6 +291,7 @@ sub get_record {
 }
 
 sub insert_record {
+    my $self = shift;
     my ($table, $record) = @_;
     my $sql = "INSERT INTO $table (";
     $sql .= join(',', keys %$record);
@@ -311,6 +300,7 @@ sub insert_record {
 }
 
 sub update_record {
+    my $self = shift;
     my ($table, $condition, $record) = @_;
     my $sql = "UPDATE $table SET ";
     my @values = (values %$record, values %$condition);
@@ -320,16 +310,18 @@ sub update_record {
 }
 
 sub save_record {
+    my $self = shift;
     my ($table, $condition, $record) = @_;
-    my $crecord = get_record($table, $condition);
+    my $crecord = $self->get_record($table, $condition);
     if ($crecord) {
-        update_record($table, $condition, $record);
+        $self->update_record($table, $condition, $record);
     } else {
-        insert_record($table, $record);
+        $self->insert_record($table, $record);
     }
 }
 
 sub delete_record {
+    my $self = shift;
     my ($table, $record) = @_;
     my $sql = "DELETE FROM $table WHERE ";
     $sql .= join(' AND ', map { "$_ = ?" } keys %$record);
@@ -341,15 +333,17 @@ sub delete_record {
 # Fields operations {{{
 
 sub create_field {
+    my $self = shift;
     if ($dbh->do("ALTER TABLE $_[0] ADD $_[1] int NOT NULL DEFAULT 0"))
     {
-        flush_table_cache($_[0]);
+        $self->flush_table_cache($_[0]);
         return 1;
     }
     return 0;
 }
 
 sub modify_field {
+    my $self = shift;
     my ($table, $field, $fdesc) = @_;
     my ($sql, @values) = convert_field_to_sql($fdesc);
     print STDERR "ALTER TABLE $table MODIFY $field $sql\n";
@@ -357,8 +351,9 @@ sub modify_field {
 }
 
 sub change_field {
+    my $self = shift;
     my ($table, $field, $nfield, $fdesc) = @_;
-    $fdesc ||= get_table_info($table, $field);
+    $fdesc ||= $self->get_table_info($table, $field);
     my ($sql, @values) = convert_field_to_sql($fdesc);
     print STDERR "ALTER TABLE $table CHANGE $field $nfield $sql\n";
     return $dbh->do("ALTER TABLE $table CHANGE $field $nfield $sql", undef, @values);
@@ -370,9 +365,10 @@ sub change_field {
 # @param string field
 # @return bool
 sub drop_field {
+    my $self = shift;
     if ($dbh->do("ALTER TABLE $_[0] DROP $_[1]"))
     {
-        flush_table_cache($_[0]);
+        $self->flush_table_cache($_[0]);
         return 1;
     }
     return 0;
@@ -417,11 +413,13 @@ sub convert_field_to_sql {
 }
 
 sub flush_table_cache {
+    my $self = shift;
     delete $table_info_cache{$_[0]};
     delete $index_info_cache{$_[0]};
 }
 
 sub execute_queries {
+    my $self = shift;
     my $buffer = shift;
     foreach (split /;\n/, $$buffer) {
         s/^\s+//; s/\s+$//;
@@ -432,4 +430,4 @@ sub execute_queries {
 
 # }}}
 
-1;
+new(__PACKAGE__);

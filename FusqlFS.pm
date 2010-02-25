@@ -7,8 +7,6 @@ use POSIX qw(:fcntl_h :errno_h mktime);
 use Fcntl qw(:mode);
 use Fuse;
 
-use FusqlFS::MySQL;
-
 use Data::Dump qw(dump ddx);
 
 require Exporter;
@@ -39,6 +37,8 @@ BEGIN {
     );
 }
 
+our $fusqlh;
+
 our %queries;
 our %new_indexes;
 
@@ -49,7 +49,8 @@ our $fn_sep;
 sub initialize {
     my %options = @_;
 
-    FusqlFS::MySQL::init_db(\%options);
+    $fusqlh = require 'FusqlFS/'.$options{'engine'}.'.pm';
+    $fusqlh->init(\%options);
 
     %queries = ();
     %new_indexes = ();
@@ -104,13 +105,13 @@ sub chmod {
 
     return -EACCES() unless $#path == 3 && $path[2] eq 'indeces';
     unless (exists $new_indexes{$path[1]}->{$path[3]}) {
-        my $indexinfo = FusqlFS::MySQL::get_index_info($path[1], $path[3]);
+        my $indexinfo = $fusqlh->get_index_info($path[1], $path[3]);
         return -ENOENT() unless $indexinfo;
         my $unique = $mode & S_ISVTX;
 
         if ($unique != $indexinfo->{'Unique'}) {
             $indexinfo->{'Unique'} = $unique;
-            FusqlFS::MySQL::modify_index($path[1], $path[3], $indexinfo);
+            $fusqlh->modify_index($path[1], $path[3], $indexinfo);
         }
     } else {
         $new_indexes{$path[1]}->{$path[3]} = $mode;
@@ -123,14 +124,14 @@ sub utime {
     my ($file, $atime, $mtime) = @_;
     my @path = split /\//, $file;
     return -EACCES() unless $#path == 4 && $path[2] eq 'indeces';
-    my $indexinfo = FusqlFS::MySQL::get_index_info($path[1], $path[3]);
+    my $indexinfo = $fusqlh->get_index_info($path[1], $path[3]);
     return -ENOENT() unless $indexinfo;
-    my $tablestat = FusqlFS::MySQL::get_table_stat($path[1]);
+    my $tablestat = $fusqlh->get_table_stat($path[1]);
     my $i = $#{ $indexinfo->{'Column_name'} };
     my %timestamps = map { $_ => $tablestat->{'Update_time'} + 86400 * $i-- } @{ $indexinfo->{'Column_name'} };
     $timestamps{$path[4]} = $mtime;
     $indexinfo->{'Column_name'} = [ sort { $timestamps{$b} <=> $timestamps{$a} } keys %timestamps ];
-    FusqlFS::MySQL::modify_index($path[1], $path[3], $indexinfo);
+    $fusqlh->modify_index($path[1], $path[3], $indexinfo);
     return 0;
 }
 
@@ -138,7 +139,7 @@ sub flush {
     my $file = shift;
     my @path = split /\//, $file;
     if ($#path > 1 && $path[1] ne '.queries') {
-        FusqlFS::MySQL::flush_table_cache($path[1]);
+        $fusqlh->flush_table_cache($path[1]);
     }
     return 0;
 }
@@ -175,7 +176,7 @@ sub getattr {
         my $tablestat;
 
         unless ($path[1] eq '.queries') {
-            $tablestat = FusqlFS::MySQL::get_table_stat($path[1]);
+            $tablestat = $fusqlh->get_table_stat($path[1]);
             return -ENOENT() unless $tablestat;
             $fileinfo[8] = $tablestat->{'Check_time'} || $def_time;
             $fileinfo[9] = $tablestat->{'Update_time'} || $def_time;
@@ -201,10 +202,10 @@ sub getattr {
                 {
                     set_dir_info(\@fileinfo);
                 } elsif ($path[2] eq 'status') {
-                    set_file_info(\@fileinfo, -s get_cache_file_by_path(\@path) || $FusqlFS::MySQL::base_stxtsz + get_real_size($tablestat));
+                    set_file_info(\@fileinfo, -s get_cache_file_by_path(\@path) || $fusqlh->{'base_stxtsz'} + get_real_size($tablestat));
                     $fileinfo[2] &= ~0222;
                 } elsif ($path[2] eq 'create') {
-                    set_file_info(\@fileinfo, -s get_cache_file_by_path(\@path) || length FusqlFS::MySQL::get_create_table($path[1]));
+                    set_file_info(\@fileinfo, -s get_cache_file_by_path(\@path) || length $fusqlh->get_create_table($path[1]));
                     $fileinfo[2] &= ~0222;
                 } else {
                     return -ENOENT();
@@ -214,14 +215,14 @@ sub getattr {
             if ($path[2] eq 'data') {
                 my $record = get_record_by_file_name(\@path, 1);
                 return -ENOENT() unless $record;# && %$record;
-                set_file_info(\@fileinfo, -s get_cache_file_by_path(\@path) || $FusqlFS::MySQL::base_rtxtsz{$path[1]} + get_real_size($record));
+                set_file_info(\@fileinfo, -s get_cache_file_by_path(\@path) || $fusqlh->{'base_rtxtsz'}->{$path[1]} + get_real_size($record));
             } elsif ($path[2] eq 'struct') {
-                my $tableinfo = FusqlFS::MySQL::get_table_info($path[1], $path[3]);
+                my $tableinfo = $fusqlh->get_table_info($path[1], $path[3]);
                 return -ENOENT() unless $tableinfo;
-                set_file_info(\@fileinfo, -s get_cache_file_by_path(\@path) || ($FusqlFS::MySQL::base_itxtsz{$tableinfo->{'Type'}}||$FusqlFS::MySQL::def_base_itxtsz) + get_real_size($tableinfo));
+                set_file_info(\@fileinfo, -s get_cache_file_by_path(\@path) || ($fusqlh->{'base_itxtsz'}->{$tableinfo->{'Type'}}||$fusqlh->{'def_base_itxtsz'}) + get_real_size($tableinfo));
             } elsif ($path[2] eq 'indeces') {
                 unless (exists $new_indexes{$path[1]}->{$path[3]}) {
-                    my $indexinfo = FusqlFS::MySQL::get_index_info($path[1], $path[3]);
+                    my $indexinfo = $fusqlh->get_index_info($path[1], $path[3]);
                     return -ENOENT() unless $indexinfo;
                     set_dir_info(\@fileinfo, scalar @{ $indexinfo->{'Column_name'} });
                     $fileinfo[2] |= S_ISVTX if $indexinfo->{'Unique'};
@@ -231,7 +232,7 @@ sub getattr {
                 }
             }
         } elsif ($#path == 4 && $path[2] eq 'indeces') { # field info
-            my @indexinfo = FusqlFS::MySQL::get_index_info($path[1], $path[3]);
+            my @indexinfo = $fusqlh->get_index_info($path[1], $path[3]);
             my $i = $#indexinfo; foreach (@indexinfo) { last if $_ eq $path[4]; $i--; }
             return -ENOENT() if $i < 0;
             $fileinfo[2] |= S_IFLNK;
@@ -249,7 +250,7 @@ sub getdir {
     my @dir_list;
 
     if ($dir eq '/') {
-        @dir_list = ('.query', '.queries', FusqlFS::MySQL::get_table_list());
+        @dir_list = ('.query', '.queries', $fusqlh->get_table_list());
     } elsif ($dir eq '/queries') {
         @dir_list = keys %queries;
     } else {
@@ -259,17 +260,17 @@ sub getdir {
         } else {
             if ($#path == 2) { # list of indexes/records/fields
                 if ($path[2] eq 'data') {
-                    @dir_list = FusqlFS::MySQL::get_table_data($path[1]);
+                    @dir_list = $fusqlh->get_table_data($path[1]);
                 } elsif ($path[2] eq 'struct') {
-                    @dir_list = FusqlFS::MySQL::get_table_info($path[1]);
+                    @dir_list = $fusqlh->get_table_info($path[1]);
                 } elsif ($path[2] eq 'indeces') {
-                    @dir_list = ( FusqlFS::MySQL::get_index_info($path[1]), keys %{ $new_indexes{$path[1]} } );
+                    @dir_list = ( $fusqlh->get_index_info($path[1]), keys %{ $new_indexes{$path[1]} } );
                 } else {
                     return -ENOENT();
                 }
             } elsif ($#path == 3) { # list of key fields
                 return -ENOENT() unless $path[2] eq 'indeces';
-                @dir_list = FusqlFS::MySQL::get_index_info($path[1], $path[3]);
+                @dir_list = $fusqlh->get_index_info($path[1], $path[3]);
             }
         }
     }
@@ -284,12 +285,12 @@ sub mkdir {
     my @path = split /\//, $dir;
     if ($#path == 1) { # create table
         return -EEXIST() if $path[1] eq '.queries';
-        my @tableinfo = FusqlFS::MySQL::get_table_info($path[1]);
+        my @tableinfo = $fusqlh->get_table_info($path[1]);
         return -EEXIST() if @tableinfo;
-        FusqlFS::MySQL::create_table($path[1], 'id');
+        $fusqlh->create_table($path[1], 'id');
     } elsif ($#path == 3 && $path[2] eq 'indeces') { # create index
         return -EEXIST() if exists $new_indexes{$path[1]}->{$path[3]};
-        my @indexinfo = FusqlFS::MySQL::get_index_info($path[1], $path[3]);
+        my @indexinfo = $fusqlh->get_index_info($path[1], $path[3]);
         return -EEXIST() if @indexinfo;
         $new_indexes{$path[1]}->{$path[3]} = $mode;
     } else {
@@ -304,14 +305,14 @@ sub mknod {
 
     if ($#path == 3) {
         if ($path[2] eq 'struct') {
-            my @tableinfo = FusqlFS::MySQL::get_table_info($path[1], $path[3]);
+            my @tableinfo = $fusqlh->get_table_info($path[1], $path[3]);
             return -EEXIST() if @tableinfo;
             #return -EINVAL() unless defined
-            FusqlFS::MySQL::create_field($path[1], $path[3]);
+            $fusqlh->create_field($path[1], $path[3]);
         } elsif ($path[2] eq 'data') {
             my @record = get_record_by_file_name(\@path, 0);
             return -EEXIST() if @record;
-            FusqlFS::MySQL::create_record($path[1], $path[3]);
+            $fusqlh->create_record($path[1], $path[3]);
         }
     } elsif ($#path == 2 && $path[1] eq '.queries') {
         return -EEXIST() if exists $queries{$path[2]};
@@ -367,7 +368,7 @@ sub read {
             $buffer = get_cache($cachefile);
         } else {
             if ($path[2] eq 'struct') {
-                my $tableinfo = FusqlFS::MySQL::get_table_info($path[1], $path[3]);
+                my $tableinfo = $fusqlh->get_table_info($path[1], $path[3]);
                 return -ENOENT() unless $tableinfo;
                 $buffer = YAML::Tiny::Dump($tableinfo);
             } elsif ($path[2] eq 'data') {
@@ -375,11 +376,11 @@ sub read {
                 return -ENOENT() unless $record;
                 $buffer = YAML::Tiny::Dump($record);
             } elsif ($path[2] eq 'status') {
-                my $tablestatus = FusqlFS::MySQL::get_table_stat($path[1]);
+                my $tablestatus = $fusqlh->get_table_stat($path[1]);
                 return -ENOENT() unless $tablestatus;
                 $buffer = YAML::Tiny::Dump($tablestatus);
             } elsif ($path[2] eq 'create') {
-                my $createstatement = FusqlFS::MySQL::get_create_table($path[1]);
+                my $createstatement = $fusqlh->get_create_table($path[1]);
                 return -ENOENT() unless $createstatement;
                 $buffer = $createstatement;
             } else {
@@ -422,9 +423,9 @@ sub release {
             if ($data) {
                 undef $buffer;
                 if ($path[2] eq 'struct') {
-                    FusqlFS::MySQL::modify_field($path[1], $path[3], $data->[0])
+                    $fusqlh->modify_field($path[1], $path[3], $data->[0])
                 } elsif ($path[2] eq 'data') {
-                    FusqlFS::MySQL::save_record($path[1], parse_file_name_to_record($path[1], $path[3]), $data->[0]);
+                    $fusqlh->save_record($path[1], parse_file_name_to_record($path[1], $path[3]), $data->[0]);
                 } else {
                     return -EACCES();
                 }
@@ -449,14 +450,14 @@ sub rename {
     return 0 if $path[$#path] eq $npath[$#npath];
 
     if ($#path == 1) { # rename table
-        my @tableinfo = FusqlFS::MySQL::get_table_info($path[1]);
+        my @tableinfo = $fusqlh->get_table_info($path[1]);
         return -ENOENT() unless @tableinfo;
-        FusqlFS::MySQL::rename_table($path[1], $npath[1]);
+        $fusqlh->rename_table($path[1], $npath[1]);
     } else {
         return -EACCES() unless $path[1] eq $npath[1];
         if ($#path == 3) { # rename field, index or record
             if ($path[2] eq 'struct') {
-                my $tableinfo = FusqlFS::MySQL::get_table_info($path[1], $path[3]);
+                my $tableinfo = $fusqlh->get_table_info($path[1], $path[3]);
                 return -ENOENT() unless $tableinfo;
                 change_field($path[1], $path[3], $npath[3]);
             } elsif ($path[2] eq 'data') {
@@ -469,18 +470,18 @@ sub rename {
 
                 my $i = 0;
                 my %nrecord = map { $_ => $nvalues[$i++] } sort keys %$record;
-                FusqlFS::MySQL::update_record($path[1], $record, \%nrecord);
+                $fusqlh->update_record($path[1], $record, \%nrecord);
 
             } elsif ($path[2] eq 'indeces') {
-                my $indexinfo = FusqlFS::MySQL::get_index_info($path[1], $path[3]);
+                my $indexinfo = $fusqlh->get_index_info($path[1], $path[3]);
                 return -ENOENT() unless $indexinfo;
-                FusqlFS::MySQL::modify_index($path[1], $npath[3], $indexinfo);
+                $fusqlh->modify_index($path[1], $npath[3], $indexinfo);
             }
         } elsif ($#path == 4 && $path[2] eq 'indeces') { # change field in index
-            my $indexinfo = FusqlFS::MySQL::get_index_info($path[1], $path[3]);
+            my $indexinfo = $fusqlh->get_index_info($path[1], $path[3]);
             return -ENOENT() unless $indexinfo;
             @{ $indexinfo->{'Column_name'} } = map { $_ eq $path[4]? $npath[4]: $_ } @{ $indexinfo->{'Column_name'} };
-            FusqlFS::MySQL::modify_index($path[1], $path[3], $indexinfo);
+            $fusqlh->modify_index($path[1], $path[3], $indexinfo);
         } else {
             return -EACCES();
         }
@@ -493,12 +494,12 @@ sub rmdir {
     my @path = split /\//, $dir;
     if ($#path == 1) { # drop table
         return -EACCES() if $path[1] eq '.queries';
-        FusqlFS::MySQL::drop_table($path[1]);
+        $fusqlh->drop_table($path[1]);
     } elsif ($#path == 3) { # drop index
         if (exists $new_indexes{$path[1]}->{$path[3]}) {
             delete $new_indexes{$path[1]}->{$path[3]};
         } else {
-            FusqlFS::MySQL::drop_index($path[1], $path[3]);
+            $fusqlh->drop_index($path[1], $path[3]);
         }
     } else {
         return -EACCES();
@@ -532,11 +533,11 @@ sub symlink {
         $indexinfo = { 'Unique' => $new_indexes{$lpath[1]}->{$lpath[3]} & S_ISVTX, 'Column_name' => [ $lpath[4] ] };
         delete $new_indexes{$lpath[1]}->{$lpath[3]};
     } else {
-        $indexinfo = FusqlFS::MySQL::get_index_info($lpath[1], $lpath[3]);
+        $indexinfo = $fusqlh->get_index_info($lpath[1], $lpath[3]);
         push @{ $indexinfo->{'Column_name'} }, $lpath[4];
-        FusqlFS::MySQL::drop_index($lpath[1], $lpath[3]);
+        $fusqlh->drop_index($lpath[1], $lpath[3]);
     }
-    FusqlFS::MySQL::create_index($lpath[1], $lpath[3], $indexinfo);
+    $fusqlh->create_index($lpath[1], $lpath[3], $indexinfo);
     return 0;
 }
 
@@ -549,7 +550,7 @@ sub truncate {
     ||
     ($#path == 3 && ($path[2] eq 'data' || $path[2] eq 'struct'));
 
-    FusqlFS::MySQL::flush_table_cache($path[1]);
+    $fusqlh->flush_table_cache($path[1]);
     #unlink get_cache_file_by_path(\@path);
 
     return 0;
@@ -560,7 +561,7 @@ sub unlink {
     return 0 if $file eq '/query';
     my @path = split /\//, $file;
     if ($#path == 4 && $path[2] eq 'indeces') {
-        my $indexinfo = FusqlFS::MySQL::get_index_info($path[1], $path[3]);
+        my $indexinfo = $fusqlh->get_index_info($path[1], $path[3]);
         my $ok = 0;
         return -ENOENT() unless $indexinfo;
         for (my $i = 0; $i <= $#{ $indexinfo->{'Column_name'} }; $i++) {
@@ -571,14 +572,14 @@ sub unlink {
             }
         }
         return -ENOENT() unless $ok;
-        FusqlFS::MySQL::modify_index($path[1], $path[3], $indexinfo);
+        $fusqlh->modify_index($path[1], $path[3], $indexinfo);
     } elsif ($#path == 3) {
         if ($path[2] eq 'data') {
             my $condition = parse_file_name_to_record($path[1], $path[3]);
             return -EINVAL() unless $condition;
-            FusqlFS::MySQL::delete_record($path[1], $condition);
+            $fusqlh->delete_record($path[1], $condition);
         } elsif ($path[2] eq 'struct') {
-            FusqlFS::MySQL::drop_field($path[1], $path[3]);
+            $fusqlh->drop_field($path[1], $path[3]);
         } else {
             return -EACCES();
         }
@@ -619,7 +620,7 @@ sub get_cache_file_by_path {
 
 sub parse_file_name_to_record {
     my ($table, $filename) = @_;
-    my @keys = FusqlFS::MySQL::get_primary_key($table);
+    my @keys = $fusqlh->get_primary_key($table);
     my @values = split /$fn_sep/, $filename, scalar @keys;
     return undef unless $#values == $#keys;
     my $i = 0;
@@ -645,7 +646,7 @@ sub put_cache {
 
 sub create_record {
     my ($table, $name) = @_;
-    my $tableinfo = FusqlFS::MySQL::get_table_info($table);
+    my $tableinfo = $fusqlh->get_table_info($table);
     my %record;
 
     unless ($name eq 'auto') {
@@ -672,7 +673,7 @@ sub create_record {
         }
     }
 
-    return FusqlFS::MySQL::insert_record($table, \%record);
+    return $fusqlh->insert_record($table, \%record);
 
 }
 
@@ -688,7 +689,7 @@ sub get_record_by_file_name {
     my ($path, $full) = @_;
     my $condition = parse_file_name_to_record($path->[1], $path->[3]);
     return undef unless $condition;
-    return wantarray? (FusqlFS::MySQL::get_record($path->[1], $condition, $full)): FusqlFS::MySQL::get_record($path->[1], $condition, $full);
+    return wantarray? ($fusqlh->get_record($path->[1], $condition, $full)): $fusqlh->get_record($path->[1], $condition, $full);
 }
 
 sub set_file_info {
