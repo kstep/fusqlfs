@@ -7,7 +7,7 @@ use POSIX qw(:fcntl_h :errno_h mktime);
 use Fcntl qw(:mode);
 use Fuse;
 
-use MySQL;
+use FusqlFS::MySQL;
 
 use Data::Dump qw(dump ddx);
 

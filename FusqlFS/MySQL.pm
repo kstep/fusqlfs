@@ -1,4 +1,4 @@
-package MySQL;
+package FusqlFS::MySQL;
 
 use strict;
 
