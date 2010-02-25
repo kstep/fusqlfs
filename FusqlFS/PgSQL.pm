@@ -12,7 +12,7 @@ our $fn_sep;
 
 sub new {
     my ($class, $options) = @_;
-    my $dsn = "DBI:pgsql:database=$options->{database}";
+    my $dsn = "DBI:Pg:database=$options->{database}";
     $dsn .= ";host=$options->{host}" if ($options->{'host'});
     $dsn .= ";port=$options->{port}" if ($options->{'port'});
 
