@@ -2,7 +2,6 @@
 
 use strict;
 
-use Fuse;
 use Getopt::Long;
 use POSIX qw(locale_h setsid);
 #require "$dirname/FusqlFS.pm";
@@ -74,30 +73,11 @@ FusqlFS::initialize(
     'useinnodb' => $options{'innodb'},
 );
 
-Fuse::main(
+FusqlFS::main(
     'mountpoint' => $options{'mountpoint'},
     'mountopts'  => $options{'allow_other'}? 'allow_other': '',
     'debug'      => $options{'debug'},
     'threaded'   => $use_threads,
-
-    'getdir'     => 'FusqlFS::getdir',
-    'getattr'    => 'FusqlFS::getattr',
-    'mkdir'      => 'FusqlFS::mkdir',
-    'rmdir'      => 'FusqlFS::rmdir',
-    'symlink'    => 'FusqlFS::symlink',
-    'readlink'   => 'FusqlFS::readlink',
-    'unlink'     => 'FusqlFS::unlink',
-    'rename'     => 'FusqlFS::rename',
-    'open'       => 'FusqlFS::open',
-    'read'       => 'FusqlFS::read',
-    'mknod'      => 'FusqlFS::mknod',
-    'chmod'      => 'FusqlFS::chmod',
-    'truncate'   => 'FusqlFS::truncate',
-    'write'      => 'FusqlFS::write',
-    'flush'      => 'FusqlFS::flush',
-    'fsync'      => 'FusqlFS::flush',
-    'release'    => 'FusqlFS::release',
-    'utime'      => 'FusqlFS::utime',
 );
 
 sub daemonize {

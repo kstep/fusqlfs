@@ -5,6 +5,8 @@ use strict;
 use YAML::Tiny;
 use POSIX qw(:fcntl_h :errno_h mktime);
 use Fcntl qw(:mode);
+use Fuse;
+
 use MySQL;
 
 use Data::Dump qw(dump ddx);
@@ -59,6 +61,36 @@ sub initialize {
     #$YAML::Syck::Headless = 1;
     #$YAML::Syck::SingleQuote = 1;
     #$YAML::UseHeader = 0;
+}
+
+sub main {
+    my %options = @_;
+
+    Fuse::main(
+        'mountpoint' => $options{'mountpoint'},
+        'mountopts'  => $options{'allow_other'}? 'allow_other': '',
+        'debug'      => $options{'debug'},
+        'threaded'   => $options{'threaded'},
+
+        'getdir'     => \&getdir,
+        'getattr'    => \&getattr,
+        'mkdir'      => \&mkdir,
+        'rmdir'      => \&rmdir,
+        'symlink'    => \&symlink,
+        'readlink'   => \&readlink,
+        'unlink'     => \&unlink,
+        'rename'     => \&rename,
+        'open'       => \&open,
+        'read'       => \&read,
+        'mknod'      => \&mknod,
+        'chmod'      => \&chmod,
+        'truncate'   => \&truncate,
+        'write'      => \&write,
+        'flush'      => \&flush,
+        'fsync'      => \&flush,
+        'release'    => \&release,
+        'utime'      => \&utime,
+    );
 }
 
 sub DESTROY {
