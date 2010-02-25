@@ -5,8 +5,8 @@ use strict;
 use Fuse;
 use Getopt::Long;
 use POSIX qw(locale_h setsid);
-#require "$dirname/MysqlFS.pm";
-use MysqlFS;
+#require "$dirname/FusqlFS.pm";
+use FusqlFS;
 
 my $use_threads = 0;
 my $locale = setlocale(LC_CTYPE);
@@ -62,7 +62,7 @@ show_help() unless !$options{'help'} && $options{'database'} && $options{'mountp
 
 daemonize($options{'logfile'}) if $options{'daemon'};
 
-MysqlFS::initialize(
+FusqlFS::initialize(
     'host'      => $options{'host'},
     'port'      => $options{'port'},
     'database'  => $options{'database'},
@@ -80,24 +80,24 @@ Fuse::main(
     'debug'      => $options{'debug'},
     'threaded'   => $use_threads,
 
-    'getdir'     => 'MysqlFS::getdir',
-    'getattr'    => 'MysqlFS::getattr',
-    'mkdir'      => 'MysqlFS::mkdir',
-    'rmdir'      => 'MysqlFS::rmdir',
-    'symlink'    => 'MysqlFS::symlink',
-    'readlink'   => 'MysqlFS::readlink',
-    'unlink'     => 'MysqlFS::unlink',
-    'rename'     => 'MysqlFS::rename',
-    'open'       => 'MysqlFS::open',
-    'read'       => 'MysqlFS::read',
-    'mknod'      => 'MysqlFS::mknod',
-    'chmod'      => 'MysqlFS::chmod',
-    'truncate'   => 'MysqlFS::truncate',
-    'write'      => 'MysqlFS::write',
-    'flush'      => 'MysqlFS::flush',
-    'fsync'      => 'MysqlFS::flush',
-    'release'    => 'MysqlFS::release',
-    'utime'      => 'MysqlFS::utime',
+    'getdir'     => 'FusqlFS::getdir',
+    'getattr'    => 'FusqlFS::getattr',
+    'mkdir'      => 'FusqlFS::mkdir',
+    'rmdir'      => 'FusqlFS::rmdir',
+    'symlink'    => 'FusqlFS::symlink',
+    'readlink'   => 'FusqlFS::readlink',
+    'unlink'     => 'FusqlFS::unlink',
+    'rename'     => 'FusqlFS::rename',
+    'open'       => 'FusqlFS::open',
+    'read'       => 'FusqlFS::read',
+    'mknod'      => 'FusqlFS::mknod',
+    'chmod'      => 'FusqlFS::chmod',
+    'truncate'   => 'FusqlFS::truncate',
+    'write'      => 'FusqlFS::write',
+    'flush'      => 'FusqlFS::flush',
+    'fsync'      => 'FusqlFS::flush',
+    'release'    => 'FusqlFS::release',
+    'utime'      => 'FusqlFS::utime',
 );
 
 sub daemonize {
