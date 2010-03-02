@@ -28,7 +28,8 @@ my %options = (
     'charset'       => $locale,
     'daemon'        => 1,
     'logfile'       => '',
-    'fnsep'         => '\.',
+    'fnsep'         => '.',
+    'engine'        => 'MySQL',
     'innodb'        => 0,
 );
 
@@ -46,6 +47,7 @@ GetOptions(
     'daemon!'         => \$options{'daemon'},
     'logfile|l:s'     => \$options{'logfile'},
     'fnsep|s:s'       => \$options{'fnsep'},
+    'engine|e:s'      => \$options{'engine'},
     'innodb!'         => \$options{'innodb'},
 ) or show_help();
 
@@ -61,7 +63,6 @@ show_help() unless !$options{'help'} && $options{'database'} && $options{'mountp
 
 daemonize($options{'logfile'}) if $options{'daemon'};
 
-$options{'engine'} = 'PgSQL';
 FusqlFS::initialize(%options);
 
 FusqlFS::main(
