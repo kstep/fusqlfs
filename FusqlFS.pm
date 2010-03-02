@@ -43,7 +43,7 @@ our %new_indexes;
 our $def_time;
 
 # host port database user password
-sub initialize {
+sub init {
     my %options = @_;
 
     my $enginename = 'FusqlFS::'.$options{'engine'};
@@ -61,14 +61,15 @@ sub initialize {
     #$YAML::UseHeader = 0;
 }
 
-sub main {
+sub mount {
+    my $mountpoint = shift;
     my %options = @_;
 
     Fuse::main(
-        'mountpoint' => $options{'mountpoint'},
+        'mountpoint' => $mountpoint,
         'mountopts'  => $options{'allow_other'}? 'allow_other': '',
-        'debug'      => $options{'debug'},
-        'threaded'   => $options{'threaded'},
+        'debug'      => $options{'debug'} || 0,
+        'threaded'   => $options{'threaded'} || 0,
 
         'getdir'     => \&getdir,
         'getattr'    => \&getattr,
@@ -96,8 +97,7 @@ sub DESTROY {
 }
 
 sub chmod {
-    my $file = shift;
-    my $mode = shift;
+    my ($file, $mode) = @_;
     my @path = split /\//, $file;
 
     return -EACCES() unless $#path == 3 && $path[2] eq 'indeces';

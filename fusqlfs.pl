@@ -63,10 +63,9 @@ show_help() unless !$options{'help'} && $options{'database'} && $options{'mountp
 
 daemonize($options{'logfile'}) if $options{'daemon'};
 
-FusqlFS::initialize(%options);
+FusqlFS::init(%options);
 
-FusqlFS::main(
-    'mountpoint' => $options{'mountpoint'},
+FusqlFS::mount( $options{'mountpoint'}, 
     'mountopts'  => $options{'allow_other'}? 'allow_other': '',
     'debug'      => $options{'debug'},
     'threaded'   => $use_threads,
