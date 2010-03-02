@@ -208,7 +208,7 @@ sub create_index {
     my @fields = @{ $idesc->{'Column_name'} };
     my $index = $index =~ /^PRI/? 'PRIMARY KEY': ($idesc->{'Unique'}? 'UNIQUE ':'')."KEY $index";
     my $sql = "ALTER TABLE $table ADD $index (";
-    $sql .= join(',', map { my ($name, $part) = split /$self->{fn_sep}/, $_; $part += 0; $part? "$name($part)": $name } @fields);
+    $sql .= join(',', map { my ($name, $part) = split /[$self->{fn_sep}]/, $_; $part += 0; $part? "$name($part)": $name } @fields);
     $sql .= ")";
     return $self->{'dbh'}->do($sql);
 }
@@ -247,7 +247,7 @@ sub create_record {
     unless ($name eq 'auto') {
         my @keys = grep $tableinfo->{$_}->{'Key'} eq 'PRI',
         sort keys %$tableinfo;
-        my @values = split /$self->{fn_sep}/, $name;
+        my @values = split /[$self->{fn_sep}]/, $name;
         my $i = 0;
         %record = map { $_ => $values[$i++] } @keys;
     }

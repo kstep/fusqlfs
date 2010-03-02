@@ -395,7 +395,7 @@ sub readlink {
     my $file = shift;
     my @path = split /\//, $file;
     return -ENOENT() unless $#path == 4 && $path[2] eq 'indeces';
-    my ($name) = split $fusqlh->{'fn_sep'}, $path[4], 2;
+    my ($name) = split /[$fusqlh->{'fn_sep'}]/, $path[4], 2;
     print STDERR "### ",$name,"\n";
     print STDERR "### ",$path[4],"\n";
     return "../../struct/$name";
@@ -464,7 +464,7 @@ sub rename {
                 my $record = get_record_by_file_name(\@path, 0);
                 return -ENOENT() unless $record;
 
-                my @nvalues = split /$fusqlh->{fn_sep}/, $npath[3];
+                my @nvalues = split /[$fusqlh->{fn_sep}]/, $npath[3];
                 return -EINVAL() unless scalar @nvalues == scalar keys %$record;
 
                 my $i = 0;
@@ -524,7 +524,7 @@ sub symlink {
     && $path[2] eq 'struct' && $lpath[2] eq 'indeces'
     && $path[1] eq $lpath[1];
 
-    my @name = split /$fusqlh->{fn_sep}/, $lpath[4];
+    my @name = split /[$fusqlh->{fn_sep}]/, $lpath[4];
     return -EINVAL() unless $#name < 2 && $name[0] eq $path[3];
 
     my $indexinfo;
@@ -620,7 +620,7 @@ sub get_cache_file_by_path {
 sub parse_file_name_to_record {
     my ($table, $filename) = @_;
     my @keys = $fusqlh->get_primary_key($table);
-    my @values = split /$fusqlh->{fn_sep}/, $filename, scalar @keys;
+    my @values = split /[$fusqlh->{fn_sep}]/, $filename, scalar @keys;
     return undef unless $#values == $#keys;
     my $i = 0;
     my %result;
