@@ -106,6 +106,7 @@ sub show_help {
     print "\t\t[--user=<username>|-u <username>] [--password=<password>|-p <password>]\n";
     print "\t\t[--charset=<charset>|-C <charset>] [--[no]innodb] [--fnsep=<sep>|-s <sep>]\n";
     print "\t\t[--debug|-D] [--[no]daemon] [--logfile=<logfile>|-l <logfile>]\n";
+    print "\t\t[--engine={MySQL|PgSQL}|-e {MySQL|PgSQL}";
     print "\t$myname --help\n\n";
     print <<HELP;
 
@@ -114,18 +115,24 @@ All names are selfexplaining. All parameters can be passed with
 Mountpoint and database are required parameters, they can be passed
 as a separate strings or using --database and --mountpoint parameters
 (or -o database=... -o mountpoint=...).
+
 If --daemon is set (the default option), daemon will be really
 daemonized. Use --nodaemon option to make daemon run in foreground.
 If run in daemon mode, you can set log file with --logfile option.
+
 If --innodb is set, daemon will try to use InnoDB engine for table
-creation. If --fnsep is set, it will be used as a separator in
+creation. Works with MySQL engine only (see below).
+
+If --fnsep is set, it will be used as a separator in
 filenames to divide e.g. values in record-files, fieldname and
 subpart in indexed fields-symlinks etc. It is extremly useful
 for databases, where fields from primary indexes can contain the default
-for this parameter (single dot). Please note: it will be used in
-regexps and SQL queries, so it must be correctly escaped, so
-set it to '\\.', not just '.', and remember to escape backslash
-if you type this command in your shell, so type --fnsep=\\\\. or something.
+for this parameter (single dot).
+
+There're two types of databases supported: MySQL and PostgreSQL.
+They are served by two different modules called "engines": MySQL and PgSQL.
+You can set engine to use with --engine options, which defaults to MySQL.
+PostgreSQL support is under development and experimental for now.
 
 HELP
     exit;
