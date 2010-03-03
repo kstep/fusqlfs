@@ -351,9 +351,10 @@ sub open {
 
     if ($path[0] eq 'tables') {
         return -EACCES() unless
-            ($flags & (O_WRONLY|O_RDWR) && $file eq '/.query')
-            || ($#path == 3 && ($path[2] eq 'struct' || $path[2] eq 'data'))
+            ($#path == 3 && ($path[2] eq 'struct' || $path[2] eq 'data'))
             || ($#path == 2 && ($path[2] eq 'status' || $path[2] eq 'create'));
+    } elsif ($path[0] eq 'query') {
+        return -EACCES() unless $flags & (O_WRONLY|O_RDWR);
     }
 
     return 0;
@@ -639,8 +640,8 @@ sub get_cache_file_by_path {
 # e.g. /tmp/mysqlfs.not_auth.id..struct"
     if ($path->[1] eq '/query') {
         return "$file.query.cache";
-    } elsif ($path->[1] eq '.queries') {
-        return "$file.$queries{$path->[2]}.queries.cache";
+    } elsif ($path->[0] eq 'queries') {
+        return "$file.$queries{$path->[1]}.queries.cache";
     } else {
         return "$file.$path->[1].$path->[3].$path->[2]";
     }
