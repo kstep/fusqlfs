@@ -329,7 +329,7 @@ sub mknod {
     } elsif ($path[0] eq 'queries') {
         return -EEXIST() if exists $queries{$path[1]};
         #return -EINVAL() unless $mode & S_IFIFO;
-        return -EINVAL() unless $path[1] =~ /^(SELECT|SHOW)/i;
+        return -EINVAL() unless $path[1] =~ /^(SELECT|EXPLAIN SELECT|SHOW)/i;
 
         my $buffer = $fusqlh->execute_query($path[1]);
         return -EINVAL() if $buffer < 0;
