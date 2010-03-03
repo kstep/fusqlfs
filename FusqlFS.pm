@@ -170,6 +170,9 @@ sub getattr {
         set_dir_info(\@fileinfo, 0);
     } elsif ($file eq '/tables') {
         set_dir_info(\@fileinfo, scalar $fusqlh->get_table_list());
+    } elsif ($file eq '/views' || $file eq '/roles') {
+        # TODO
+        set_dir_info(\@fileinfo, 0);
     } elsif ($file eq '/queries') {
         set_dir_info(\@fileinfo, scalar keys %queries);
     } elsif ($file eq '/query') {
@@ -253,7 +256,8 @@ sub getdir {
     my @dir_list;
 
     if ($dir eq '/') {
-        @dir_list = ('query', 'queries', 'tables');
+        # TODO
+        @dir_list = ('query', 'queries', 'tables', 'views', 'roles');
     } elsif ($dir eq '/tables') {
         @dir_list = ($fusqlh->get_table_list());
     } elsif ($dir eq '/queries') {
