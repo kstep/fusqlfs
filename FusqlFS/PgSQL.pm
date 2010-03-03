@@ -146,6 +146,12 @@ sub get_index_info {
 
 sub get_primary_key {
     my $self = shift;
+    my $table = shift;
+    my $result = $self->{'dbh'}->selectcol_arrayref("SELECT attname FROM pg_catalog.pg_attribute, pg_catalog.pg_index
+	WHERE attrelid = indexrelid AND indrelid = (SELECT oid FROM pg_catalog.pg_class as c WHERE c.relname = ? AND relkind = 'r')
+	    AND attnum > 0 AND indisprimary
+	ORDER BY attnum", {}, $table);
+    return @$result;
 }
 
 sub create_index {
@@ -174,7 +180,12 @@ sub change_field {
 
 sub get_table_data {
     my $self = shift;
-    return {};
+    my $table = shift;
+    my @keys = $self->get_primary_key($table);
+    return () unless @keys;
+    my @result = map { join($self->{'fn_sep'}, @$_) } @{$self->{'dbh'}->selectall_arrayref("SELECT ".join(',',@keys)." FROM $table") || []};
+    print STDERR @result;
+    return @result;
 }
 
 # }}}
