@@ -190,30 +190,19 @@ sub getattr {
             if ($#path == 1) { # tables
                 set_dir_info(\@fileinfo, 3);
             } elsif ($#path == 2) { # special dirs
-                if ($path[1] eq '.queries') {
-                    return -ENOENT() unless exists $queries{$path[2]};
-                    my $cachefile = get_cache_file_by_path(\@path);
-                    unless (-e $cachefile) {
-                        delete $queries{$path[2]};
-                        return -ENOENT();
-                    }
-                    set_file_info(\@fileinfo, -s get_cache_file_by_path(\@path));
+                if ($path[2] eq 'indeces'
+                    || $path[2] eq 'struct'
+                    || $path[2] eq 'data')
+                {
+                    set_dir_info(\@fileinfo);
+                } elsif ($path[2] eq 'status') {
+                    set_file_info(\@fileinfo, -s get_cache_file_by_path(\@path) || $fusqlh->{'base_stxtsz'} + get_real_size($tablestat));
+                    $fileinfo[2] &= ~0222;
+                } elsif ($path[2] eq 'create') {
+                    set_file_info(\@fileinfo, -s get_cache_file_by_path(\@path) || length $fusqlh->get_create_table($path[1]));
                     $fileinfo[2] &= ~0222;
                 } else {
-                    if ($path[2] eq 'indeces'
-                        || $path[2] eq 'struct'
-                        || $path[2] eq 'data')
-                    {
-                        set_dir_info(\@fileinfo);
-                    } elsif ($path[2] eq 'status') {
-                        set_file_info(\@fileinfo, -s get_cache_file_by_path(\@path) || $fusqlh->{'base_stxtsz'} + get_real_size($tablestat));
-                        $fileinfo[2] &= ~0222;
-                    } elsif ($path[2] eq 'create') {
-                        set_file_info(\@fileinfo, -s get_cache_file_by_path(\@path) || length $fusqlh->get_create_table($path[1]));
-                        $fileinfo[2] &= ~0222;
-                    } else {
-                        return -ENOENT();
-                    }
+                    return -ENOENT();
                 }
             } elsif ($#path == 3) { # dir-indexes, records, fields
                 if ($path[2] eq 'data') {
@@ -243,6 +232,15 @@ sub getattr {
                 $fileinfo[7] = 21 + length($path[4]) - index($path[4], $fusqlh->{'fn_sep'});
                 $fileinfo[9] += 86400 * $i
             }
+        } elsif ($path[0] eq 'queries') {
+            return -ENOENT() unless exists $queries{$path[1]};
+            my $cachefile = get_cache_file_by_path(\@path);
+            unless (-e $cachefile) {
+                delete $queries{$path[1]};
+                return -ENOENT();
+            }
+            set_file_info(\@fileinfo, -s get_cache_file_by_path(\@path));
+            $fileinfo[2] &= ~0222;
         }
     }
 
@@ -329,20 +327,18 @@ sub mknod {
             return -EACCES();
         }
     } elsif ($path[0] eq 'queries') {
-        return -EEXIST() if exists $queries{$path[2]};
+        return -EEXIST() if exists $queries{$path[1]};
         #return -EINVAL() unless $mode & S_IFIFO;
-        return -EINVAL() unless $path[2] =~ /^(SELECT|SHOW)/i;
+        return -EINVAL() unless $path[1] =~ /^(SELECT|SHOW)/i;
 
-        #my $sth = $dbh->prepare($path[2]);
-        #return -EINVAL() unless ($sth->execute());
+        my $buffer = $fusqlh->execute_query($path[1]);
+        return -EINVAL() if $buffer < 0;
 
-        #my $buffer = $sth->fetchall_arrayref({});
-        #if ($buffer && @$buffer) {
-            #$queries{$path[2]} = mktime(localtime());
-            #my $cachefile = get_cache_file_by_path(\@path);
-            #put_cache($cachefile, YAML::Tiny::Dump($buffer));
-        #}
-        #$sth->finish();
+        if ($buffer && @$buffer) {
+            $queries{$path[1]} = mktime(localtime());
+            my $cachefile = get_cache_file_by_path(\@path);
+            put_cache($cachefile, YAML::Tiny::Dump($buffer));
+        }
     }
 
     return 0;
@@ -366,44 +362,42 @@ sub open {
 sub read {
     my ($file, $size, $offset) = @_;
     my ($_, @path) = split /\//, $file;
+    my $buffer = '';
+    my $cachefile = get_cache_file_by_path(\@path);
 
     if ($path[0] eq 'tables') {
-        my $buffer = '';
-        my $cachefile = get_cache_file_by_path(\@path);
 
-        if ($#path == 2 && $path[1] eq '.queries') {
-            return -ENOENT() unless exists $queries{$path[2]};
-            $buffer = get_cache($cachefile, $size, $offset) if -s $cachefile;
-            return $buffer;
+        if (-r $cachefile) {
+            $buffer = get_cache($cachefile);
         } else {
-
-            if (-r $cachefile) {
-                $buffer = get_cache($cachefile);
+            if ($path[2] eq 'struct') {
+                my $tableinfo = $fusqlh->get_table_info($path[1], $path[3]);
+                return -ENOENT() unless $tableinfo;
+                $buffer = YAML::Tiny::Dump($tableinfo);
+            } elsif ($path[2] eq 'data') {
+                my $record = get_record_by_file_name(\@path, 1);
+                return -ENOENT() unless $record;
+                $buffer = YAML::Tiny::Dump($record);
+            } elsif ($path[2] eq 'status') {
+                my $tablestatus = $fusqlh->get_table_stat($path[1]);
+                return -ENOENT() unless $tablestatus;
+                $buffer = YAML::Tiny::Dump($tablestatus);
+            } elsif ($path[2] eq 'create') {
+                my $createstatement = $fusqlh->get_create_table($path[1]);
+                return -ENOENT() unless $createstatement;
+                $buffer = $createstatement;
             } else {
-                if ($path[2] eq 'struct') {
-                    my $tableinfo = $fusqlh->get_table_info($path[1], $path[3]);
-                    return -ENOENT() unless $tableinfo;
-                    $buffer = YAML::Tiny::Dump($tableinfo);
-                } elsif ($path[2] eq 'data') {
-                    my $record = get_record_by_file_name(\@path, 1);
-                    return -ENOENT() unless $record;
-                    $buffer = YAML::Tiny::Dump($record);
-                } elsif ($path[2] eq 'status') {
-                    my $tablestatus = $fusqlh->get_table_stat($path[1]);
-                    return -ENOENT() unless $tablestatus;
-                    $buffer = YAML::Tiny::Dump($tablestatus);
-                } elsif ($path[2] eq 'create') {
-                    my $createstatement = $fusqlh->get_create_table($path[1]);
-                    return -ENOENT() unless $createstatement;
-                    $buffer = $createstatement;
-                } else {
-                    return -EACCES();
-                }
-                put_cache($cachefile, $buffer) if $buffer;
+                return -EACCES();
             }
-            $buffer .= " " x ($size - length $buffer) if $size > length $buffer;
-            return substr($buffer, $offset, $size);
+            put_cache($cachefile, $buffer) if $buffer;
         }
+        $buffer .= " " x ($size - length $buffer) if $size > length $buffer;
+        return substr($buffer, $offset, $size);
+
+    } elsif ($path[0] eq 'queries') {
+        return -ENOENT() unless exists $queries{$path[1]};
+        $buffer = get_cache($cachefile, $size, $offset) if -s $cachefile;
+        return $buffer;
     }
 }
 

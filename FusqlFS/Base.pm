@@ -225,6 +225,18 @@ sub execute_queries {
     }
 }
 
+sub execute_query {
+    my $self = shift;
+    my $query = shift;
+
+    my $sth = $self->{'dbh'}->prepare($query);
+    return -1 unless $sth->execute();
+
+    my $buffer = $sth->fetchall_arrayref({});
+    $sth->finish();
+    return $buffer;
+}
+
 # }}}
 
 1;
