@@ -101,7 +101,7 @@ sub chmod {
     my ($_, @path) = split /\//, $file;
 
     if ($path[0] eq 'tables') {
-        return -EACCES() unless $#path == 3 && $path[2] eq 'indeces';
+        return -EACCES() unless $#path == 3 && $path[2] eq 'indices';
         unless (exists $new_indexes{$path[1]}->{$path[3]}) {
             my $indexinfo = $fusqlh->get_index_info($path[1], $path[3]);
             return -ENOENT() unless $indexinfo;
@@ -124,7 +124,7 @@ sub utime {
     my ($_, @path) = split /\//, $file;
 
     if ($path[0] eq 'tables') {
-        return -EACCES() unless $#path == 4 && $path[2] eq 'indeces';
+        return -EACCES() unless $#path == 4 && $path[2] eq 'indices';
         my $indexinfo = $fusqlh->get_index_info($path[1], $path[3]);
         return -ENOENT() unless $indexinfo;
         my $tablestat = $fusqlh->get_table_stat($path[1]);
@@ -193,7 +193,7 @@ sub getattr {
             if ($#path == 1) { # tables
                 set_dir_info(\@fileinfo, 3);
             } elsif ($#path == 2) { # special dirs
-                if ($path[2] eq 'indeces'
+                if ($path[2] eq 'indices'
                     || $path[2] eq 'struct'
                     || $path[2] eq 'data')
                 {
@@ -216,7 +216,7 @@ sub getattr {
                     my $tableinfo = $fusqlh->get_table_info($path[1], $path[3]);
                     return -ENOENT() unless $tableinfo;
                     set_file_info(\@fileinfo, -s get_cache_file_by_path(\@path) || ($fusqlh->{'base_itxtsz'}->{$tableinfo->{'Type'}}||$fusqlh->{'def_base_itxtsz'}) + get_real_size($tableinfo));
-                } elsif ($path[2] eq 'indeces') {
+                } elsif ($path[2] eq 'indices') {
                     unless (exists $new_indexes{$path[1]}->{$path[3]}) {
                         my $indexinfo = $fusqlh->get_index_info($path[1], $path[3]);
                         return -ENOENT() unless $indexinfo;
@@ -227,7 +227,7 @@ sub getattr {
                         set_dir_info(\@fileinfo, 0);
                     }
                 }
-            } elsif ($#path == 4 && $path[2] eq 'indeces') { # field info
+            } elsif ($#path == 4 && $path[2] eq 'indices') { # field info
                 my @indexinfo = $fusqlh->get_index_info($path[1], $path[3]);
                 my $i = $#indexinfo; foreach (@indexinfo) { last if $_ eq $path[4]; $i--; }
                 return -ENOENT() if $i < 0;
@@ -267,20 +267,20 @@ sub getdir {
 
         if ($path[0] eq 'tables') {
             if ($#path == 1) { # spec dirs list
-                @dir_list = ('create', 'status', 'struct', 'data', 'indeces');
+                @dir_list = ('create', 'status', 'struct', 'data', 'indices');
             } else {
                 if ($#path == 2) { # list of indexes/records/fields
                     if ($path[2] eq 'data') {
                         @dir_list = $fusqlh->get_table_data($path[1]);
                     } elsif ($path[2] eq 'struct') {
                         @dir_list = $fusqlh->get_table_info($path[1]);
-                    } elsif ($path[2] eq 'indeces') {
+                    } elsif ($path[2] eq 'indices') {
                         @dir_list = ( $fusqlh->get_index_info($path[1]), keys %{ $new_indexes{$path[1]} } );
                     } else {
                         return -ENOENT();
                     }
                 } elsif ($#path == 3) { # list of key fields
-                    return -ENOENT() unless $path[2] eq 'indeces';
+                    return -ENOENT() unless $path[2] eq 'indices';
                     @dir_list = $fusqlh->get_index_info($path[1], $path[3]);
                 }
             }
@@ -299,7 +299,7 @@ sub mkdir {
             my @tableinfo = $fusqlh->get_table_info($path[1]);
             return -EEXIST() if @tableinfo;
             $fusqlh->create_table($path[1], 'id');
-        } elsif ($#path == 3 && $path[2] eq 'indeces') { # create index
+        } elsif ($#path == 3 && $path[2] eq 'indices') { # create index
             return -EEXIST() if exists $new_indexes{$path[1]}->{$path[3]};
             my @indexinfo = $fusqlh->get_index_info($path[1], $path[3]);
             return -EEXIST() if @indexinfo;
@@ -410,7 +410,7 @@ sub readlink {
     my $file = shift;
     my ($_, @path) = split /\//, $file;
     if ($path[0] eq 'tables') {
-        return -ENOENT() unless $#path == 4 && $path[2] eq 'indeces';
+        return -ENOENT() unless $#path == 4 && $path[2] eq 'indices';
         my ($name) = split /[$fusqlh->{'fn_sep'}]/, $path[4], 2;
         print STDERR "### ",$name,"\n";
         print STDERR "### ",$path[4],"\n";
@@ -493,12 +493,12 @@ sub rename {
                     my %nrecord = map { $_ => $nvalues[$i++] } sort keys %$record;
                     $fusqlh->update_record($path[1], $record, \%nrecord);
 
-                } elsif ($path[2] eq 'indeces') {
+                } elsif ($path[2] eq 'indices') {
                     my $indexinfo = $fusqlh->get_index_info($path[1], $path[3]);
                     return -ENOENT() unless $indexinfo;
                     $fusqlh->modify_index($path[1], $npath[3], $indexinfo);
                 }
-            } elsif ($#path == 4 && $path[2] eq 'indeces') { # change field in index
+            } elsif ($#path == 4 && $path[2] eq 'indices') { # change field in index
                 my $indexinfo = $fusqlh->get_index_info($path[1], $path[3]);
                 return -ENOENT() unless $indexinfo;
                 @{ $indexinfo->{'Column_name'} } = map { $_ eq $path[4]? $npath[4]: $_ } @{ $indexinfo->{'Column_name'} };
@@ -550,7 +550,7 @@ sub symlink {
         }
 
         return -EINVAL() unless $#path == 3 && $#lpath == 4
-            && $path[2] eq 'struct' && $lpath[2] eq 'indeces'
+            && $path[2] eq 'struct' && $lpath[2] eq 'indices'
             && $path[1] eq $lpath[1];
 
         my @name = split /[$fusqlh->{fn_sep}]/, $lpath[4];
@@ -591,7 +591,7 @@ sub unlink {
     my $file = shift;
     return 0 if $file eq '/query';
     my ($_, @path) = split /\//, $file;
-    if ($#path == 4 && $path[2] eq 'indeces') {
+    if ($#path == 4 && $path[2] eq 'indices') {
         my $indexinfo = $fusqlh->get_index_info($path[1], $path[3]);
         my $ok = 0;
         return -ENOENT() unless $indexinfo;
