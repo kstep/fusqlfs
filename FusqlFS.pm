@@ -7,34 +7,6 @@ use POSIX qw(:fcntl_h :errno_h mktime);
 use Fcntl qw(:mode);
 use Fuse;
 
-require Exporter;
-our (@ISA, @EXPORT);
-
-@ISA = qw(Exporter);
-
-BEGIN {
-    @EXPORT = qw(
-    initialize
-    getdir
-    getattr
-    mkdir
-    rmdir
-    symlink
-    readlink
-    unlink
-    rename
-    chmod
-    open
-    read
-    mknod
-    truncate
-    write
-    flush
-    release
-    utime
-    );
-}
-
 our $fusqlh;
 
 our %queries;
