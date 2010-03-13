@@ -236,17 +236,6 @@ sub get_cache_file_by_path {
     }
 }
 
-sub parse_file_name_to_record {
-    my ($table, $filename) = @_;
-    my @keys = $fusqlh->get_primary_key($table);
-    my @values = split /[$fusqlh->{fn_sep}]/, $filename, scalar @keys;
-    return undef unless $#values == $#keys;
-    my $i = 0;
-    my %result;
-    %result = map { $_ => $values[$i++] } @keys;
-    return \%result;
-}
-
 sub set_dir_info {
     my $fileinfo = shift;
     $fileinfo->[2] |= (S_IFDIR|0111);
