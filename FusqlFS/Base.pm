@@ -4,20 +4,20 @@ use strict;
 use DBI;
 use POSIX qw(mktime);
 
-sub new {
+our %table_info_cache = ();
+our %index_info_cache = ();
+our $fn_sep;
+our $dbh;
+our $dsn;
+
+sub init {
     my $class = shift;
-    my ($dsn, $options) = @_;
+    $dsn = shift;
 
-    my $self = {
-	'table_info_cache' => {},
-	'index_info_cache' => {},
-	'fn_sep'           => $options->{'fn_sep'} || '.',
-	'dsn'              => $dsn,
-	'dbh'              => DBI->connect($dsn, $options->{'user'}, $options->{'password'}),
-    };
+    my $options = shift;
+    $dbh = DBI->connect($dsn, $options->{'user'}, $options->{'password'});
 
-    bless $self, $class;
-
+    my $self = {};
     $self->{'.mods'} = { map { $pkg = $class.'::'.$_; lc $_ => $pkg->new($self); } qw(Tables Views Roles Functions Queries) }
     return $self;
 }
@@ -25,14 +25,8 @@ sub new {
 # @param string table
 # @action flush table cache for given table
 sub flush_table_cache {
-    my $self = shift;
-    delete $self->{'table_info_cache'}->{$_[0]};
-    delete $self->{'index_info_cache'}->{$_[0]};
-}
-
-
-sub DESTROY {
-    $_[0]->{'dbh'}->disconnect();
+    delete $table_info_cache{$_[0]};
+    delete $index_info_cache{$_[0]};
 }
 
 1;
@@ -89,18 +83,11 @@ package FusqlFS::Base::Tables;
 use strict;
 our @ISA = ('FusqlFS::Base::Module');
 
-sub new {
-    my $self = SUPER::new(@_);
-    $self->{'table_info_cache'} = {};
-    $self->{'index_info_cache'} = {};
-    return $self;
-}
-
 sub drop {
     my $self = shift;
-    if ($self->{'dbh'}->do("DROP TABLE $_[0]"))
+    if (FusqlFS::Base::$dbh->do("DROP TABLE $_[0]"))
     {
-        $self->{'parent'}->flush_table_cache($_[0]);
+        FusqlFS::Base::flush_table_cache($_[0]);
         return 1;
     }
     return 0;
@@ -108,7 +95,7 @@ sub drop {
 
 sub rename {
     my $self = shift;
-    $self->{'dbh'}->do("ALTER TABLE $_[0] RENAME TO $_[1]");
+    FusqlFS::Base::$dbh->do("ALTER TABLE $_[0] RENAME TO $_[1]");
 }
 
 # @abstract
@@ -152,9 +139,9 @@ our @ISA = ('FusqlFS::Base::Module');
 
 sub create {
     my $self = shift;
-    if ($self->{'dbh'}->do("ALTER TABLE $self->{table} ADD $_[0] int NOT NULL DEFAULT 0"))
+    if (FusqlFS::Base::$dbh->do("ALTER TABLE $self->{table} ADD $_[0] int NOT NULL DEFAULT 0"))
     {
-        $self->{'parent'}->{'parent'}->flush_table_cache($self->{'table'});
+        FusqlFS::Base::flush_table_cache($self->{'table'});
         return 1;
     }
     return 0;
@@ -162,9 +149,9 @@ sub create {
 
 sub drop {
     my $self = shift;
-    if ($self->{'dbh'}->do("ALTER TABLE $self->{table} DROP $_[0]"))
+    if (FusqlFS::Base::$dbh->do("ALTER TABLE $self->{table} DROP $_[0]"))
     {
-        $self->{'parent'}->{'parent'}->flush_table_cache($self->{'table'});
+        FusqlFS::Base::flush_table_cache($self->{'table'});
         return 1;
     }
     return 0;
@@ -196,7 +183,7 @@ sub list {
     my $self = shift;
     my @keys = $self->get_primary_key();
     return () unless @keys;
-    my @result = map { join($self->{'fn_sep'}, @$_) } @{$self->{'dbh'}->selectall_arrayref("SELECT ".join(',',@keys)." FROM $self->{table}") || []};
+    my @result = map { join($self->{'fn_sep'}, @$_) } @{FusqlFS::Base::$dbh->selectall_arrayref("SELECT ".join(',',@keys)." FROM $self->{table}") || []};
     return @result;
 }
 
@@ -217,7 +204,7 @@ sub drop {
     my $record = $self->map_name_to_rec($_[0]);
     my $sql = "DELETE FROM $self->{table} WHERE ";
     $sql .= join(' AND ', map { "$_ = ?" } keys %$record);
-    return $self->{'dbh'}->do($sql, undef, values %$record);
+    return FusqlFS::Base::$dbh->do($sql, undef, values %$record);
 }
 
 sub map_name_to_rec {
@@ -241,7 +228,7 @@ sub get_record {
     my @keys = keys %$condition;
     my $sql = "SELECT ". ($full? "*": join(',', @keys));
     $sql .= " FROM $self->{table} WHERE ". join(' AND ', map { "$_ = ?" } @keys);
-    return wantarray? $self->{'dbh'}->selectrow_array($sql, undef, values %$condition): $self->{'dbh'}->selectrow_hashref($sql, undef, values %$condition);
+    return wantarray? FusqlFS::Base::$dbh->selectrow_array($sql, undef, values %$condition): FusqlFS::Base::$dbh->selectrow_hashref($sql, undef, values %$condition);
 }
 
 sub insert_record {
@@ -250,7 +237,7 @@ sub insert_record {
     my $sql = "INSERT INTO $self->{table} (";
     $sql .= join(',', keys %$record);
     $sql .= ") VALUES (". substr(',?' x scalar keys %$record, 1) .")";
-    return $self->{'dbh'}->do($sql, undef, values %$record);
+    return FusqlFS::Base::$dbh->do($sql, undef, values %$record);
 }
 
 sub update_record {
@@ -260,7 +247,7 @@ sub update_record {
     my @values = (values %$record, values %$condition);
     $sql .= join(',', map { "$_ = ?" } keys %$record);
     $sql .= " WHERE ". join(' AND ', map { "$_ = ?" } keys %$condition);
-    return $self->{'dbh'}->do($sql, undef, @values);
+    return FusqlFS::Base::$dbh->do($sql, undef, @values);
 }
 
 1;
@@ -277,7 +264,7 @@ sub execute_queries {
     foreach (split /;\n/, $$buffer) {
         s/^\s+//; s/\s+$//;
         next unless $_;
-        $self->{'dbh'}->do($_);
+        FusqlFS::Base::$dbh->do($_);
     }
 }
 
@@ -285,7 +272,7 @@ sub get {
     my $self = shift;
     my $query = shift;
 
-    my $sth = $self->{'dbh'}->prepare($query);
+    my $sth = FusqlFS::Base::$dbh->prepare($query);
     return -1 unless $sth->execute();
 
     my $buffer = $sth->fetchall_arrayref({});

@@ -21,7 +21,7 @@ sub init {
     my $enginename = 'FusqlFS::'.$options{'engine'};
     my $enginefile = 'FusqlFS/'.$options{'engine'}.'.pm';
     require $enginefile;
-    $fusqlh = new $enginename (\%options);
+    $fusqlh = $enginename->init(\%options);
 
     %queries = ();
     %new_indexes = ();
