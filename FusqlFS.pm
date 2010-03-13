@@ -610,6 +610,53 @@ sub write {
     return length $buffer;
 }
 
+# @param string path
+# @return hashref object
+sub map_path_to_obj {
+    my ($_, @path) = split /\//, shift;
+    my $entry = $fusqlh;
+    my $refmode = 0;
+    while (@path) {
+        my $p = shift @path;
+        my $ref = ref $entry;
+        return 0 unless $ref;
+        if (exists $entry->{'.mods'}) {
+            $entry = $entry->{'.mods'}->{$p};
+        } elsif (exists $entry->{'.refs'}) {
+            $entry = $entry->{'.refs'}->{$p};
+            $refmode = 1;
+        } elsif ($refmode) {
+            $entry = $entry->{$p};
+        } elsif ($entry->can('get')) {
+            $entry = $entry->get($p);
+        } else {
+            return 0;
+        }
+    }
+    return $entry;
+}
+
+# @param hashref object
+# @return string path
+sub map_obj_to_path {
+    my $entry = shift;
+    my @path = ();
+    while ($entry != $fusqlh) {
+        my $ref = ref $entry;
+        my $name;
+        if ($ref =~ /^FusqlFS::/) {
+            ($name) = ($ref =~ /([^:]+)$/);
+        } elsif ($ref eq 'HASH') {
+            $name = $entry->{'name'};
+        } else {
+            return 0;
+        }
+        unshift @path, lc $name;
+        $entry = $entry->{'parent'};
+    }
+    return '/'.join('/', $path);
+}
+
 sub get_cache_file_by_path {
     my $path = shift;
     my $file = "/tmp/".lc(__PACKAGE__);
