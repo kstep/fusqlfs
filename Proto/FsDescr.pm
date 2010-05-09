@@ -417,3 +417,54 @@ sub list
 }
 
 1;
+
+package Entry;
+
+sub new
+{
+    my $class = shift;
+    my $fs = shift;
+    my $path = shift;
+
+    my $pkg = $fs;
+    my $pkglvl = 0;
+    my $entry = $pkg->{subpackages};
+    my @names = ();
+
+    $path =~ s{^/}{};
+    $path =~ s{/$}{};
+    my @path = split /\//, $path;
+    foreach my $p (@path)
+    {
+        if (exists $entry->{$p})
+        {
+            $entry = $entry->{$p};
+            if (UNIVERSAL::isa($entry, 'Interface'))
+            {
+                $pkglvl++;
+                $pkg = $entry;
+                $entry = $entry->{subpackages} if exists $entry->{subpackages};
+            }
+        }
+        else
+        {
+            push @names, $p;
+        }
+    }
+    if ($pkg == $entry)
+    {
+        $entry = $pkglvl == scalar(@names)? $entry->get(@names): $entry->list(@names);
+    }
+
+    my $self = [ $pkg, \@names, $entry ];
+    bless $self, $class;
+}
+
+sub get { $_[0]->[2] ||= $_[0]->[0]->get(@{$_[0]->[1]}) }
+sub list { $_[0]->[0]->list(splice(@{$_[0]->[1]}, 0, -1)) }
+sub rename { $_[0]->[0]->rename(@{$_[0]->[1]}, @_) }
+sub drop { $_[0]->[0]->drop(@{$_[0]->[1]}) }
+sub create { $_[0]->[0]->create(@{$_[0]->[1]}) }
+sub store { $_[0]->[0]->store(@{$_[0]->[1]}, @_) }
+
+1;

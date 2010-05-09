@@ -5,40 +5,11 @@ use strict;
 use feature ':5.10';
 
 our $fs = new FsDescr('DBI:Pg:database=unite_dev', 'unite_dev', 'GtIXQeugXO4I');
+say $fs;
 
 sub map_path_to_obj
 {
-    my $path = shift;
-    my $pkg = $fs;
-    my $pkglvl = 0;
-    my $entry = $pkg->{subpackages};
-    my @names = ();
-
-    $path =~ s{^/}{};
-    $path =~ s{/$}{};
-    my @path = split /\//, $path;
-    foreach my $p (@path)
-    {
-        if (exists $entry->{$p})
-        {
-            $entry = $entry->{$p};
-            if (UNIVERSAL::isa($entry, 'Interface'))
-            {
-                $pkglvl++;
-                $pkg = $entry;
-                $entry = $entry->{subpackages} if exists $entry->{subpackages};
-            }
-        }
-        else
-        {
-            push @names, $p;
-        }
-    }
-    if ($pkg == $entry)
-    {
-        $entry = $pkglvl == scalar(@names)? $entry->get(@names): $entry->list(@names);
-    }
-    return wantarray? ($entry, $pkg, @names): $entry;
+    return new Entry($fs, shift);
 }
 
 # /tables/profiles/indices
@@ -58,11 +29,11 @@ my $ind = map_path_to_obj('/tables/profiles/struct/id');
 say $ind;
 
 # /tables
-my ($_, $t) = map_path_to_obj('/tables');
-$t->create('testtablecreate');
+my $t = map_path_to_obj('/tables/testtablecreate');
+$t->create();
 $ind = $t->list();
 say dump $ind;
-$t->drop('testtablecreate');
+$t->drop();
 $ind = $t->list();
 say dump $ind;
 
