@@ -462,6 +462,7 @@ sub new
     $self->{create_expr} = 'CREATE TABLE "%s" (id serial, PRIMARY KEY (id))';
 
     $self->{list_expr} = $FsDescr::dbh->prepare("SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname = 'public'");
+    $self->{get_expr} = $FsDescr::dbh->prepare("SELECT 1 FROM pg_catalog.pg_tables WHERE schemaname = 'public' AND tablename = ?");
 
     $self->{subpackages} = {
         indices => new Table::Indices(),
@@ -475,7 +476,9 @@ sub new
 sub get
 {
     my $self = shift;
-    return $self->{subpackages};
+    my ($name) = @_;
+    my $result = $FsDescr::dbh->selectcol_arrayref($self->{get_expr}, {}, $name);
+    return $self->{subpackages} if @$result;
 }
 
 sub drop
