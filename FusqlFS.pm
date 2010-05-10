@@ -49,6 +49,7 @@ sub mount
         write      => \&write,
         truncate   => \&truncate,
         flush      => \&flush,
+        symlink    => \&symlink,
     );
 }
 
@@ -114,6 +115,16 @@ sub truncate
     my $entry = $fusqlh->by_path($path);
     $entry->write($offset);
     return 0;
+}
+
+sub symlink
+{
+    $, = ",";
+    my ($path, $symlink) = @_;
+    say STDERR "path", $path, "symlink", $symlink;
+    my $entry = $fusqlh->by_path($symlink, \$path);
+    say STDERR "symlink", $entry;
+    return -EACCES();
 }
 
 sub file_struct
