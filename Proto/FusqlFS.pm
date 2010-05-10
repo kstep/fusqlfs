@@ -37,6 +37,7 @@ sub mount
         getdir     => \&getdir,
         getattr    => \&getattr,
         readlink   => \&readlink,
+        read       => \&read,
     );
 }
 
@@ -61,6 +62,13 @@ sub readlink
     my ($path) = @_;
     my $entry = $fusqlh->by_path($path);
     return ${$entry->get()};
+}
+
+sub read
+{
+    my ($path, $size, $offset) = @_;
+    my $entry = $fusqlh->by_path($path);
+    return substr($entry->get(), $offset, $size);
 }
 
 sub file_struct
