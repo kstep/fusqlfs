@@ -34,10 +34,11 @@ sub new
         }
         else
         {
-            $entry = $entry->{$p};
+            $entry = $entry->{$p} || undef;
         }
     }
 
+    return unless $entry;
     my $list;
     if (UNIVERSAL::isa($entry, 'Base::Interface'))
     {
