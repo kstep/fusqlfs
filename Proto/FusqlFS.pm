@@ -52,7 +52,7 @@ sub getattr
 {
     my ($path) = @_;
     my $entry = $fusqlh->by_path($path);
-    dbg('getattr', $path, $entry->isdir());
+    return -ENOENT() unless $entry;
     return file_struct($entry);
 }
 
