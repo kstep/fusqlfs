@@ -1,16 +1,25 @@
 #!/usr/bin/perl
+use v5.10.0;
+use strict;
+
 use FsDescr;
 use Data::Dump qw(dump);
-use strict;
-use feature ':5.10';
 
 our $fs = new FsDescr('DBI:Pg:database=unite_dev', 'unite_dev', 'GtIXQeugXO4I');
 say $fs;
 
 sub map_path_to_obj
 {
-    return new Entry($fs, shift);
+    return $fs->by_path($_[0]);
 }
+
+my $entry = map_path_to_obj('/tables');
+say dump $entry->[3];
+
+__END__
+
+my $entry = map_path_to_obj('/');
+say dump $entry;
 
 # /tables/profiles/indices
 my $entry = map_path_to_obj('/tables/profiles/indices');
