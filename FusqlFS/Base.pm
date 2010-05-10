@@ -5,9 +5,7 @@ package Base::Entry;
 
 sub new
 {
-    my $class = shift;
-    my $fs = shift;
-    my $path = shift;
+    my ($class, $fs, $path, $leaf_absent) = @_;
 
     $path =~ s{^/}{};
     $path =~ s{/$}{};
@@ -38,7 +36,8 @@ sub new
         }
     }
 
-    return unless $entry;
+    $entry ||= $leaf_absent;
+    return unless defined $entry;
     my $list;
     if (UNIVERSAL::isa($entry, 'Base::Interface'))
     {
@@ -133,7 +132,7 @@ sub init
 
 sub by_path
 {
-    $cache{$_[1]} = new Base::Entry($_[0], $_[1]) unless defined $cache{$_[1]};
+    $cache{$_[1]} = new Base::Entry(@_) unless defined $cache{$_[1]};
     return $cache{$_[1]};
 }
 
