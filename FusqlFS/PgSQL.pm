@@ -5,13 +5,17 @@ use FusqlFS::Base;
 package PgSQL::Root;
 use base 'Base::Root';
 
-sub new
+sub init
 {
-    my $self = new Base::Root(@_);
-    $self->{subpackages} = {
+    $_[0]->{subpackages} = {
         tables => new PgSQL::Tables(),
     };
-    return $self;
+}
+
+sub dsn
+{
+    my $self = shift;
+    return 'Pg:'.$self->SUPER::dsn(@_);
 }
 
 1;
@@ -295,6 +299,7 @@ sub get
     my $self = shift;
     my ($table, $name) = @_;
     my $result = $Base::Root::dbh->selectrow_hashref($self->{get_expr}, {}, $name);
+    return unless $result;
     if ($result->{'.order'})
     {
         my @fields = @{PgSQL::Table::Struct->new()->list($table)};

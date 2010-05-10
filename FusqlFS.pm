@@ -17,23 +17,17 @@ sub dbg
     print STDERR $caller, @_, "\n";
 }
 
-our %engines = (PgSQL => 'Pg');
-
 sub init
 {
     my %options = @_;
 
     my $engine = $options{engine};
-    return unless exists $engines{$engine};
 
     my $filename = "FusqlFS/${engine}.pm";
     my $package = "${engine}::Root";
 
-    my $dsn = "DBI:$engines{$engine}:database=$options{database}";
-    say $dsn;
-
     require $filename;
-    $fusqlh = new $package ($dsn, $options{user}, $options{password});
+    $fusqlh = $package->new(@options{qw(host port database user password)});
     $def_time = mktime(localtime());
 }
 

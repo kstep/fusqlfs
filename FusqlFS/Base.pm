@@ -96,16 +96,32 @@ our $dumper;
 
 sub new
 {
-    shift;
     my $class = shift;
-    $dbh = DBI->connect(@_);
+    my $self = {};
+    bless $self, $class;
+
+    my $dsn = 'DBI:'.$self->dsn(@_[0..2]);
+    $dbh = DBI->connect($dsn, @_[-2,-1]);
     $dumper = \&YAML::Tiny::Dump;
 
-    my $self = {
-        cache => {},
-    };
+    $self->{cache} = {};
 
-    bless $self, $class;
+    $self->init();
+    return $self;
+}
+
+sub dsn
+{
+    my $dsn = "";
+    $dsn .= ";host=$_[1]" if $_[1];
+    $dsn .= ";port=$_[2]" if $_[2];
+    $dsn .= ";database=$_[3]";
+    return $dsn;
+}
+
+sub init
+{
+    return;
 }
 
 sub by_path
