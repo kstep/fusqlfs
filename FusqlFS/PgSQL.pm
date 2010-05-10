@@ -105,33 +105,46 @@ sub list
 sub where_clause
 {
     my $self = shift;
-    my ($table) = @_;
-    return join ' AND ', map { "\"$_\" = ?" } $self->get_primary_key($table);
+    my ($table, $name) = @_;
+    my @binds = split /[.]/, $name;
+    my @primary_key = $self->get_primary_key($table);
+    return unless $#primary_key == $#binds;
+    return join(' AND ', map { "\"$_\" = ?" } @primary_key), @binds;
 }
 
 sub get
 {
     my $self = shift;
     my ($table, $name) = @_;
-    my $sth = $Base::Root::dbh->prepare_cached(sprintf('SELECT * FROM "%s" WHERE %s', $table, $self->where_clause($table)));
-    return &$Base::Root::dumper($sth->fetchrow_hashref) if $sth->execute(split /[.]/, $name);
+    my ($where_clause, @binds) = $self->where_clause($table, $name);
+    return unless $where_clause;
+
+    my $sth = $Base::Root::dbh->prepare_cached(sprintf('SELECT * FROM "%s" WHERE %s', $table, $where_clause));
+    return &$Base::Root::dumper($sth->fetchrow_hashref) if $sth->execute(@binds);
 }
 
 sub drop
 {
     my $self = shift;
     my ($table, $name) = @_;
-    my $sth = $Base::Root::dbh->prepare_cached(sprintf('DELETE FROM "%s" WHERE %s', $table, $self->where_clause($table)));
-    $sth->execute(split /[.]/, $name);
+    my ($where_clause, @binds) = $self->where_clause($table, $name);
+    return unless $where_clause;
+
+    my $sth = $Base::Root::dbh->prepare_cached(sprintf('DELETE FROM "%s" WHERE %s', $table, $where_clause));
+    $sth->execute(@binds);
 }
 
 sub store
 {
     my $self = shift;
     my ($table, $name, $data) = @_;
+    my ($where_clause, @binds) = $self->where_clause($table, $name);
+    return unless $where_clause;
+
+    $data = &$Base::Root::loader($data);
     my $template = join ', ', map { "\"$_\" = ?" } keys %$data;
-    my $sth = $Base::Root::dbh->prepare_cached(sprintf('UPDATE "%s" SET %s WHERE %s', $table, $template, $self->where_clause($table)));
-    $sth->execute(values %$data, split /[.]/, $name);
+    my $sth = $Base::Root::dbh->prepare_cached(sprintf('UPDATE "%s" SET %s WHERE %s', $table, $template, $where_clause));
+    $sth->execute(values %$data, @binds);
 }
 
 sub create
@@ -252,6 +265,7 @@ sub store
 {
     my $self = shift;
     my ($table, $name, $data) = @_;
+    $data = &$Base::Root::loader($data);
 
     my $newtype = $data->{'type_name'};
     my $length = $data->{'length'};

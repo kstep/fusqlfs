@@ -45,6 +45,10 @@ sub mount
         getattr    => \&getattr,
         readlink   => \&readlink,
         read       => \&read,
+
+        write      => \&write,
+        truncate   => \&truncate,
+        flush      => \&flush,
     );
 }
 
@@ -76,6 +80,40 @@ sub read
     my ($path, $size, $offset) = @_;
     my $entry = $fusqlh->by_path($path);
     return substr($entry->get(), $offset, $size);
+}
+
+sub write
+{
+    my ($path, $buffer, $offset) = @_;
+    my $entry = $fusqlh->by_path($path);
+    $entry->write($offset, $buffer);
+    return length($buffer);
+}
+
+sub flush
+{
+    my ($path) = @_;
+    my $entry = $fusqlh->by_path($path);
+    if ($entry->isduty())
+    {
+        $entry->flush();
+        $fusqlh->clear_cache($path);
+    }
+    return 0;
+}
+
+sub open
+{
+    my ($path, $mode) = @_;
+    return 0;
+}
+
+sub truncate
+{
+    my ($path, $offset) = @_;
+    my $entry = $fusqlh->by_path($path);
+    $entry->write($offset);
+    return 0;
 }
 
 sub file_struct

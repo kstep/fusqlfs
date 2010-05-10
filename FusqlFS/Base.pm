@@ -63,13 +63,17 @@ sub new
 
 sub get { $_[0]->[2] }
 sub list { $_[0]->[3] }
-sub rename { $_[0]->[0]->rename(@{$_[0]->[1]}, @_) }
+sub rename { $_[0]->[0]->rename(@{$_[0]->[1]}, $_[1]) }
 sub drop { $_[0]->[0]->drop(@{$_[0]->[1]}) }
 sub create { $_[0]->[0]->create(@{$_[0]->[1]}) }
-sub store { $_[0]->[0]->store(@{$_[0]->[1]}, @_) }
+sub store { $_[0]->[0]->store(@{$_[0]->[1]}, $_[1]) }
 
 sub isdir { defined $_[0]->[3] }
 sub islink { ref $_[0]->[2] eq 'SCALAR' }
+sub isduty { defined $_[0]->[4] }
+
+sub write { $_[0]->[4] = 1; substr($_[0]->[2], $_[1], length($_[2]||$_[0]->[2])) = $_[2]||''; }
+sub flush { $_[0]->store($_[0]->[2]); delete $_[0]->[4]; }
 
 1;
 
@@ -93,6 +97,9 @@ use YAML::Tiny;
 
 our $dbh;
 our $dumper;
+our $loader;
+
+our %cache;
 
 sub new
 {
@@ -103,8 +110,7 @@ sub new
     my $dsn = 'DBI:'.$self->dsn(@_[0..2]);
     $dbh = DBI->connect($dsn, @_[-2,-1]);
     $dumper = \&YAML::Tiny::Dump;
-
-    $self->{cache} = {};
+    $loader = \&YAML::Tiny::Load;
 
     $self->init();
     return $self;
@@ -126,13 +132,13 @@ sub init
 
 sub by_path
 {
-    $_[0]->{cache}->{$_[1]} = new Base::Entry($_[0], $_[1]) unless defined $_[0]->{cache}->{$_[1]};
-    return $_[0]->{cache}->{$_[1]};
+    $cache{$_[1]} = new Base::Entry($_[0], $_[1]) unless defined $cache{$_[1]};
+    return $cache{$_[1]};
 }
 
 sub clear_cache
 {
-    delete $_[0]->{cache}->{$_[1]};
+    delete $cache{$_[1]};
 }
 
 1;
