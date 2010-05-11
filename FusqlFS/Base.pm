@@ -73,7 +73,7 @@ sub islink { ref $_[0]->[2] eq 'SCALAR' }
 sub isduty { defined $_[0]->[4] }
 
 sub write { $_[0]->[4] = 1; substr($_[0]->[2], $_[1], length($_[2]||$_[0]->[2])) = $_[2]||''; }
-sub flush { $_[0]->store($_[0]->[2]); delete $_[0]->[4]; }
+sub flush { if (defined $_[0]->[4]) { $_[0]->store($_[0]->[2]); pop @{$_[0]}; } }
 
 1;
 
