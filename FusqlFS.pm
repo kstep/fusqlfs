@@ -126,12 +126,33 @@ sub truncate
 
 sub symlink
 {
-    $, = ",";
     my ($path, $symlink) = @_;
-    say STDERR "path", $path, "symlink", $symlink;
-    my $entry = $fusqlh->by_path($symlink, \$path);
-    say STDERR "symlink", $entry;
-    return -EACCES();
+    return -EINVAL() if $path =~ /^\//;
+
+    $path = fold_path($symlink, '..', $path);
+    my $origin = $fusqlh->by_path($path);
+    return -ENOENT() unless $origin;
+
+    my ($tail) = ($path =~ m{/([^/]+)$});
+    my $entry = $fusqlh->by_path_uncached($symlink, \$tail);
+    return -EEXIST() unless $entry->get() == \$tail;
+
+    $entry->store();
+    $symlink = fold_path($symlink, '../' x $entry->tail());
+    $fusqlh->clear_cache($symlink, 1);
+    return 0;
+}
+
+sub fold_path
+{
+    local $/ = '/';
+    my $path = join '/', @_;
+    $path =~ s{//+}{/}g;
+    while ($path =~ s{/\./}{/}g) {}
+    while ($path =~ s{[^/]+/\.\./}{}) {}
+    #$path =~ s{^/\.\./}{/};
+    chomp $path;
+    return $path;
 }
 
 sub file_struct
