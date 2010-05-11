@@ -174,6 +174,11 @@ sub by_path
     return $cache{$_[1]};
 }
 
+sub by_path_uncached
+{
+    new FusqlFS::Base::Entry(@_);
+}
+
 sub clear_cache
 {
     delete $cache{$_[1]};
