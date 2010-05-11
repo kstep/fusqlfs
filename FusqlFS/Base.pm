@@ -16,7 +16,6 @@ sub new
     my @names = ();
     foreach my $p (@path)
     {
-        return unless UNIVERSAL::isa($entry, 'HASH');
         if (UNIVERSAL::isa($entry, 'FusqlFS::Base::Interface'))
         {
             $pkg = $entry;
@@ -30,9 +29,13 @@ sub new
                 $entry = $pkg->{subpackages}->{$p} || undef;
             }
         }
-        else
+        elsif (UNIVERSAL::isa($entry, 'HASH'))
         {
             $entry = $entry->{$p} || undef;
+        }
+        elsif (UNIVERSAL::isa($entry, 'ARRAY'))
+        {
+            $entry = $entry->[$p] || undef;
         }
     }
 
@@ -53,7 +56,7 @@ sub new
         given ($ref)
         {
             when ('HASH')  { $list = [ keys %$entry ] }
-            when ('ARRAY') { $list = $entry }
+            when ('ARRAY') { $list = [ 0..$#{$entry} ] }
             #when ('SCALAR') {}
         }
     }
