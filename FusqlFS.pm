@@ -12,9 +12,16 @@ our $def_time;
 
 sub dbg
 {
-    my $caller = caller();
-    local $, = ",";
-    print STDERR $caller, @_, "\n";
+    my $fmt = shift;
+    my @caller = caller(1);
+    my $caller = @caller? "$caller[3]:$caller[2]: ": "(unknown): ";
+    my $info;
+    given ($fmt)
+    {
+        when ('hash') { my %p = @_; $info = join ", ", map { "$_: $p{$_}" } keys %p; }
+        default { $info = join ", ", @_; }
+    }
+    say STDERR $caller, $info;
 }
 
 sub init
