@@ -95,7 +95,7 @@ sub flush
 {
     my ($path) = @_;
     my $entry = $fusqlh->by_path($path);
-    if ($entry->isduty())
+    if ($entry->isdirty())
     {
         $entry->flush();
         $fusqlh->clear_cache($path);
