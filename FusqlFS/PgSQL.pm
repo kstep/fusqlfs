@@ -293,7 +293,7 @@ sub new
     my $self = {};
     $self->{rename_expr} = 'ALTER INDEX "%s" RENAME TO "%s"';
     $self->{drop_expr} = 'DROP INDEX "%s"';
-    $self->{create_expr} = 'CREATE INDEX "%s" ON "%s" (%s)';
+    $self->{create_expr} = 'CREATE %s INDEX "%s" ON "%s" (%s)';
 
     $self->{list_expr} = $FusqlFS::Base::dbh->prepare("SELECT (SELECT c1.relname FROM pg_catalog.pg_class as c1 WHERE c1.oid = indexrelid) as Index_name
         FROM pg_catalog.pg_index
@@ -312,6 +312,8 @@ sub get
 {
     my $self = shift;
     my ($table, $name) = @_;
+    return $self->{create_cache}->{$table}->{$name} if exists $self->{create_cache}->{$table}->{$name};
+
     my $result = $FusqlFS::Base::dbh->selectrow_hashref($self->{get_expr}, {}, $name);
     return unless $result;
     if ($result->{'.order'})
@@ -351,7 +353,26 @@ sub store
     {
         $self->drop($table, $name);
     }
-    $FusqlFS::Base::dbh->do(sprintf($self->{create_expr}, $name, $table, $data));
+    my $fields = $self->parse_fields($data);
+    my $unique = defined $data->{'.unique'}? 'UNIQUE': '';
+    $FusqlFS::Base::dbh->do(sprintf($self->{create_expr}, $unique, $name, $table, $fields));
+}
+
+sub parse_fields
+{
+    my $self = shift;
+    my ($data) = @_;
+    my @order = @{$data->{'.order'}};
+    my @fields = grep { !/^\./ && $_ ne 'create.sql' } keys %$data;
+
+    my %order = map { $_ => 1 } @order;
+    foreach (@fields)
+    {
+        push @order, $_ unless exists $order{$_};
+    }
+    my $fields = '"'.join('", "', @order).'"';
+
+    return $fields;
 }
 
 sub create
@@ -359,7 +380,7 @@ sub create
     my $self = shift;
     my ($table, $name) = @_;
     $self->{create_cache}->{$table} ||= {};
-    $self->{create_cache}->{$table}->{$name} = 1;
+    $self->{create_cache}->{$table}->{$name} = { '.order' => [] };
 }
 
 sub rename
