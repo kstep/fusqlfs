@@ -5,10 +5,17 @@ use FusqlFS::Base;
 package MySQL::Base;
 use base 'FusqlFS::Base';
 
-sub new
+sub dsn
 {
-    my $self = new FusqlFS::Base::Root(@_);
-    return $self;
+    my $self = shift;
+    return 'mysql:'.$self->SUPER::dsn(@_);
+}
+
+sub init
+{
+    my $self = shift;
+    $self->{subpackages} = {
+    };
 }
 
 1;
