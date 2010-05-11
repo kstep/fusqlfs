@@ -145,6 +145,14 @@ sub by_path
 sub clear_cache
 {
     delete $cache{$_[1]};
+    if ($_[2])
+    {
+        foreach (keys %cache)
+        {
+            next unless /^$_[1]/;
+            delete $cache{$_};
+        }
+    }
 }
 
 sub destroy
