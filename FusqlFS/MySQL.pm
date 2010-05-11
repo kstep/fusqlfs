@@ -1,13 +1,13 @@
 use v5.10.0;
 use strict;
-use Base;
+use FusqlFS::Base;
 
-package MySQL::Root;
-use base 'Base::Root';
+package MySQL::Base;
+use base 'FusqlFS::Base';
 
 sub new
 {
-    my $self = new Base::Root(@_);
+    my $self = new FusqlFS::Base::Root(@_);
     return $self;
 }
 

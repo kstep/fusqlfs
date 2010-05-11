@@ -24,7 +24,7 @@ sub init
     my $engine = $options{engine};
 
     my $filename = "FusqlFS/${engine}.pm";
-    my $package = "${engine}::Root";
+    my $package = "FusqlFS::${engine}";
 
     require $filename;
     $fusqlh = $package->new(@options{qw(host port database user password)});

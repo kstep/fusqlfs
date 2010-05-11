@@ -1,7 +1,7 @@
 use v5.10.0;
 use strict;
 
-package Base::Entry;
+package FusqlFS::Base::Entry;
 
 sub new
 {
@@ -17,7 +17,7 @@ sub new
     foreach my $p (@path)
     {
         return unless UNIVERSAL::isa($entry, 'HASH');
-        if (UNIVERSAL::isa($entry, 'Base::Interface'))
+        if (UNIVERSAL::isa($entry, 'FusqlFS::Base::Interface'))
         {
             $pkg = $entry;
             $entry = $pkg->get(@names, $p);
@@ -39,7 +39,7 @@ sub new
     $entry ||= $leaf_absent;
     return unless defined $entry;
     my $list;
-    if (UNIVERSAL::isa($entry, 'Base::Interface'))
+    if (UNIVERSAL::isa($entry, 'FusqlFS::Base::Interface'))
     {
         $pkg = $entry;
         $list = $pkg->list(@names);
@@ -77,7 +77,7 @@ sub flush { $_[0]->store($_[0]->[2]); delete $_[0]->[4]; }
 
 1;
 
-package Base::Interface;
+package FusqlFS::Base::Interface;
 
 sub new { bless {}, $_[0] }
 sub get { return '' }
@@ -89,8 +89,8 @@ sub store { return 1 }
 
 1;
 
-package Base::Root;
-use base 'Base::Interface';
+package FusqlFS::Base;
+use base 'FusqlFS::Base::Interface';
 
 use DBI;
 use YAML::Tiny;
@@ -119,9 +119,9 @@ sub new
 sub dsn
 {
     my $dsn = "";
-    $dsn .= ";host=$_[1]" if $_[1];
-    $dsn .= ";port=$_[2]" if $_[2];
-    $dsn .= ";database=$_[3]";
+    $dsn .= "host=$_[1];" if $_[1];
+    $dsn .= "port=$_[2];" if $_[2];
+    $dsn .= "database=$_[3];";
     return $dsn;
 }
 
@@ -132,7 +132,7 @@ sub init
 
 sub by_path
 {
-    $cache{$_[1]} = new Base::Entry(@_) unless defined $cache{$_[1]};
+    $cache{$_[1]} = new FusqlFS::Base::Entry(@_) unless defined $cache{$_[1]};
     return $cache{$_[1]};
 }
 
@@ -142,3 +142,4 @@ sub clear_cache
 }
 
 1;
+
