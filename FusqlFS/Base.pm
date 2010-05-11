@@ -14,10 +14,13 @@ sub new
     my $entry = $fs;
     my $pkg = $entry;
     my @names = ();
+    my @tail = ();
     foreach my $p (@path)
     {
+        return unless defined $entry;
         if (UNIVERSAL::isa($entry, 'FusqlFS::Base::Interface'))
         {
+            @tail = ();
             $pkg = $entry;
             $entry = $pkg->get(@names, $p);
             if ($entry)
@@ -29,13 +32,15 @@ sub new
                 $entry = $pkg->{subpackages}->{$p} || undef;
             }
         }
-        elsif (UNIVERSAL::isa($entry, 'HASH'))
+        else
         {
-            $entry = $entry->{$p} || undef;
-        }
-        elsif (UNIVERSAL::isa($entry, 'ARRAY'))
-        {
-            $entry = $entry->[$p] || undef;
+            given (ref $entry)
+            {
+                when ('HASH')  { $entry = $entry->{$p} || undef }
+                when ('ARRAY') { $entry = $entry->[$p] || undef }
+                default        { undef $entry }
+            }
+            push @tail, $p;
         }
     }
 
@@ -60,7 +65,7 @@ sub new
             #when ('SCALAR') {}
         }
     }
-    my $self = [ $pkg, \@names, $entry, $list ];
+    my $self = [ $pkg, \@names, $entry, $list, \@tail ];
     bless $self, $class;
 }
 
@@ -69,14 +74,41 @@ sub list { $_[0]->[3] }
 sub rename { $_[0]->[0]->rename(@{$_[0]->[1]}, $_[1]) }
 sub drop { $_[0]->[0]->drop(@{$_[0]->[1]}) }
 sub create { $_[0]->[0]->create(@{$_[0]->[1]}) }
-sub store { $_[0]->[0]->store(@{$_[0]->[1]}, $_[1]) }
+sub store
+{
+    my $self = shift;
+    my $data = shift || $self->get();
+    my @tail = $self->tail();
+    unless (@tail)
+    {
+        $self->pkg()->store($self->names(), $data);
+    }
+    else
+    {
+        my $entry = $self->entry();
+        my $tail = pop @tail;
+        my $tailref = $entry;
+        $tailref = ref $tailref eq 'HASH'? $tailref->{$_}: $tailref->[$_] foreach (@tail);
+        given (ref $tailref)
+        {
+            when ('HASH')  { $tailref->{$tail} = $data }
+            when ('ARRAY') { $tailref->[$tail] = $data }
+        }
+        $self->pkg()->store($self->names(), $entry);
+    }
+}
 
 sub isdir { defined $_[0]->[3] }
 sub islink { ref $_[0]->[2] eq 'SCALAR' }
-sub isdirty { defined $_[0]->[4] }
+sub isdirty { defined $_[0]->[5] }
 
-sub write { $_[0]->[4] = 1; substr($_[0]->[2], $_[1], length($_[2]||$_[0]->[2])) = $_[2]||''; }
-sub flush { if (defined $_[0]->[4]) { $_[0]->store($_[0]->[2]); pop @{$_[0]}; } }
+sub pkg { $_[0]->[0] }
+sub names { @{$_[0]->[1]} }
+sub tail { @{$_[0]->[4]} }
+
+sub entry { $_[0]->[0]->get(@{$_[0]->[1]}) }
+sub write { $_[0]->[5] = 1; substr($_[0]->[2], $_[1], length($_[2]||$_[0]->[2])) = $_[2]||''; }
+sub flush { return unless defined $_[0]->[5]; $_[0]->store($_[0]->[2]); pop @{$_[0]}; }
 
 1;
 
