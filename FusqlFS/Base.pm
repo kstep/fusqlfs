@@ -98,11 +98,14 @@ use YAML::Tiny;
 our $dbh;
 our $dumper;
 our $loader;
+our $instance;
 
 our %cache;
 
 sub new
 {
+    return $instance if $instance;
+
     my $class = shift;
     my $self = {};
     bless $self, $class;
@@ -113,7 +116,7 @@ sub new
     $loader = \&YAML::Tiny::Load;
 
     $self->init();
-    return $self;
+    $instance = $self;
 }
 
 sub dsn
@@ -141,5 +144,18 @@ sub clear_cache
     delete $cache{$_[1]};
 }
 
+sub destroy
+{
+    undef $instance;
+}
+
+sub DESTROY
+{
+    $dbh->disconnect();
+    undef $dbh;
+    undef $dumper;
+    undef $loader;
+    undef %cache;
+}
 1;
 
