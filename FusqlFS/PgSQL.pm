@@ -362,7 +362,7 @@ sub parse_fields
 {
     my $self = shift;
     my ($data) = @_;
-    my @order = @{$data->{'.order'}};
+    my @order = grep { exists $data->{$_} } @{$data->{'.order'}};
     my @fields = grep { !/^\./ && $_ ne 'create.sql' } keys %$data;
 
     my %order = map { $_ => 1 } @order;

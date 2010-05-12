@@ -57,6 +57,8 @@ sub mount
         truncate   => \&truncate,
         flush      => \&flush,
         symlink    => \&symlink,
+
+        unlink     => \&unlink,
     );
 }
 
@@ -140,6 +142,17 @@ sub symlink
     $entry->store();
     $symlink = fold_path($symlink, '../' x $entry->tail());
     $fusqlh->clear_cache($symlink, 1);
+    return 0;
+}
+
+sub unlink
+{
+    my ($path) = @_;
+    my $entry = $fusqlh->by_path($path);
+    return -ENOENT() unless $entry;
+
+    $entry->drop();
+    $fusqlh->clear_cache(fold_path($path, '../' x $entry->tail()), 1);
     return 0;
 }
 
