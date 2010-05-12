@@ -331,7 +331,8 @@ sub list
 {
     my $self = shift;
     my ($table) = @_;
-    return $FusqlFS::Base::dbh->selectcol_arrayref($self->{list_expr}, {}, $table) || [];
+    my @list = keys %{$self->{create_cache}->{$table}||{}};
+    return [ (@{$FusqlFS::Base::dbh->selectcol_arrayref($self->{list_expr}, {}, $table)}, @list) ] || \@list;
 }
 
 sub drop
