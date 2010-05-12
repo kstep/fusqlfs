@@ -79,7 +79,7 @@ sub put
     }
     else
     {
-        my $entry = $self->tailref($data);
+        my $entry = $self->tailref(undef, $data);
         $self->pkg()->store($self->names(), $entry);
     }
     return 1;
@@ -90,16 +90,14 @@ sub tailref
     my $self = shift;
     my @tail = $self->tail();
     my $tail = pop @tail;
-    my $entry = $self->entry();
+    my $entry = shift || $self->entry();
+    my $data = @_? shift: $self->get();
     my $tailref = $entry;
     $tailref = ref $tailref eq 'HASH'? $tailref->{$_}: $tailref->[$_] foreach (@tail);
-    if (@_)
+    given (ref $tailref)
     {
-        given (ref $tailref)
-        {
-            when ('HASH')  { if (defined $_[0]) { $tailref->{$tail} = $_[0] } else { delete $tailref->{$tail} } }
-            when ('ARRAY') { if (defined $_[0]) { $tailref->[$tail] = $_[0] } else { delete $tailref->[$tail] } }
-        }
+        when ('HASH')  { if (defined $data) { $tailref->{$tail} = $data } else { delete $tailref->{$tail} } }
+        when ('ARRAY') { if (defined $data) { $tailref->[$tail] = $data } else { delete $tailref->[$tail] } }
     }
     return $entry;
 }
