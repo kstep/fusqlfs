@@ -11,7 +11,7 @@ sub new
     $path =~ s{/$}{};
     my @path = split /\//, $path;
 
-    my $entry = $fs;
+    my $entry = $fs->{subpackages};
     my $pkg = $entry;
     my @names = ();
     my @tail = ();
@@ -23,14 +23,7 @@ sub new
             @tail = ();
             $pkg = $entry;
             $entry = $pkg->get(@names, $p);
-            if ($entry)
-            {
-                push @names, $p;
-            }
-            else
-            {
-                $entry = $pkg->{subpackages}->{$p} || undef;
-            }
+            push @names, $p;
         }
         else
         {
@@ -166,7 +159,7 @@ sub new
     return $instance if $instance;
 
     my $class = shift;
-    my $self = {};
+    my $self = { subpackages => {} };
     bless $self, $class;
 
     my $dsn = 'DBI:'.$self->dsn(@_[0..2]);
