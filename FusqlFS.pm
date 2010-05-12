@@ -56,9 +56,12 @@ sub mount
         write      => \&write,
         truncate   => \&truncate,
         flush      => \&flush,
+
+        mkdir      => \&mkdir,
         symlink    => \&symlink,
 
         unlink     => \&unlink,
+        rmdir      => \&rmdir,
     );
 }
 
@@ -146,6 +149,28 @@ sub symlink
 }
 
 sub unlink
+{
+    my ($path) = @_;
+    my $entry = $fusqlh->by_path($path);
+    return -ENOENT() unless $entry;
+
+    $entry->drop();
+    $fusqlh->clear_cache(fold_path($path, '../' x $entry->tail()), 1);
+    return 0;
+}
+
+sub mkdir
+{
+    my ($path, $mode) = @_;
+    my $newdir = {};
+    my $entry = $fusqlh->by_path_uncached($path, $newdir);
+    return -EEXIST() unless $entry->get() == $newdir;
+
+    $entry->create();
+    return 0;
+}
+
+sub rmdir
 {
     my ($path) = @_;
     my $entry = $fusqlh->by_path($path);
