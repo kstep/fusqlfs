@@ -130,6 +130,8 @@ sub islink { ref $_[0]->[2] eq 'SCALAR' }
 sub isfile { !(defined $_[0]->[3] || ref $_[0]->[2]) }
 sub isdirty { defined $_[0]->[5] }
 
+sub writable { !UNIVERSAL::isa($_[0]->[2], 'FusqlFS::Base::Interface') }
+
 sub pkg { $_[0]->[0] }
 sub names { @{$_[0]->[1]} }
 sub tail { @{$_[0]->[4]} }

@@ -267,6 +267,11 @@ sub file_struct
         $fileinfo[7] = 0 + length($entry->get());
     }
 
+    unless ($entry->writable())
+    {
+        $fileinfo[2] &= ~0222;
+    }
+
     return @fileinfo;
 }
 
