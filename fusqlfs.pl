@@ -3,8 +3,10 @@
 use strict;
 
 use Getopt::Long;
+use Pod::Usage;
+use Carp;
+
 use POSIX qw(locale_h setsid);
-#require "$dirname/FusqlFS.pm";
 use FusqlFS;
 
 my $use_threads = 0;
@@ -49,12 +51,12 @@ GetOptions(
     'fnsep|s:s'       => \$options{'fnsep'},
     'engine|e:s'      => \$options{'engine'},
     'innodb!'         => \$options{'innodb'},
-) or show_help();
+) or pod2usage(2);
 
 $options{'database'} ||= $ARGV[0];
 $options{'mountpoint'} ||= $ARGV[1];
 
-show_help() unless !$options{'help'} && $options{'database'} && $options{'mountpoint'};
+pod2usage(1) unless !$options{'help'} && $options{'database'} && $options{'mountpoint'};
 
 #if ($use_threads) {
 #	use threads;
@@ -75,64 +77,124 @@ sub daemonize {
     my $logfile = shift;
 
     if ($logfile) {
-        open \*STDERR, ">>", $logfile;
+        open STDERR, ">>", $logfile;
         select((select(\*STDERR), $| = 1)[0]);
     }
 
     my $ppid = $$;
     my $pid = fork and exit 0;
-    die "Can't daemonize!\n" unless defined $pid;
+    croak('Can\'t daemonize') unless defined $pid;
     select undef, undef, undef, .001 while (kill 0, $ppid);
     my $sid = setsid();
     die() if $sid == -1;
     chdir '/';
     umask 00;
-    close \*STDIN or die();
-    close \*STDOUT or die();
+    close STDIN or croak('Unable to close STDIN');
+    close STDOUT or croak('Unable to close STDOUT');
     unless ($logfile) {
-        close STDERR or die();
+        close STDERR or croak('Unable to close STDERR');
     }
     return $sid;
 }
 
-sub show_help {
-    my ($myname) = ($0 =~ m{/([^/]+)$});
-    print "Usage:\n";
-    print "\t$myname [-o <name>=<value> [...]]\n";
-    print "\t\t\{--database=<database>|-d <database>|<database>\}\n";
-    print "\t\t\{--mountpoint=<mountpoint>|-m <mountpoint>|<mountpoint>\}\n";
-    print "\t\t[--host=<hostname>|-h <hostname>] [--port=<port>|-P <port>]\n";
-    print "\t\t[--user=<username>|-u <username>] [--password=<password>|-p <password>]\n";
-    print "\t\t[--charset=<charset>|-C <charset>] [--[no]innodb] [--fnsep=<sep>|-s <sep>]\n";
-    print "\t\t[--debug|-D] [--[no]daemon] [--logfile=<logfile>|-l <logfile>]\n";
-    print "\t\t[--engine={MySQL|PgSQL}|-e {MySQL|PgSQL}";
-    print "\t$myname --help\n\n";
-    print <<HELP;
+__END__
 
-All names are selfexplaining. All parameters can be passed with
--o option, e.g. -o host=localhost is identical to --host=localhost.
-Mountpoint and database are required parameters, they can be passed
-as a separate strings or using --database and --mountpoint parameters
-(or -o database=... -o mountpoint=...).
+=head1 NAME
 
-If --daemon is set (the default option), daemon will be really
-daemonized. Use --nodaemon option to make daemon run in foreground.
-If run in daemon mode, you can set log file with --logfile option.
+    fusqlfs - FUSE file system to mount DB and provide tools to control and admin it
 
-If --innodb is set, daemon will try to use InnoDB engine for table
-creation. Works with MySQL engine only (see below).
+=head1 SYNOPSIS
 
-If --fnsep is set, it will be used as a separator in
-filenames to divide e.g. values in record-files, fieldname and
-subpart in indexed fields-symlinks etc. It is extremly useful
-for databases, where fields from primary indexes can contain the default
-for this parameter (single dot).
+    fusqlfs [options] database directory
 
-There're two types of databases supported: MySQL and PostgreSQL.
-They are served by two different modules called "engines": MySQL and PgSQL.
-You can set engine to use with --engine options, which defaults to MySQL.
-PostgreSQL support is under development and experimental for now.
+=head1 EXAMPLES
 
-HELP
-    exit;
-}
+    fusqlfs dbname ./mnt
+    fusqlfs --host=localhost --port=5432 --engine=PgSQL --user=postgres --password=12345 dbname ./mnt
+    fusqlfs --database=dbname --user=postgres --mountpoint=./mnt
+    fusqlfs -d dbname -m ./mnt -u postgres -p 12345 -e PgSQL
+
+=head1 OPTIONS
+
+=over 8
+
+=item B<--host, -h>
+
+    Host name to connect, defaults to localhost.
+
+=item B<--port, -P>
+
+    Port number to connect to, default depends on database engine in use.
+
+=item B<--user, -u>
+
+    Username to authorize.
+
+=item B<--password, -p>
+
+    Password to authorize.
+
+=item B<--charset, -C>
+
+    Default charset, used for tables creation, results display etc.
+    Defaults to current locale's charset.
+
+=item B<--mountpoint, -m>
+
+    Mointpoint, must be an empty directory. Mandatory.
+
+=item B<--database, -d>
+
+    Database name to connect to. Mandatory.
+
+=item B<--innodb>
+
+    Boolean, MySQL specific. If set, new tables created by the program use
+    InnoDB backend, MyISAM is used otherwise. Defaults to false (MyISAM).
+
+=item B<--fnsep, -s>
+
+    File name fields separator, used to compose filenames out from multi-field
+    primary keys. If you have table with primary key like (obj_id, name), every
+    record in DB will be visible as a file with its name composed of this two
+    fields (like "12.odrie", "43.nanny" etc.) This option's value is used as a
+    separator to glue field values togather. Defaults to single dot (.).
+    You may wish to change it if you have table with text fields in primary key
+    with a dot in them.
+
+=item B<--debug, -D>
+
+    Boolean, if set you will see more debug info.
+
+=item B<--engine, -e>
+
+    DB engine to use. Can be either PgSQL or MySQL for now. PgSQL is really
+    implemented, MySQL is in my todo list.
+
+=item B<--daemon>
+
+    Boolean, if set the program will daemonize itself. Defaults to true. You
+    may wish to use it as --nodeamon to debug the program.
+
+=back
+
+=head1 DESCRIPTION
+
+This FUSE-daemon allows to mount any DB as a simple filesystem. Unlike other
+similar "sqlfs" filesystem, it doesn't provide simple DB-backed file storage,
+but given you full interface to all database internals.
+
+Every table, view, function etc. is a directory, every single field, index,
+record etc. is a file, symlink or subdirectory in the mounted filesystem. You
+can create table "mkdir ./mnt/tables/tablename", and remove them with "rmdir"
+afterwards. You can edit fields as simple YAML-files. All your usual file
+utilities are at your service including "find", "rm", "ln", "mv", "cp" etc.
+
+Just mount your DB and enjoy!
+
+=head1 TODO
+
+    * Implement MySQL support.
+    * Implement PgSQL views, functions, sequences etc.
+    * Write better docs: describe FS structure, rules and precautions to use it
+    as DB admin tool.
