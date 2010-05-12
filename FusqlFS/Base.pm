@@ -206,11 +206,13 @@ sub by_path_uncached
 sub clear_cache
 {
     delete $cache{$_[1]};
-    if ($_[2])
+    if (defined $_[2])
     {
+        my $key = $_[1];
+        $key =~ s{/[^/]+$}{} for (0..$_[2]);
         foreach (keys %cache)
         {
-            next unless /^$_[1]/;
+            next unless /^$key/;
             delete $cache{$_};
         }
     }
