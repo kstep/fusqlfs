@@ -180,6 +180,9 @@ sub new
     $dumper = \&YAML::Tiny::Dump;
     $loader = \&YAML::Tiny::Load;
 
+    %cache = ();
+    $SIG{'USR1'} = sub () { %cache = (); };
+
     $self->init();
     $instance = $self;
 }
