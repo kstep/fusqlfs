@@ -58,6 +58,7 @@ sub mount
         flush      => \&flush,
 
         mkdir      => \&mkdir,
+        mknod      => \&mknod,
         symlink    => \&symlink,
 
         unlink     => \&unlink,
@@ -177,6 +178,17 @@ sub rmdir
     return -ENOENT() unless $entry;
 
     $entry->drop();
+    $fusqlh->clear_cache($path, $entry->depth());
+    return 0;
+}
+
+sub mknod
+{
+    my ($path, $mode, $dev) = @_;
+    my $entry = $fusqlh->by_path_uncached($path, '');
+    return -EEXIST() unless $entry->get() eq '';
+
+    $entry->create();
     $fusqlh->clear_cache($path, $entry->depth());
     return 0;
 }
