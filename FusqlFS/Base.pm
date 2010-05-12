@@ -72,7 +72,20 @@ sub new
 sub get { $_[0]->[2] }
 sub list { $_[0]->[3] }
 sub rename { $_[0]->[0]->rename(@{$_[0]->[1]}, $_[1]) }
-sub drop { $_[0]->[0]->drop(@{$_[0]->[1]}) }
+sub drop
+{
+    my $self = shift;
+    my @tail = $self->tail();
+    unless (@tail)
+    {
+        $self->pkg()->drop($self->names());
+    }
+    else
+    {
+        my $entry = $self->tailref(undef);
+        $self->pkg()->store($self->names(), $entry);
+    }
+}
 sub create { $_[0]->[0]->create(@{$_[0]->[1]}) }
 sub store
 {
@@ -85,17 +98,28 @@ sub store
     }
     else
     {
-        my $entry = $self->entry();
-        my $tail = pop @tail;
-        my $tailref = $entry;
-        $tailref = ref $tailref eq 'HASH'? $tailref->{$_}: $tailref->[$_] foreach (@tail);
-        given (ref $tailref)
-        {
-            when ('HASH')  { $tailref->{$tail} = $data }
-            when ('ARRAY') { $tailref->[$tail] = $data }
-        }
+        my $entry = $self->tailref($data);
         $self->pkg()->store($self->names(), $entry);
     }
+}
+
+sub tailref
+{
+    my $self = shift;
+    my @tail = $self->tail();
+    my $tail = pop @tail;
+    my $entry = $self->entry();
+    my $tailref = $entry;
+    $tailref = ref $tailref eq 'HASH'? $tailref->{$_}: $tailref->[$_] foreach (@tail);
+    if (@_)
+    {
+        given (ref $tailref)
+        {
+            when ('HASH')  { if (defined $_[0]) { $tailref->{$tail} = $_[0] } else { delete $tailref->{$tail} } }
+            when ('ARRAY') { if (defined $_[0]) { $tailref->[$tail] = $_[0] } else { delete $tailref->[$tail] } }
+        }
+    }
+    return $entry;
 }
 
 sub isdir { defined $_[0]->[3] }
