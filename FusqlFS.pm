@@ -56,6 +56,7 @@ sub mount
         write      => \&write,
         truncate   => \&truncate,
         flush      => \&flush,
+        rename     => \&rename,
 
         mkdir      => \&mkdir,
         mknod      => \&mknod,
@@ -189,6 +190,18 @@ sub mknod
     return -EEXIST() unless $entry->get() eq '';
 
     $entry->create();
+    $fusqlh->clear_cache($path, $entry->depth());
+    return 0;
+}
+
+sub rename
+{
+    my ($path, $name) = @_;
+    my $entry = $fusqlh->by_path($path);
+    return -ENOENT() unless $entry;
+    my $target = $fusqlh->by_path_uncached($name, $entry->get());
+    return -EEXIST() unless $target->get() eq $entry->get();
+    $entry->rename($name);
     $fusqlh->clear_cache($path, $entry->depth());
     return 0;
 }
