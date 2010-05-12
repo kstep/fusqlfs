@@ -262,7 +262,7 @@ sub file_struct
     if ($entry->isdir())
     {
         $fileinfo[2] |= (S_IFDIR|0111);
-        $fileinfo[3] = 2;
+        $fileinfo[3] = 2 + scalar(@{$entry->list()});
     }
     elsif ($entry->islink())
     {
