@@ -106,6 +106,7 @@ sub tailref
 
 sub isdir { defined $_[0]->[3] }
 sub islink { ref $_[0]->[2] eq 'SCALAR' }
+sub isfile { !(defined $_[0]->[3] || ref $_[0]->[2]) }
 sub isdirty { defined $_[0]->[5] }
 
 sub pkg { $_[0]->[0] }

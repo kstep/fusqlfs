@@ -100,7 +100,7 @@ sub read
     my ($path, $size, $offset) = @_;
     my $entry = $fusqlh->by_path($path);
     return -ENOENT() unless $entry;
-    return -EINVAL() if $entry->isdir() || $entry->islink();
+    return -EINVAL() unless $entry->isfile();
     return substr($entry->get(), $offset, $size);
 }
 
@@ -109,7 +109,7 @@ sub write
     my ($path, $buffer, $offset) = @_;
     my $entry = $fusqlh->by_path($path);
     return -ENOENT() unless $entry;
-    return -EINVAL() if $entry->isdir() || $entry->islink();
+    return -EINVAL() unless $entry->isfile();
     $entry->write($offset, $buffer);
     return length($buffer);
 }
@@ -141,7 +141,7 @@ sub truncate
     my ($path, $offset) = @_;
     my $entry = $fusqlh->by_path($path);
     return -ENOENT() unless $entry;
-    return -EINVAL() if $entry->isdir() || $entry->islink();
+    return -EINVAL() unless $entry->isfile();
     $entry->write($offset);
     return 0;
 }
