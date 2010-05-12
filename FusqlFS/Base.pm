@@ -44,10 +44,6 @@ sub new
     {
         $pkg = $entry;
         $list = $pkg->list(@names);
-        unless ($list)
-        {
-            $list = [ keys %{$pkg->{subpackages}} ] if exists $pkg->{subpackages};
-        }
     }
     elsif (my $ref = ref $entry)
     {
