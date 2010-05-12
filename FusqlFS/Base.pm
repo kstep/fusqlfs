@@ -64,7 +64,29 @@ sub new
 
 sub get { $_[0]->[2] }
 sub list { $_[0]->[3] }
-sub rename { $_[0]->[0]->rename(@{$_[0]->[1]}, $_[1]) }
+sub rename
+{
+    my $self = shift;
+    my $name = shift;
+    my $target = (ref $self)->new($name, $self->get());
+
+    return unless $target
+                && $self->get() == $target->get()
+                && $self->pkg() == $target->pkg()
+                && $self->depth() == $target->depth()
+                && $self->height() == $target->height();
+
+    unless ($self->depth())
+    {
+        $self->pkg()->rename($name);
+    }
+    else
+    {
+        my $entry = $target->tailref();
+        $entry = $self->tailref($entry, undef);
+        $self->pkg()->store($self->names(), $entry);
+    }
+}
 sub drop { $_[0]->put(undef) or $_[0]->[0]->drop(@{$_[0]->[1]}); }
 sub create { $_[0]->put('') or $_[0]->[0]->create(@{$_[0]->[1]}); }
 sub store { my $data = $_[1]||$_[0]->[2]; $_[0]->put($data) or $_[0]->[0]->store(@{$_[0]->[1]}, $data); }
