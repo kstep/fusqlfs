@@ -72,6 +72,8 @@ sub getdir
     
     my ($path) = @_;
     my $entry = $fusqlh->by_path($path);
+    return -ENOENT() unless $entry;
+    return -ENOTDIR() unless $entry->isdir();
     return ('.', '..', @{$entry->list()}, 0);
 }
 
@@ -87,6 +89,8 @@ sub readlink
 {
     my ($path) = @_;
     my $entry = $fusqlh->by_path($path);
+    return -ENOENT() unless $entry;
+    return -EINVAL() unless $entry->islink();
     return ${$entry->get()};
 }
 
@@ -94,6 +98,8 @@ sub read
 {
     my ($path, $size, $offset) = @_;
     my $entry = $fusqlh->by_path($path);
+    return -ENOENT() unless $entry;
+    return -EINVAL() if $entry->isdir() || $entry->islink();
     return substr($entry->get(), $offset, $size);
 }
 
@@ -101,6 +107,8 @@ sub write
 {
     my ($path, $buffer, $offset) = @_;
     my $entry = $fusqlh->by_path($path);
+    return -ENOENT() unless $entry;
+    return -EINVAL() if $entry->isdir() || $entry->islink();
     $entry->write($offset, $buffer);
     return length($buffer);
 }
@@ -109,6 +117,7 @@ sub flush
 {
     my ($path) = @_;
     my $entry = $fusqlh->by_path($path);
+    return -ENOENT() unless $entry;
     if ($entry->isdirty())
     {
         $entry->flush();
@@ -127,6 +136,8 @@ sub truncate
 {
     my ($path, $offset) = @_;
     my $entry = $fusqlh->by_path($path);
+    return -ENOENT() unless $entry;
+    return -EINVAL() if $entry->isdir() || $entry->islink();
     $entry->write($offset);
     return 0;
 }
@@ -134,7 +145,7 @@ sub truncate
 sub symlink
 {
     my ($path, $symlink) = @_;
-    return -EINVAL() if $path =~ /^\//;
+    return -EOPNOTSUPP() if $path =~ /^\//;
 
     $path = fold_path($symlink, '..', $path);
     my $origin = $fusqlh->by_path($path);
