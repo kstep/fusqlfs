@@ -95,6 +95,7 @@ sub put
 {
     my $self = shift;
     my $data = shift;
+
     unless ($self->depth())
     {
         return;

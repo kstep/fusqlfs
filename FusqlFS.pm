@@ -65,6 +65,8 @@ sub mount
 
         unlink     => \&unlink,
         rmdir      => \&rmdir,
+
+        fsync      => \&fsync,
     );
 }
 
@@ -110,6 +112,7 @@ sub write
     my $entry = $fusqlh->by_path($path);
     return -ENOENT() unless $entry;
     return -EINVAL() unless $entry->isfile();
+
     $entry->write($offset, $buffer);
     return length($buffer);
 }
@@ -119,6 +122,7 @@ sub flush
     my ($path) = @_;
     my $entry = $fusqlh->by_path($path);
     return -ENOENT() unless $entry;
+
     if ($entry->isdirty())
     {
         $entry->flush();
@@ -217,6 +221,17 @@ sub rename
 
     $entry->rename($name);
     $fusqlh->clear_cache($path, $entry->depth());
+    return 0;
+}
+
+sub fsync
+{
+    my ($path, $flags) = @_;
+    my $entry = $fusqlh->by_path($path);
+    return -ENOENT() unless $entry;
+
+    $entry->flush();
+    $fusqlh->clear_cache($path, $flags? undef: $entry->depth());
     return 0;
 }
 
