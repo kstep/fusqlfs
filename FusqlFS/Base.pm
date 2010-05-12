@@ -122,6 +122,7 @@ sub isdirty { defined $_[0]->[5] }
 sub pkg { $_[0]->[0] }
 sub names { @{$_[0]->[1]} }
 sub tail { @{$_[0]->[4]} }
+sub depth { scalar @{$_[0]->[4]} }
 
 sub entry { $_[0]->[0]->get(@{$_[0]->[1]}) }
 sub write { $_[0]->[5] = 1; substr($_[0]->[2], $_[1], length($_[2]||$_[0]->[2])) = $_[2]||''; }

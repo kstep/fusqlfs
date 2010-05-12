@@ -143,7 +143,7 @@ sub symlink
     return -EEXIST() unless $entry->get() == \$tail;
 
     $entry->store();
-    $fusqlh->clear_cache($symlink, scalar $entry->tail());
+    $fusqlh->clear_cache($symlink, $entry->depth());
     return 0;
 }
 
@@ -154,7 +154,7 @@ sub unlink
     return -ENOENT() unless $entry;
 
     $entry->drop();
-    $fusqlh->clear_cache($path, scalar $entry->tail());
+    $fusqlh->clear_cache($path, $entry->depth());
     return 0;
 }
 
@@ -163,10 +163,10 @@ sub mkdir
     my ($path, $mode) = @_;
     my $newdir = {};
     my $entry = $fusqlh->by_path_uncached($path, $newdir);
-    dbg 'hash', entry => dump $entry;
     return -EEXIST() unless $entry->get() == $newdir;
 
     $entry->create();
+    $fusqlh->clear_cache($path, $entry->depth());
     return 0;
 }
 
@@ -177,7 +177,7 @@ sub rmdir
     return -ENOENT() unless $entry;
 
     $entry->drop();
-    $fusqlh->clear_cache($path, scalar $entry->tail());
+    $fusqlh->clear_cache($path, $entry->depth());
     return 0;
 }
 
