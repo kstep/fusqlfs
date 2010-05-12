@@ -51,6 +51,7 @@ sub mount
         getdir     => \&getdir,
         getattr    => \&getattr,
         readlink   => \&readlink,
+        open       => \&open,
         read       => \&read,
 
         write      => \&write,
@@ -129,6 +130,9 @@ sub flush
 sub open
 {
     my ($path, $mode) = @_;
+    my $entry = $fusqlh->by_path($path);
+    return -ENOENT() unless $entry;
+    return -EISDIR() if $entry->isdir();
     return 0;
 }
 
