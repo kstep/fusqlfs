@@ -65,35 +65,24 @@ sub new
 sub get { $_[0]->[2] }
 sub list { $_[0]->[3] }
 sub rename { $_[0]->[0]->rename(@{$_[0]->[1]}, $_[1]) }
-sub drop
+sub drop { $_[0]->put(undef) or $_[0]->[0]->drop(@{$_[0]->[1]}); }
+sub create { $_[0]->put('') or $_[0]->[0]->create(@{$_[0]->[1]}); }
+sub store { my $data = $_[1]||$_[0]->[2]; $_[0]->put($data) or $_[0]->[0]->store(@{$_[0]->[1]}, $data); }
+
+sub put
 {
     my $self = shift;
-    my @tail = $self->tail();
-    unless (@tail)
+    my $data = shift;
+    unless ($self->depth())
     {
-        $self->pkg()->drop($self->names());
-    }
-    else
-    {
-        my $entry = $self->tailref(undef);
-        $self->pkg()->store($self->names(), $entry);
-    }
-}
-sub create { $_[0]->[0]->create(@{$_[0]->[1]}) }
-sub store
-{
-    my $self = shift;
-    my $data = shift || $self->get();
-    my @tail = $self->tail();
-    unless (@tail)
-    {
-        $self->pkg()->store($self->names(), $data);
+        return;
     }
     else
     {
         my $entry = $self->tailref($data);
         $self->pkg()->store($self->names(), $entry);
     }
+    return 1;
 }
 
 sub tailref
