@@ -98,6 +98,7 @@ sub write
     my $entry = $fusqlh->by_path($path);
     return -ENOENT() unless $entry;
     return -EINVAL() unless $entry->isfile();
+    return -EACCES() unless $entry->writable();
 
     $entry->write($offset, $buffer);
     return length($buffer);
@@ -132,6 +133,8 @@ sub truncate
     my $entry = $fusqlh->by_path($path);
     return -ENOENT() unless $entry;
     return -EINVAL() unless $entry->isfile();
+    return -EACCES() unless $entry->writable();
+
     $entry->write($offset);
     return 0;
 }
@@ -159,6 +162,7 @@ sub unlink
     my ($path) = @_;
     my $entry = $fusqlh->by_path($path);
     return -ENOENT() unless $entry;
+    return -EACCES() unless $entry->writable();
 
     $entry->drop();
     $fusqlh->clear_cache($path, $entry->depth());
@@ -170,6 +174,7 @@ sub mkdir
     my ($path, $mode) = @_;
     my $newdir = {};
     my $entry = $fusqlh->by_path_uncached($path, $newdir);
+    return -ENOENT() unless $entry;
     return -EEXIST() unless $entry->get() == $newdir;
 
     $entry->create();
@@ -182,6 +187,7 @@ sub rmdir
     my ($path) = @_;
     my $entry = $fusqlh->by_path($path);
     return -ENOENT() unless $entry;
+    return -EACCES() unless $entry->writable();
 
     $entry->drop();
     $fusqlh->clear_cache($path, $entry->depth());
@@ -192,6 +198,7 @@ sub mknod
 {
     my ($path, $mode, $dev) = @_;
     my $entry = $fusqlh->by_path_uncached($path, '');
+    return -ENOENT() unless $entry;
     return -EEXIST() unless $entry->get() eq '';
 
     $entry->create();
@@ -204,6 +211,7 @@ sub rename
     my ($path, $name) = @_;
     my $entry = $fusqlh->by_path($path);
     return -ENOENT() unless $entry;
+    return -EACCES() unless $entry->writable();
 
     $entry->rename($name);
     $fusqlh->clear_cache($path, $entry->depth());
