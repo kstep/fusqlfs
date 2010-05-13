@@ -61,21 +61,14 @@ sub new
 
 sub get { $_[0]->[2] }
 sub list { $_[0]->[3] }
-sub rename
+sub move
 {
     my $self = shift;
-    my $name = shift;
-    my $target = (ref $self)->new($name, $self->get());
-
-    return unless $target
-                && $self->get() == $target->get()
-                && $self->pkg() == $target->pkg()
-                && $self->depth() == $target->depth()
-                && $self->height() == $target->height();
+    my $target = shift;
 
     unless ($self->depth())
     {
-        $self->pkg()->rename($name);
+        $self->pkg()->rename($target->name());
     }
     else
     {

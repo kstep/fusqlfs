@@ -213,7 +213,15 @@ sub rename
     return -ENOENT() unless $entry;
     return -EACCES() unless $entry->writable();
 
-    $entry->rename($name);
+    my $target = $fusqlh->by_path_uncached($name, $entry->get());
+    return -ENOENT() unless $target;
+    return -EEXIST() unless $entry->get() == $target->get();
+    return -EACCES() unless $target->writable();
+    return -EOPNOTSUPP() unless $entry->pkg()    == $target->pkg()
+                             && $entry->depth()  == $target->depth()
+                             && $entry->height() == $target->height();
+
+    $entry->move($target);
     $fusqlh->clear_cache($path, $entry->depth());
     return 0;
 }
