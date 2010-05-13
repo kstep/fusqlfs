@@ -133,6 +133,7 @@ sub writable { !UNIVERSAL::isa($_[0]->[2], 'FusqlFS::Base::Interface') }
 sub pkg { $_[0]->[0] }
 sub names { @{$_[0]->[1]} }
 sub tail { @{$_[0]->[4]} }
+sub name { $_[0]->[4]->[-1] || $_[0]->[1]->[-1] }
 sub depth { scalar @{$_[0]->[4]} }
 sub height { scalar @{$_[0]->[1]} }
 
