@@ -9,6 +9,7 @@ sub init
 {
     $_[0]->{subpackages} = {
         tables => new FusqlFS::PgSQL::Tables(),
+        views  => new FusqlFS::PgSQL::Views(),
     };
 }
 
@@ -66,6 +67,64 @@ use base 'FusqlFS::Base::Interface';
 
 package FusqlFS::PgSQL::Views;
 use base 'FusqlFS::Base::Interface';
+
+sub new
+{
+    my $class = shift;
+    my $self = {};
+
+    $self->{'drop_expr'} = 'DROP VIEW "%s"';
+    $self->{'create_expr'} = 'CREATE VIEW "%s" AS SELECT 1';
+    $self->{'store_expr'} = 'CREATE OR REPLACE VIEW "%s" AS %s';
+    $self->{'rename_expr'} = 'ALTER VIEW "%s" RENAME TO "%s"';
+
+    $self->{'get_expr'} = $FusqlFS::Base::dbh->prepare("SELECT definition FROM pg_catalog.pg_views WHERE viewname = ?");
+    $self->{'list_expr'} = $FusqlFS::Base::dbh->prepare("SELECT viewname FROM pg_catalog.pg_views WHERE schemaname = 'public'");
+
+    bless $self, $class;
+}
+
+sub list
+{
+    my $self = shift;
+    return $FusqlFS::Base::dbh->selectcol_arrayref($self->{list_expr});
+}
+
+sub get
+{
+    my $self = shift;
+    my ($name) = @_;
+    my $result = $FusqlFS::Base::dbh->selectcol_arrayref($self->{get_expr}, {}, $name);
+    return $result->[0];
+}
+
+sub rename
+{
+    my $self = shift;
+    my ($name, $newname) = @_;
+    $FusqlFS::Base::dbh->do(sprintf($self->{'rename_expr'}, $name, $newname));
+}
+
+sub drop
+{
+    my $self = shift;
+    my ($name) = @_;
+    $FusqlFS::Base::dbh->do(sprintf($self->{'drop_expr'}, $name));
+}
+
+sub create
+{
+    my $self = shift;
+    my ($name) = @_;
+    $FusqlFS::Base::dbh->do(sprintf($self->{'create_expr'}, $name));
+}
+
+sub store
+{
+    my $self = shift;
+    my ($name, $data) = @_;
+    $FusqlFS::Base::dbh->do(sprintf($self->{'store_expr'}, $name, $data));
+}
 
 1;
 
