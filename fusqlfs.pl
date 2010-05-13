@@ -120,6 +120,8 @@ __END__
 
 =over 8
 
+=head2 Basic options
+
 =item B<--host, -h>
 
     Host name to connect, defaults to localhost.
@@ -136,23 +138,25 @@ __END__
 
     Password to authorize.
 
-=item B<--charset, -C>
+=item B<--database, -d>
 
-    Default charset, used for tables creation, results display etc.
-    Defaults to current locale's charset.
+    Database name to connect to. Mandatory.
 
 =item B<--mountpoint, -m>
 
     Mointpoint, must be an empty directory. Mandatory.
 
-=item B<--database, -d>
+=item B<--engine, -e>
 
-    Database name to connect to. Mandatory.
+    DB engine to use. Can be either PgSQL or MySQL for now. PgSQL is really
+    implemented, MySQL is in my todo list. Defaults to PgSQL.
 
-=item B<--innodb>
+=head2 Other options with values
 
-    Boolean, MySQL specific. If set, new tables created by the program use
-    InnoDB backend, MyISAM is used otherwise. Defaults to false (MyISAM).
+=item B<--charset, -C>
+
+    Default charset, used for tables creation, results display etc.
+    Defaults to current locale's charset.
 
 =item B<--fnsep, -s>
 
@@ -164,20 +168,6 @@ __END__
     You may wish to change it if you have table with text fields in primary key
     with a dot in them.
 
-=item B<--debug, -D>
-
-    Boolean, if set you will see more debug info.
-
-=item B<--engine, -e>
-
-    DB engine to use. Can be either PgSQL or MySQL for now. PgSQL is really
-    implemented, MySQL is in my todo list.
-
-=item B<--daemon>
-
-    Boolean, if set the program will daemonize itself. Defaults to true. You
-    may wish to use it as --nodeamon to debug the program.
-
 =item B<--limit, -L>
 
     Integer, number of data rows to show in table's data subdir, defaults to 0
@@ -186,16 +176,31 @@ __END__
 
     All data are buffered in memory for now, which is OK for small DBs (the
     most usual case for developers as they work with almost empty development
-    database), but for big tables this approach be a show stopper, so I'm going
-    to add some kind of adaptive caching (cache only small subset of data we
-    are working with now and drop unused cache entries on memory low
+    databases), but for big tables this approach can be a show stopper, so I'm
+    going to add some kind of adaptive caching (cache only small subset of data
+    we are working with now and drop unused cache entries on memory low
     condition), or HDD-backed caching, or both.
     
-    If this is an issue for you, use this option to limit number of loaded
+    If this is an issue for you, use this option to limit number of listed
     table rows. You can still get record by requesting filename equal to
     primary key value (id usually) directly, if you know it, even if you don't
     see it in directory listing.
-    
+
+=head2 Boolean options
+
+=item B<--innodb>
+
+    Boolean, MySQL specific. If set, new tables created by the program use
+    InnoDB backend, MyISAM is used otherwise. Defaults to false (MyISAM).
+
+=item B<--debug, -D>
+
+    Boolean, if set you will see more debug info.
+
+=item B<--daemon>
+
+    Boolean, if set the program will daemonize itself. Defaults to true. You
+    may wish to use it as --nodeamon to debug the program.
 
 =back
 
