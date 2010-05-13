@@ -119,8 +119,13 @@ sub get
     my ($where_clause, @binds) = $self->where_clause($table, $name);
     return unless $where_clause;
 
-    my $sth = $FusqlFS::Base::dbh->prepare_cached(sprintf('SELECT * FROM "%s" WHERE %s', $table, $where_clause));
-    return &$FusqlFS::Base::dumper($sth->fetchrow_hashref) if $sth->execute(@binds);
+    my $sth = $FusqlFS::Base::dbh->prepare_cached(sprintf('SELECT * FROM "%s" WHERE %s LIMIT 1', $table, $where_clause));
+    if ($sth->execute(@binds))
+    {
+        my $data = $sth->fetchrow_hashref();
+        $sth->finish();
+        return &$FusqlFS::Base::dumper($data);
+    }
 }
 
 sub drop
