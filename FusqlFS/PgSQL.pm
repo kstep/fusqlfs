@@ -78,8 +78,8 @@ sub new
     $self->{'store_expr'} = 'CREATE OR REPLACE VIEW "%s" AS %s';
     $self->{'rename_expr'} = 'ALTER VIEW "%s" RENAME TO "%s"';
 
-    $self->{'get_expr'} = $FusqlFS::Base::dbh->prepare("SELECT definition FROM pg_catalog.pg_views WHERE viewname = ?");
-    $self->{'list_expr'} = $FusqlFS::Base::dbh->prepare("SELECT viewname FROM pg_catalog.pg_views WHERE schemaname = 'public'");
+    $self->{'get_expr'} = $class->expr("SELECT definition FROM pg_catalog.pg_views WHERE viewname = ?");
+    $self->{'list_expr'} = $class->expr("SELECT viewname FROM pg_catalog.pg_views WHERE schemaname = 'public'");
 
     bless $self, $class;
 }
@@ -87,14 +87,14 @@ sub new
 sub list
 {
     my $self = shift;
-    return $FusqlFS::Base::dbh->selectcol_arrayref($self->{list_expr});
+    return $self->all($self->{list_expr});
 }
 
 sub get
 {
     my $self = shift;
     my ($name) = @_;
-    my $result = $FusqlFS::Base::dbh->selectcol_arrayref($self->{get_expr}, {}, $name);
+    my $result = $self->all($self->{get_expr}, $name);
     return $result->[0];
 }
 
@@ -102,28 +102,28 @@ sub rename
 {
     my $self = shift;
     my ($name, $newname) = @_;
-    $FusqlFS::Base::dbh->do(sprintf($self->{'rename_expr'}, $name, $newname));
+    $self->do($self->{'rename_expr'}, [$name, $newname]);
 }
 
 sub drop
 {
     my $self = shift;
     my ($name) = @_;
-    $FusqlFS::Base::dbh->do(sprintf($self->{'drop_expr'}, $name));
+    $self->do($self->{'drop_expr'}, [$name]);
 }
 
 sub create
 {
     my $self = shift;
     my ($name) = @_;
-    $FusqlFS::Base::dbh->do(sprintf($self->{'create_expr'}, $name));
+    $self->do($self->{'create_expr'}, [$name]);
 }
 
 sub store
 {
     my $self = shift;
     my ($name, $data) = @_;
-    $FusqlFS::Base::dbh->do(sprintf($self->{'store_expr'}, $name, $data));
+    $self->do($self->{'store_expr'}, [$name, $data]);
 }
 
 1;
@@ -146,7 +146,7 @@ sub new
     my $class = shift;
     my $self = {};
 
-    $self->{get_primary_expr} = $FusqlFS::Base::dbh->prepare("SELECT indkey FROM pg_catalog.pg_index
+    $self->{get_primary_expr} = $class->expr("SELECT indkey FROM pg_catalog.pg_index
             WHERE indisprimary AND indrelid = (SELECT oid FROM pg_catalog.pg_class as c WHERE c.relname = ? AND relkind = 'r')");
 
     bless $self, $class;
@@ -158,8 +158,8 @@ sub list
     my ($table) = @_;
     my $primary_key = join " || '.' || ", $self->get_primary_key($table);
     my $limit = $FusqlFS::Base::limit? "LIMIT $FusqlFS::Base::limit": "";
-    my $sth = $FusqlFS::Base::dbh->prepare_cached(sprintf('SELECT %s FROM "%s" %s', $primary_key, $table, $limit));
-    return $FusqlFS::Base::dbh->selectcol_arrayref($sth);
+    my $sth = $self->cexpr('SELECT %s FROM "%s" %s', $primary_key, $table, $limit);
+    return $self->all($sth);
 }
 
 sub where_clause
@@ -179,7 +179,7 @@ sub get
     my ($where_clause, @binds) = $self->where_clause($table, $name);
     return unless $where_clause;
 
-    my $sth = $FusqlFS::Base::dbh->prepare_cached(sprintf('SELECT * FROM "%s" WHERE %s LIMIT 1', $table, $where_clause));
+    my $sth = $self->cexpr('SELECT * FROM "%s" WHERE %s LIMIT 1', $table, $where_clause);
     if ($sth->execute(@binds))
     {
         my $data = $sth->fetchrow_hashref();
@@ -195,7 +195,7 @@ sub drop
     my ($where_clause, @binds) = $self->where_clause($table, $name);
     return unless $where_clause;
 
-    my $sth = $FusqlFS::Base::dbh->prepare_cached(sprintf('DELETE FROM "%s" WHERE %s', $table, $where_clause));
+    my $sth = $self->cexpr('DELETE FROM "%s" WHERE %s', $table, $where_clause);
     $sth->execute(@binds);
 }
 
@@ -208,7 +208,7 @@ sub store
 
     $data = &$FusqlFS::Base::loader($data);
     my $template = join ', ', map { "\"$_\" = ?" } keys %$data;
-    my $sth = $FusqlFS::Base::dbh->prepare_cached(sprintf('UPDATE "%s" SET %s WHERE %s', $table, $template, $where_clause));
+    my $sth = $self->cexpr('UPDATE "%s" SET %s WHERE %s', $table, $template, $where_clause);
     $sth->execute(values %$data, @binds);
 }
 
@@ -219,7 +219,7 @@ sub create
     my @primary_key = $self->get_primary_key($table);
     my $pholders = '?,' x scalar(@primary_key);
     chop $pholders;
-    my $sth = $FusqlFS::Base::dbh->prepare_cached(sprintf('INSERT INTO "%s" (%s) VALUES (%s)', $table, join(', ', @primary_key), $pholders));
+    my $sth = $self->cexpr('INSERT INTO "%s" (%s) VALUES (%s)', $table, join(', ', @primary_key), $pholders);
     $sth->execute(split /[.]/, $name);
 }
 
@@ -237,7 +237,7 @@ sub get_primary_key
     my $self = shift;
     my ($table) = @_;
     my @result = ();
-    my $data = $FusqlFS::Base::dbh->selectcol_arrayref($self->{get_primary_expr}, {}, $table);
+    my $data = $self->all($self->{get_primary_expr}, $table);
     if ($data)
     {
         my $fields = FusqlFS::PgSQL::Table::Struct->new()->list($table);
@@ -256,10 +256,10 @@ sub new
 {
     my $class = shift;
     my $self = {};
-    $self->{list_expr} = $FusqlFS::Base::dbh->prepare("SELECT attname FROM pg_catalog.pg_attribute as a
+    $self->{list_expr} = $class->expr("SELECT attname FROM pg_catalog.pg_attribute as a
                 WHERE attrelid = (SELECT oid FROM pg_catalog.pg_class as c WHERE c.relname = ? AND relkind = 'r') AND attnum > 0
             ORDER BY attnum");
-    $self->{get_expr} = $FusqlFS::Base::dbh->prepare("SELECT typname as Type, pg_catalog.format_type(atttypid, atttypmod) AS Type_name,
+    $self->{get_expr} = $class->expr("SELECT typname as Type, pg_catalog.format_type(atttypid, atttypmod) AS Type_name,
                 NOT attnotnull as Nullable,
                 CASE WHEN atthasdef THEN
                     (SELECT pg_catalog.pg_get_expr(adbin, adrelid) FROM pg_attrdef as d
@@ -294,14 +294,14 @@ sub list
 {
     my $self = shift;
     my ($table) = @_;
-    return $FusqlFS::Base::dbh->selectcol_arrayref($self->{list_expr}, {}, $table);
+    return $self->all($self->{list_expr}, $table);
 }
 
 sub get
 {
     my $self = shift;
     my ($table, $name) = @_;
-    my $result = $FusqlFS::Base::dbh->selectrow_hashref($self->{get_expr}, {}, $table, $name);
+    my $result = $self->one($self->{get_expr}, $table, $name);
     return &$FusqlFS::Base::dumper($result) if $result;
 }
 
@@ -309,21 +309,21 @@ sub drop
 {
     my $self = shift;
     my ($table, $name) = @_;
-    $FusqlFS::Base::dbh->do(sprintf($self->{drop_expr}, $table, $name));
+    $self->do($self->{drop_expr}, [$table, $name]);
 }
 
 sub create
 {
     my $self = shift;
     my ($table, $name) = @_;
-    $FusqlFS::Base::dbh->do(sprintf($self->{create_expr}, $table, $name));
+    $self->do($self->{create_expr}, [$table, $name]);
 }
 
 sub rename
 {
     my $self = shift;
     my ($table, $name, $newname) = @_;
-    $FusqlFS::Base::dbh->do(sprintf($self->{rename_expr}, $table, $name, $newname));
+    $self->do($self->{rename_expr}, [$table, $name, $newname]);
 }
 
 sub store
@@ -339,12 +339,12 @@ sub store
     $newtype .= '[]' x $data->{'dimensions'};
 
     if (defined $data->{'default'}) {
-        $FusqlFS::Base::dbh->do(sprintf($self->{store_default_expr}, $table, $name), {}, $data->{'default'});
+        $self->do($self->{store_default_expr}, [$table, $name], $data->{'default'});
     } else {
-        $FusqlFS::Base::dbh->do(sprintf($self->{drop_default_expr}, $table, $name));
+        $self->do($self->{drop_default_expr}, [$table, $name]);
     }
-    $FusqlFS::Base::dbh->do(sprintf($self->{$data->{'nullable'}? 'set_nullable_expr': 'drop_nullable_expr'}, $table, $name));
-    $FusqlFS::Base::dbh->do(sprintf($self->{store_type_expr}, $table, $name, $newtype));
+    $self->do($self->{$data->{'nullable'}? 'set_nullable_expr': 'drop_nullable_expr'}, [$table, $name]);
+    $self->do($self->{store_type_expr}, [$table, $name, $newtype]);
 }
 
 1;
@@ -360,10 +360,10 @@ sub new
     $self->{drop_expr} = 'DROP INDEX "%s"';
     $self->{create_expr} = 'CREATE %s INDEX "%s" ON "%s" (%s)';
 
-    $self->{list_expr} = $FusqlFS::Base::dbh->prepare("SELECT (SELECT c1.relname FROM pg_catalog.pg_class as c1 WHERE c1.oid = indexrelid) as Index_name
+    $self->{list_expr} = $class->expr("SELECT (SELECT c1.relname FROM pg_catalog.pg_class as c1 WHERE c1.oid = indexrelid) as Index_name
         FROM pg_catalog.pg_index
             WHERE indrelid = (SELECT oid FROM pg_catalog.pg_class as c WHERE c.relname = ? AND relkind = 'r')");
-    $self->{get_expr} = $FusqlFS::Base::dbh->prepare("SELECT pg_get_indexdef(indexrelid, 0, true) AS \"create.sql\",
+    $self->{get_expr} = $class->expr("SELECT pg_get_indexdef(indexrelid, 0, true) AS \"create.sql\",
             indisunique as \".unique\", indisprimary as \".primary\", indkey as \".order\"
         FROM pg_catalog.pg_index
             WHERE indexrelid = (SELECT oid FROM pg_catalog.pg_class as c WHERE c.relname = ? AND relkind = 'i')");
@@ -379,7 +379,7 @@ sub get
     my ($table, $name) = @_;
     return $self->{create_cache}->{$table}->{$name} if exists $self->{create_cache}->{$table}->{$name};
 
-    my $result = $FusqlFS::Base::dbh->selectrow_hashref($self->{get_expr}, {}, $name);
+    my $result = $self->one($self->{get_expr}, $name);
     return unless $result;
     if ($result->{'.order'})
     {
@@ -397,14 +397,14 @@ sub list
     my $self = shift;
     my ($table) = @_;
     my @list = keys %{$self->{create_cache}->{$table}||{}};
-    return [ (@{$FusqlFS::Base::dbh->selectcol_arrayref($self->{list_expr}, {}, $table)}, @list) ] || \@list;
+    return [ (@{$self->all($self->{list_expr}, $table)}, @list) ] || \@list;
 }
 
 sub drop
 {
     my $self = shift;
     my ($table, $name) = @_;
-    $FusqlFS::Base::dbh->do(sprintf($self->{drop_expr}, $name));
+    $self->do($self->{drop_expr}, [$name]);
 }
 
 sub store
@@ -421,7 +421,7 @@ sub store
     }
     my $fields = $self->parse_fields($data);
     my $unique = defined $data->{'.unique'}? 'UNIQUE': '';
-    $FusqlFS::Base::dbh->do(sprintf($self->{create_expr}, $unique, $name, $table, $fields));
+    $self->do($self->{create_expr}, [$unique, $name, $table, $fields]);
 }
 
 sub parse_fields
@@ -453,7 +453,7 @@ sub rename
 {
     my $self = shift;
     my ($table, $name, $newname) = @_;
-    $FusqlFS::Base::dbh->do(sprintf($self->{rename_expr}, $name, $newname));
+    $self->do($self->{rename_expr}, [$name, $newname]);
 }
 
 1;
@@ -469,8 +469,8 @@ sub new
     $self->{drop_expr} = 'DROP TABLE "%s"';
     $self->{create_expr} = 'CREATE TABLE "%s" (id serial, PRIMARY KEY (id))';
 
-    $self->{list_expr} = $FusqlFS::Base::dbh->prepare("SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname = 'public'");
-    $self->{get_expr} = $FusqlFS::Base::dbh->prepare("SELECT 1 FROM pg_catalog.pg_tables WHERE schemaname = 'public' AND tablename = ?");
+    $self->{list_expr} = $class->expr("SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname = 'public'");
+    $self->{get_expr} = $class->expr("SELECT 1 FROM pg_catalog.pg_tables WHERE schemaname = 'public' AND tablename = ?");
 
     $self->{subpackages} = {
         indices => new FusqlFS::PgSQL::Table::Indices(),
@@ -485,7 +485,7 @@ sub get
 {
     my $self = shift;
     my ($name) = @_;
-    my $result = $FusqlFS::Base::dbh->selectcol_arrayref($self->{get_expr}, {}, $name);
+    my $result = $self->all($self->{get_expr}, $name);
     return $self->{subpackages} if @$result;
 }
 
@@ -493,27 +493,27 @@ sub drop
 {
     my $self = shift;
     my ($name) = @_;
-    $FusqlFS::Base::dbh->do(sprintf($self->{drop_expr}, $name));
+    $self->do($self->{drop_expr}, [$name]);
 }
 
 sub create
 {
     my $self = shift;
     my ($name) = @_;
-    $FusqlFS::Base::dbh->do(sprintf($self->{create_expr}, $name));
+    $self->do($self->{create_expr}, [$name]);
 }
 
 sub rename
 {
     my $self = shift;
     my ($name, $newname) = @_;
-    $FusqlFS::Base::dbh->do(sprintf($self->{rename_expr}, $name, $newname));
+    $self->do($self->{rename_expr}, [$name, $newname]);
 }
 
 sub list
 {
     my $self = shift;
-    return $FusqlFS::Base::dbh->selectcol_arrayref($self->{list_expr}) || [];
+    return $self->all($self->{list_expr}) || [];
 }
 
 1;

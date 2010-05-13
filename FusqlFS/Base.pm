@@ -147,6 +147,39 @@ sub drop { return 1 }
 sub create { return 1 }
 sub store { return 1 }
 
+sub expr
+{
+    my ($self, $sql, @sprintf) = @_;
+    $sql = sprintf($sql, @sprintf) if @sprintf;
+    return $FusqlFS::Base::dbh->prepare($sql);
+}
+
+sub cexpr
+{
+    my ($self, $sql, @sprintf) = @_;
+    $sql = sprintf($sql, @sprintf) if @sprintf;
+    return $FusqlFS::Base::dbh->prepare_cached($sql);
+}
+
+sub do
+{
+    my ($self, $sql, $sprintf, @binds) = @_;
+    $sql = sprintf($sql, @$sprintf) if $sprintf && @$sprintf;
+    $FusqlFS::Base::dbh->do($sql, {}, @binds);
+}
+
+sub one
+{
+    my ($self, $sql, @binds) = @_;
+    return $FusqlFS::Base::dbh->selectrow_hashref($sql, {}, @binds);
+}
+
+sub all
+{
+    my ($self, $sql, @binds) = @_;
+    return $FusqlFS::Base::dbh->selectcol_arrayref($sql, {}, @binds);
+}
+
 1;
 
 package FusqlFS::Base;
