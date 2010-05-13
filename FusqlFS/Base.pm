@@ -158,7 +158,7 @@ sub cexpr
 {
     my ($self, $sql, @sprintf) = @_;
     $sql = sprintf($sql, @sprintf) if @sprintf;
-    return $FusqlFS::Base::dbh->prepare_cached($sql);
+    return $FusqlFS::Base::dbh->prepare_cached($sql, {}, 1);
 }
 
 sub do
@@ -168,16 +168,33 @@ sub do
     $FusqlFS::Base::dbh->do($sql, {}, @binds);
 }
 
-sub one
+sub cdo
+{
+    my ($self, $sql, $sprintf, @binds) = @_;
+    $sql = $self->cexpr($sql, @{$sprintf||[]});
+    return $sql if $sql->execute(@binds);
+}
+
+sub one_row
 {
     my ($self, $sql, @binds) = @_;
     return $FusqlFS::Base::dbh->selectrow_hashref($sql, {}, @binds);
 }
 
-sub all
+sub all_col
 {
     my ($self, $sql, @binds) = @_;
     return $FusqlFS::Base::dbh->selectcol_arrayref($sql, {}, @binds);
+}
+
+sub load
+{
+    return $FusqlFS::Base::loader->($_[1]);
+}
+
+sub dump
+{
+    return $FusqlFS::Base::dumper->($_[1]) if $_[1];
 }
 
 1;

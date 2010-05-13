@@ -37,7 +37,6 @@ my %options = (
 );
 
 GetOptions(
-    'o:s'             => \%options,
     'host|h:s'        => \$options{'host'},
     'port|P:i'        => \$options{'port'},
     'database|db|d:s' => \$options{'database'},

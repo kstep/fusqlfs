@@ -87,14 +87,14 @@ sub new
 sub list
 {
     my $self = shift;
-    return $self->all($self->{list_expr});
+    return $self->all_col($self->{list_expr});
 }
 
 sub get
 {
     my $self = shift;
     my ($name) = @_;
-    my $result = $self->all($self->{get_expr}, $name);
+    my $result = $self->all_col($self->{get_expr}, $name);
     return $result->[0];
 }
 
@@ -159,7 +159,7 @@ sub list
     my $primary_key = join " || '.' || ", $self->get_primary_key($table);
     my $limit = $FusqlFS::Base::limit? "LIMIT $FusqlFS::Base::limit": "";
     my $sth = $self->cexpr('SELECT %s FROM "%s" %s', $primary_key, $table, $limit);
-    return $self->all($sth);
+    return $self->all_col($sth);
 }
 
 sub where_clause
@@ -180,12 +180,7 @@ sub get
     return unless $where_clause;
 
     my $sth = $self->cexpr('SELECT * FROM "%s" WHERE %s LIMIT 1', $table, $where_clause);
-    if ($sth->execute(@binds))
-    {
-        my $data = $sth->fetchrow_hashref();
-        $sth->finish();
-        return &$FusqlFS::Base::dumper($data) if $data;
-    }
+    return $self->dump($sth->fetchrow_hashref) if $sth->execute(@binds);
 }
 
 sub drop
@@ -195,8 +190,7 @@ sub drop
     my ($where_clause, @binds) = $self->where_clause($table, $name);
     return unless $where_clause;
 
-    my $sth = $self->cexpr('DELETE FROM "%s" WHERE %s', $table, $where_clause);
-    $sth->execute(@binds);
+    $self->cdo('DELETE FROM "%s" WHERE %s', [$table, $where_clause], @binds);
 }
 
 sub store
@@ -206,10 +200,9 @@ sub store
     my ($where_clause, @binds) = $self->where_clause($table, $name);
     return unless $where_clause;
 
-    $data = &$FusqlFS::Base::loader($data);
+    $data = $self->load($data);
     my $template = join ', ', map { "\"$_\" = ?" } keys %$data;
-    my $sth = $self->cexpr('UPDATE "%s" SET %s WHERE %s', $table, $template, $where_clause);
-    $sth->execute(values %$data, @binds);
+    $self->cdo('UPDATE "%s" SET %s WHERE %s', [$table, $template, $where_clause], values %$data, @binds);
 }
 
 sub create
@@ -219,8 +212,7 @@ sub create
     my @primary_key = $self->get_primary_key($table);
     my $pholders = '?,' x scalar(@primary_key);
     chop $pholders;
-    my $sth = $self->cexpr('INSERT INTO "%s" (%s) VALUES (%s)', $table, join(', ', @primary_key), $pholders);
-    $sth->execute(split /[.]/, $name);
+    $self->cdo('INSERT INTO "%s" (%s) VALUES (%s)', [$table, join(', ', @primary_key), $pholders], split(/[.]/, $name));
 }
 
 sub rename
@@ -237,7 +229,7 @@ sub get_primary_key
     my $self = shift;
     my ($table) = @_;
     my @result = ();
-    my $data = $self->all($self->{get_primary_expr}, $table);
+    my $data = $self->all_col($self->{get_primary_expr}, $table);
     if ($data)
     {
         my $fields = FusqlFS::PgSQL::Table::Struct->new()->list($table);
@@ -245,7 +237,6 @@ sub get_primary_key
     }
     return @result;
 }
-
 
 1;
 
@@ -294,15 +285,15 @@ sub list
 {
     my $self = shift;
     my ($table) = @_;
-    return $self->all($self->{list_expr}, $table);
+    return $self->all_col($self->{list_expr}, $table);
 }
 
 sub get
 {
     my $self = shift;
     my ($table, $name) = @_;
-    my $result = $self->one($self->{get_expr}, $table, $name);
-    return &$FusqlFS::Base::dumper($result) if $result;
+    my $result = $self->one_row($self->{get_expr}, $table, $name);
+    return $self->dump($result);
 }
 
 sub drop
@@ -330,7 +321,7 @@ sub store
 {
     my $self = shift;
     my ($table, $name, $data) = @_;
-    $data = &$FusqlFS::Base::loader($data);
+    $data = $self->load($data);
 
     my $newtype = $data->{'type_name'};
     my $length = $data->{'length'};
@@ -379,7 +370,7 @@ sub get
     my ($table, $name) = @_;
     return $self->{create_cache}->{$table}->{$name} if exists $self->{create_cache}->{$table}->{$name};
 
-    my $result = $self->one($self->{get_expr}, $name);
+    my $result = $self->one_row($self->{get_expr}, $name);
     return unless $result;
     if ($result->{'.order'})
     {
@@ -397,7 +388,7 @@ sub list
     my $self = shift;
     my ($table) = @_;
     my @list = keys %{$self->{create_cache}->{$table}||{}};
-    return [ (@{$self->all($self->{list_expr}, $table)}, @list) ] || \@list;
+    return [ (@{$self->all_col($self->{list_expr}, $table)}, @list) ] || \@list;
 }
 
 sub drop
@@ -485,7 +476,7 @@ sub get
 {
     my $self = shift;
     my ($name) = @_;
-    my $result = $self->all($self->{get_expr}, $name);
+    my $result = $self->all_col($self->{get_expr}, $name);
     return $self->{subpackages} if @$result;
 }
 
@@ -513,7 +504,7 @@ sub rename
 sub list
 {
     my $self = shift;
-    return $self->all($self->{list_expr}) || [];
+    return $self->all_col($self->{list_expr}) || [];
 }
 
 1;
