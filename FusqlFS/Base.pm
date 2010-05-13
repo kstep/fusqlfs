@@ -2,6 +2,7 @@ use v5.10.0;
 use strict;
 
 package FusqlFS::Base::Entry;
+use Carp;
 
 sub new
 {
@@ -68,7 +69,7 @@ sub move
 
     unless ($self->depth())
     {
-        $self->pkg()->rename($target->name());
+        $self->pkg()->rename($self->names(), $target->name());
     }
     else
     {
@@ -158,6 +159,7 @@ our $dbh;
 our $dumper;
 our $loader;
 our $instance;
+our $limit;
 
 our %cache;
 
@@ -166,13 +168,15 @@ sub new
     return $instance if $instance;
 
     my $class = shift;
+    my %options = @_;
     my $self = { subpackages => {} };
     bless $self, $class;
 
-    my $dsn = 'DBI:'.$self->dsn(@_[0..2]);
-    $dbh = DBI->connect($dsn, @_[-2,-1]);
+    my $dsn = 'DBI:'.$self->dsn(@options{qw(host port database)});
+    $dbh = DBI->connect($dsn, @options{qw(user password)});
     $dumper = \&YAML::Tiny::Dump;
     $loader = \&YAML::Tiny::Load;
+    $limit = 0 + $options{limit} if $options{limit};
 
     %cache = ();
     $SIG{'USR1'} = sub () { %cache = (); };

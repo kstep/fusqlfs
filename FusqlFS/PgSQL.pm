@@ -157,7 +157,8 @@ sub list
     my $self = shift;
     my ($table) = @_;
     my $primary_key = join ' || ', $self->get_primary_key($table);
-    my $sth = $FusqlFS::Base::dbh->prepare_cached(sprintf('SELECT %s FROM "%s"', $primary_key, $table));
+    my $limit = $FusqlFS::Base::limit? "LIMIT $FusqlFS::Base::limit": "";
+    my $sth = $FusqlFS::Base::dbh->prepare_cached(sprintf('SELECT %s FROM "%s" %s', $primary_key, $table, $limit));
     return $FusqlFS::Base::dbh->selectcol_arrayref($sth);
 }
 

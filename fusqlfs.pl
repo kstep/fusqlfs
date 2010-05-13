@@ -33,6 +33,7 @@ my %options = (
     'fnsep'         => '.',
     'engine'        => 'MySQL',
     'innodb'        => 0,
+    'limit'         => 0,
 );
 
 GetOptions(
@@ -51,6 +52,7 @@ GetOptions(
     'fnsep|s:s'       => \$options{'fnsep'},
     'engine|e:s'      => \$options{'engine'},
     'innodb!'         => \$options{'innodb'},
+    'limit|L:i'       => \$options{'limit'},
 ) or pod2usage(2);
 
 $options{'database'} ||= $ARGV[0];
@@ -175,6 +177,25 @@ __END__
 
     Boolean, if set the program will daemonize itself. Defaults to true. You
     may wish to use it as --nodeamon to debug the program.
+
+=item B<--limit, -L>
+
+    Integer, number of data rows to show in table's data subdir, defaults to 0
+    (means all rows). Useful if you are going to browse really big databases,
+    as listing all data records as files can be very slow and memory consuming.
+
+    All data are buffered in memory for now, which is OK for small DBs (the
+    most usual case for developers as they work with almost empty development
+    database), but for big tables this approach be a show stopper, so I'm going
+    to add some kind of adaptive caching (cache only small subset of data we
+    are working with now and drop unused cache entries on memory low
+    condition), or HDD-backed caching, or both.
+    
+    If this is an issue for you, use this option to limit number of loaded
+    table rows. You can still get record by requesting filename equal to
+    primary key value (id usually) directly, if you know it, even if you don't
+    see it in directory listing.
+    
 
 =back
 

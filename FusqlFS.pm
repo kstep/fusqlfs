@@ -20,7 +20,7 @@ sub init
     my $package = "FusqlFS::${engine}";
 
     require $filename;
-    $fusqlh = $package->new(@options{qw(host port database user password)});
+    $fusqlh = $package->new(@_);
     $def_time = mktime(localtime());
 }
 
