@@ -184,7 +184,7 @@ sub get
     {
         my $data = $sth->fetchrow_hashref();
         $sth->finish();
-        return &$FusqlFS::Base::dumper($data);
+        return &$FusqlFS::Base::dumper($data) if $data;
     }
 }
 
@@ -302,7 +302,7 @@ sub get
     my $self = shift;
     my ($table, $name) = @_;
     my $result = $FusqlFS::Base::dbh->selectrow_hashref($self->{get_expr}, {}, $table, $name);
-    return &$FusqlFS::Base::dumper($result);
+    return &$FusqlFS::Base::dumper($result) if $result;
 }
 
 sub drop
