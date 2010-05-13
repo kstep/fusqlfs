@@ -31,7 +31,7 @@ my %options = (
     'daemon'        => 1,
     'logfile'       => '',
     'fnsep'         => '.',
-    'engine'        => 'MySQL',
+    'engine'        => 'PgSQL',
     'innodb'        => 0,
     'limit'         => 0,
 );
