@@ -34,6 +34,7 @@ my %options = (
     'engine'        => 'PgSQL',
     'innodb'        => 0,
     'limit'         => 0,
+    'maxcached'     => 0,
 );
 
 GetOptions(
@@ -52,6 +53,7 @@ GetOptions(
     'engine|e:s'      => \$options{'engine'},
     'innodb!'         => \$options{'innodb'},
     'limit|L:i'       => \$options{'limit'},
+    'maxcached|M:i'   => \$options{'maxcached'},
 ) or pod2usage(2);
 
 $options{'database'} ||= $ARGV[0];
@@ -173,17 +175,32 @@ __END__
     (means all rows). Useful if you are going to browse really big databases,
     as listing all data records as files can be very slow and memory consuming.
 
-    All data are buffered in memory for now, which is OK for small DBs (the
-    most usual case for developers as they work with almost empty development
-    databases), but for big tables this approach can be a show stopper, so I'm
-    going to add some kind of adaptive caching (cache only small subset of data
-    we are working with now and drop unused cache entries on memory low
-    condition), or HDD-backed caching, or both.
+    You can also limit number of cache entries with --maxcached options (see
+    below). HDD-backed cache can be implemented in the future.
     
     If this is an issue for you, use this option to limit number of listed
     table rows. You can still get record by requesting filename equal to
     primary key value (id usually) directly, if you know it, even if you don't
     see it in directory listing.
+
+=item B<--maxcached, -M>
+
+    Integer, number of max cache items to store. If number of cached items
+    exceeds this number, cache cleanup is forced, least used entries removed
+    first. Values below or equal to zero means unlimited cache entries.
+    Defaults to 0, i.e. unlimited cache.
+
+    I recommend to set this value to at least 3/4 of total objects in your
+    database (including all tables, sequences, views, data rows and other
+    objects, browsable with this program). But this is just a basic
+    recomendation based on educated guess and some tests with "entry" names
+    generated with normally distributed random generator. Experiment is your
+    best advisor in this case.
+
+    Also set this value above zero only if you really have low memory issues
+    with the program, as this cache method have to support additional
+    structures to analyze data usage, and so it's slower than simple unlimited
+    cache strategy (it's still much faster than database requests, however).
 
 =head2 Boolean options
 

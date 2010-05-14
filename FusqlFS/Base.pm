@@ -232,6 +232,11 @@ sub new
     $limit = 0 + $options{limit} if $options{limit};
 
     %cache = ();
+    if ($options{maxcached} && $options{maxcached} > 0)
+    {
+        use FusqlFS::Cache;
+        tie %cache, 'FusqlFS::Cache', $options{maxcached};
+    }
     $SIG{'USR1'} = sub () { %cache = (); };
 
     $self->init();
