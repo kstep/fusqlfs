@@ -26,9 +26,9 @@ sub new
             $entry = $pkg->get(@names, $p);
             push @names, $p;
         }
-        else
+        elsif (my $ref = ref $entry)
         {
-            given (ref $entry)
+            given ($ref)
             {
                 when ('HASH')  { $entry = $entry->{$p} || undef }
                 when ('ARRAY') { $entry = $entry->[$p] || undef }
@@ -46,6 +46,7 @@ sub new
     {
         $pkg = $entry;
         $list = $pkg->list(@names);
+        $entry = $pkg->get(@names) unless $list;
     }
     elsif (my $ref = ref $entry)
     {
