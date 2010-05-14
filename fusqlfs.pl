@@ -139,7 +139,7 @@ __END__
 
     Password to authorize.
 
-=item B<--database, -d>
+=item B<--database, --db, -d>
 
     Database name to connect to. Mandatory.
 
