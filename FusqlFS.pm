@@ -53,6 +53,7 @@ sub mount
         rmdir      => \&rmdir,
 
         fsync      => \&fsync,
+        utime      => \&utime,
     );
 }
 
@@ -234,6 +235,14 @@ sub fsync
 
     $entry->flush();
     $fusqlh->clear_cache($path, $flags? undef: $entry->depth());
+    return 0;
+}
+
+sub utime
+{
+    my ($path, $atime, $mtime) = @_;
+    my $entry = $fusqlh->by_path($path);
+    return -ENOENT() unless $entry;
     return 0;
 }
 
