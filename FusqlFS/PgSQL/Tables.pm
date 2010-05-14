@@ -315,6 +315,7 @@ sub rename
 
 package FusqlFS::PgSQL::Tables;
 use base 'FusqlFS::Base::Interface';
+use FusqlFS::PgSQL::Roles;
 
 sub new
 {
@@ -331,6 +332,7 @@ sub new
         indices => new FusqlFS::PgSQL::Table::Indices(),
         struct  => new FusqlFS::PgSQL::Table::Struct(),
         data    => new FusqlFS::PgSQL::Table::Data(),
+        owner   => new FusqlFS::PgSQL::Role::Owner('r', 2),
     };
 
     bless $self, $class;

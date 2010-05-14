@@ -23,6 +23,49 @@ sub list
 
 1;
 
+package FusqlFS::PgSQL::Role::Owner;
+use base 'FusqlFS::Base::Interface';
+
+our %relkinds = qw(
+    r TABLE
+    i INDEX
+    S SEQUENCE
+);
+
+sub new
+{
+    my $class = shift;
+    my $relkind = shift;
+    my $depth = 0+shift;
+    my $self = {};
+
+    $self->{depth} = '../' x $depth;
+    $self->{get_expr} = $class->expr("SELECT pg_catalog.pg_get_userbyid(relowner) FROM pg_catalog.pg_class WHERE relname = ? AND relkind = '$relkind'");
+    $self->{store_expr} = "ALTER $relkinds{$relkind} \"%s\" OWNER TO \"%s\"";
+
+    bless $self, $class;
+}
+
+sub get
+{
+    my $self = shift;
+    my $name = pop;
+    my $owner = $self->all_col($self->{get_expr}, $name);
+    return \"$self->{depth}roles/$owner->[0]" if $owner;
+}
+
+sub store
+{
+    my $self = shift;
+    my $data = pop;
+    my $name = pop;
+    $data = $$data if ref $data eq 'SCALAR';
+    return if ref $data || $data !~ m#^$self->{depth}roles/([^/]+)$#;
+    $self->do($self->{store_expr}, [$name, $1]);
+}
+
+1;
+
 package FusqlFS::PgSQL::Role::Owned;
 use base 'FusqlFS::Base::Interface';
 
