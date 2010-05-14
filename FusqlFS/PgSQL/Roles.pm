@@ -73,14 +73,20 @@ use base 'FusqlFS::Base::Interface';
 
 package FusqlFS::PgSQL::Roles;
 use base 'FusqlFS::Base::Interface';
+use DBI qw(:sql_types);
 
 sub new
 {
     my $class = shift;
     my $self = {};
 
-    $self->{'list_expr'} = $class->expr("SELECT rolname FROM pg_catalog.pg_roles");
-    $self->{'get_expr'} = $class->expr("SELECT * FROM pg_catalog.pg_roles WHERE rolname = ?");
+    $self->{list_expr} = $class->expr("SELECT rolname FROM pg_catalog.pg_roles");
+    $self->{get_expr} = $class->expr("SELECT rolcanlogin AS can_login, rolcatupdate AS cat_update, rolconfig AS config,
+            rolconnlimit AS conn_limit, rolcreatedb AS create_db, rolcreaterole AS create_role, rolinherit AS inherit,
+            rolsuper AS superuser, rolvaliduntil AS valid_until
+        FROM pg_catalog.pg_roles WHERE rolname = ?");
+
+    $self->{rename_expr} = 'ALTER ROLE "%s" RENAME TO "%s"';
 
     bless $self, $class;
 }
@@ -89,13 +95,67 @@ sub get
 {
     my $self = shift;
     my ($name) = @_;
-    return $self->dump($self->one_row($self->{'get_expr'}, $name));
+    return $self->dump($self->one_row($self->{get_expr}, $name));
 }
 
 sub list
 {
     my $self = shift;
-    return $self->all_col($self->{'list_expr'})||[];
+    return $self->all_col($self->{list_expr})||[];
+}
+
+sub rename
+{
+    my $self = shift;
+    my ($name, $newname) = @_;
+    $self->do($self->{rename_expr}, [$name, $newname]);
+}
+
+sub store
+{
+    my $self = shift;
+    my ($name, $data) = @_;
+    my $data = $self->load($data);
+    my $sql = "ALTER ROLE \"$name\" ";
+
+    my %options = qw(
+        superuser   SUPERUSER
+        create_db   CREATEDB
+        create_role CREATEROLE
+        inherit     INHERIT
+        can_login   LOGIN
+    );
+
+    my %params = (
+        conn_limit  => ['CONNECTION LIMIT', SQL_INTEGER],
+        valid_until => ['VALID UNTIL', SQL_TIMESTAMP],
+        password    => ['PASSWORD', SQL_VARCHAR],
+    );
+
+    foreach (keys %options)
+    {
+        next unless exists $data->{$_};
+        $sql .= 'NO' unless $data->{$_};
+        $sql .= $options{$_}.' ';
+    }
+
+    my @binds;
+    my @types;
+    foreach (keys %params)
+    {
+        next unless exists $data->{$_};
+        $sql .= $params{$_}->[0].' ? ';
+        push @binds, $data->{$_};
+        push @types, $params{$_}->[1];
+    }
+
+    say STDERR $sql;
+    my $sth = $self->expr($sql);
+    foreach (0..$#binds)
+    {
+        $sth->bind_param($_+1, $binds[$_], $types[$_]);
+    }
+    $sth->execute();
 }
 
 1;
