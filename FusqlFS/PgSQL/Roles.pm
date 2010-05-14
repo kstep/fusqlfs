@@ -157,7 +157,6 @@ sub store
         push @types, $params{$_}->[1];
     }
 
-    say STDERR $sql;
     my $sth = $self->expr($sql);
     foreach (0..$#binds)
     {
