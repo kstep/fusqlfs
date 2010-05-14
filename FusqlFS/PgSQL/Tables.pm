@@ -180,11 +180,12 @@ sub store
     my ($table, $name, $data) = @_;
     $data = $self->load($data);
 
-    my $newtype = $data->{'type_name'};
-    my $length = $data->{'length'};
-    $length .= ",$data->{decimal}" if $data->{'decimal'};
-    $newtype .= "($length)" if $length;
+    my $newtype = $data->{'type'};
+    $newtype =~ s/(\[\])+$//;
     $newtype .= '[]' x $data->{'dimensions'};
+
+    my $using = $data->{'using'} || undef;
+    $newtype .= " USING $using" if $using;
 
     if (defined $data->{'default'}) {
         $self->do($self->{store_default_expr}, [$table, $name], $data->{'default'});
