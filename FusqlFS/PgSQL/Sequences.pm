@@ -11,7 +11,8 @@ sub new
     my $self = {};
 
     $self->{list_expr} = $class->expr("SELECT relname FROM pg_catalog.pg_class WHERE relkind = 'S'");
-    $self->{get_expr} = $class->expr("SELECT 1 FROM pg_catalog.pg_class WHERE relname = ? AND relkind = 'S'");
+    $self->{exists_expr} = $class->expr("SELECT 1 FROM pg_catalog.pg_class WHERE relkind = 'S' AND relname = ?");
+    $self->{get_expr} = 'SELECT * FROM "%s"';
 
     $self->{subpackages} = {
     };
@@ -23,8 +24,9 @@ sub get
 {
     my $self = shift;
     my ($name) = @_;
-    my $result = $self->all_col($self->{get_expr}, $name);
-    return $self->{subpackages} if @$result;
+    my $result = $self->all_col($self->{exists_expr}, undef, $name);
+    return unless @$result;
+    return $self->dump($self->one_row($self->{get_expr}, [$name]));
 }
 
 sub list
