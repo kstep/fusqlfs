@@ -163,29 +163,29 @@ sub cexpr
 
 sub do
 {
-    my ($self, $sql, $sprintf, @binds) = @_;
-    $sql = sprintf($sql, @$sprintf) if $sprintf && @$sprintf;
+    my ($self, $sql, @binds) = @_;
+    $sql = sprintf($sql, @{shift @binds}) if !ref($sql) && ref($binds[0]);
     $FusqlFS::Base::dbh->do($sql, {}, @binds);
 }
 
 sub cdo
 {
-    my ($self, $sql, $sprintf, @binds) = @_;
-    $sql = $self->cexpr($sql, @{$sprintf||[]});
+    my ($self, $sql, @binds) = @_;
+    $sql = $self->cexpr($sql, !ref($sql) && ref($binds[0])? @{shift @binds}: undef);
     return $sql if $sql->execute(@binds);
 }
 
 sub one_row
 {
-    my ($self, $sql, $sprintf, @binds) = @_;
-    $sql = sprintf($sql, @$sprintf) if $sprintf && @$sprintf;
+    my ($self, $sql, @binds) = @_;
+    $sql = sprintf($sql, @{shift @binds}) if !ref($sql) && ref($binds[0]);
     return $FusqlFS::Base::dbh->selectrow_hashref($sql, {}, @binds);
 }
 
 sub all_col
 {
-    my ($self, $sql, $sprintf, @binds) = @_;
-    $sql = sprintf($sql, @$sprintf) if $sprintf && @$sprintf;
+    my ($self, $sql, @binds) = @_;
+    $sql = sprintf($sql, @{shift @binds}) if !ref($sql) && ref($binds[0]);
     return $FusqlFS::Base::dbh->selectcol_arrayref($sql, {}, @binds);
 }
 

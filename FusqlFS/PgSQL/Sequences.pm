@@ -24,7 +24,7 @@ sub get
 {
     my $self = shift;
     my ($name) = @_;
-    my $result = $self->all_col($self->{exists_expr}, undef, $name);
+    my $result = $self->all_col($self->{exists_expr}, $name);
     return unless @$result;
     return $self->dump($self->one_row($self->{get_expr}, [$name]));
 }

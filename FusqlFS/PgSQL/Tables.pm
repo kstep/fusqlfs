@@ -93,7 +93,7 @@ sub get_primary_key
     my $self = shift;
     my ($table) = @_;
     my @result = ();
-    my $data = $self->all_col($self->{get_primary_expr}, undef, $table);
+    my $data = $self->all_col($self->{get_primary_expr}, $table);
     if ($data)
     {
         my $fields = FusqlFS::PgSQL::Table::Struct->new()->list($table);
@@ -149,14 +149,14 @@ sub list
 {
     my $self = shift;
     my ($table) = @_;
-    return $self->all_col($self->{list_expr}, undef, $table);
+    return $self->all_col($self->{list_expr}, $table);
 }
 
 sub get
 {
     my $self = shift;
     my ($table, $name) = @_;
-    my $result = $self->one_row($self->{get_expr}, undef, $table, $name);
+    my $result = $self->one_row($self->{get_expr}, $table, $name);
     return $self->dump($result);
 }
 
@@ -234,7 +234,7 @@ sub get
     my ($table, $name) = @_;
     return $self->{create_cache}->{$table}->{$name} if exists $self->{create_cache}->{$table}->{$name};
 
-    my $result = $self->one_row($self->{get_expr}, undef, $name);
+    my $result = $self->one_row($self->{get_expr}, $name);
     return unless $result;
     if ($result->{'.order'})
     {
@@ -252,7 +252,7 @@ sub list
     my $self = shift;
     my ($table) = @_;
     my @list = keys %{$self->{create_cache}->{$table}||{}};
-    return [ (@{$self->all_col($self->{list_expr}, undef, $table)}, @list) ] || \@list;
+    return [ (@{$self->all_col($self->{list_expr}, $table)}, @list) ] || \@list;
 }
 
 sub drop
@@ -340,7 +340,7 @@ sub get
 {
     my $self = shift;
     my ($name) = @_;
-    my $result = $self->all_col($self->{get_expr}, undef, $name);
+    my $result = $self->all_col($self->{get_expr}, $name);
     return $self->{subpackages} if @$result;
 }
 
