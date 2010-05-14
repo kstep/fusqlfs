@@ -31,17 +31,28 @@ use base 'FusqlFS::Base::Interface';
 package FusqlFS::PgSQL::Roles;
 use base 'FusqlFS::Base::Interface';
 
+sub new
+{
+    my $class = shift;
+    my $self = {};
+
+    $self->{'list_expr'} = $class->expr("SELECT rolname FROM pg_catalog.pg_roles");
+    $self->{'get_expr'} = $class->expr("SELECT * FROM pg_catalog.pg_roles WHERE rolname = ?");
+
+    bless $self, $class;
+}
+
 sub get
 {
     my $self = shift;
     my ($name) = @_;
-    return {
-        owner => \"../../owner",
-        owned => new FusqlFS::PgSQL::Role::Owned($self->{dbh}),
-        permissions => new FusqlFS::PgSQL::Role::Permissions($self->{dbh}),
-        password => sub() {},
-        'create.sql' => '',
-    };
+    return $self->dump($self->one_row($self->{'get_expr'}, $name));
+}
+
+sub list
+{
+    my $self = shift;
+    return $self->all_col($self->{'list_expr'})||[];
 }
 
 1;
