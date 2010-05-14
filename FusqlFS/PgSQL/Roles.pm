@@ -87,6 +87,7 @@ sub new
         FROM pg_catalog.pg_roles WHERE rolname = ?");
 
     $self->{rename_expr} = 'ALTER ROLE "%s" RENAME TO "%s"';
+    $self->{drop_expr} = 'DROP ROLE "%s"';
 
     bless $self, $class;
 }
@@ -109,6 +110,13 @@ sub rename
     my $self = shift;
     my ($name, $newname) = @_;
     $self->do($self->{rename_expr}, [$name, $newname]);
+}
+
+sub drop
+{
+    my $self = shift;
+    my ($name) = @_;
+    $self->do($self->{drop_expr}, [$name]);
 }
 
 sub store
