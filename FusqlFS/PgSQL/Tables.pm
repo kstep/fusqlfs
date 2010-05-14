@@ -114,23 +114,16 @@ sub new
     $self->{list_expr} = $class->expr("SELECT attname FROM pg_catalog.pg_attribute as a
                 WHERE attrelid = (SELECT oid FROM pg_catalog.pg_class as c WHERE c.relname = ? AND relkind = 'r') AND attnum > 0
             ORDER BY attnum");
-    $self->{get_expr} = $class->expr("SELECT typname as Type, pg_catalog.format_type(atttypid, atttypmod) AS Type_name,
-                NOT attnotnull as Nullable,
+    $self->{get_expr} = $class->expr("SELECT pg_catalog.format_type(atttypid, atttypmod) AS type,
+                NOT attnotnull as nullable,
                 CASE WHEN atthasdef THEN
                     (SELECT pg_catalog.pg_get_expr(adbin, adrelid) FROM pg_attrdef as d
                         WHERE adrelid = attrelid AND adnum = attnum)
-                ELSE NULL END AS Default,
-                CASE WHEN atttypmod < 0 THEN NULL
-                    WHEN typcategory = 'N' THEN (((atttypmod-4)>>16)&65535)
-                    ELSE atttypmod-4 END AS Length,
-                CASE WHEN atttypmod < 0 THEN NULL
-                    WHEN typcategory = 'N' THEN ((atttypmod-4)&65535)
-                    ELSE NULL END AS Decimal,
-                attndims AS Dimensions,
-                attnum as Order
-            FROM pg_catalog.pg_attribute as a, pg_catalog.pg_type as t
-            WHERE a.atttypid = t.oid
-                AND attrelid = (SELECT oid FROM pg_catalog.pg_class as c WHERE c.relname = ? AND relkind = 'r')
+                ELSE NULL END AS default,
+                attndims AS dimensions,
+                attnum as order
+            FROM pg_catalog.pg_attribute as a
+            WHERE attrelid = (SELECT oid FROM pg_catalog.pg_class as c WHERE c.relname = ? AND relkind = 'r')
                 AND attname = ?");
 
     $self->{drop_expr} = 'ALTER TABLE "%s" DROP COLUMN "%s"';
