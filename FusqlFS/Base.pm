@@ -177,13 +177,15 @@ sub cdo
 
 sub one_row
 {
-    my ($self, $sql, @binds) = @_;
+    my ($self, $sql, $sprintf, @binds) = @_;
+    $sql = sprintf($sql, @$sprintf) if $sprintf && @$sprintf;
     return $FusqlFS::Base::dbh->selectrow_hashref($sql, {}, @binds);
 }
 
 sub all_col
 {
-    my ($self, $sql, @binds) = @_;
+    my ($self, $sql, $sprintf, @binds) = @_;
+    $sql = sprintf($sql, @$sprintf) if $sprintf && @$sprintf;
     return $FusqlFS::Base::dbh->selectcol_arrayref($sql, {}, @binds);
 }
 

@@ -31,7 +31,7 @@ sub get
 {
     my $self = shift;
     my ($name) = @_;
-    my $result = $self->all_col($self->{get_expr}, $name);
+    my $result = $self->all_col($self->{get_expr}, undef, $name);
     return $result->[0];
 }
 
