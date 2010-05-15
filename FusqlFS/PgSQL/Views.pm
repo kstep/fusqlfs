@@ -4,6 +4,7 @@ use FusqlFS::Base;
 
 package FusqlFS::PgSQL::Views;
 use base 'FusqlFS::Base::Interface';
+use FusqlFS::PgSQL::Roles;
 
 sub new
 {
@@ -17,6 +18,8 @@ sub new
 
     $self->{get_expr} = $class->expr("SELECT definition FROM pg_catalog.pg_views WHERE viewname = ?");
     $self->{list_expr} = $class->expr("SELECT viewname FROM pg_catalog.pg_views WHERE schemaname = 'public'");
+
+    $self->{owner} = new FusqlFS::PgSQL::Role::Owner('v', 2);
 
     bless $self, $class;
 }
@@ -32,7 +35,10 @@ sub get
     my $self = shift;
     my ($name) = @_;
     my $result = $self->all_col($self->{get_expr}, $name);
-    return $result->[0];
+    return {
+        'query.sql' => $result->[0],
+        owner => $self->{owner},
+    };
 }
 
 sub rename
@@ -60,7 +66,7 @@ sub store
 {
     my $self = shift;
     my ($name, $data) = @_;
-    $self->do($self->{'store_expr'}, [$name, $data]);
+    $self->do($self->{'store_expr'}, [$name, $data->{'query.sql'}]);
 }
 
 1;

@@ -30,6 +30,7 @@ our %relkinds = qw(
     r TABLE
     i INDEX
     S SEQUENCE
+    v VIEW
 );
 
 sub new

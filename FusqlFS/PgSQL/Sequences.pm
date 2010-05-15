@@ -4,6 +4,7 @@ use FusqlFS::Base;
 
 package FusqlFS::PgSQL::Sequences;
 use base 'FusqlFS::Base::Interface';
+use FusqlFS::PgSQL::Roles;
 use DBI qw(:sql_types);
 
 sub new
@@ -18,8 +19,7 @@ sub new
     $self->{create_expr} = 'CREATE SEQUENCE "%s"';
     $self->{drop_expr} = 'DROP SEQUENCE "%s"';
 
-    $self->{subpackages} = {
-    };
+    $self->{owner} = new FusqlFS::PgSQL::Role::Owner('S', 2);
 
     bless $self, $class;
 }
@@ -30,7 +30,10 @@ sub get
     my ($name) = @_;
     my $result = $self->all_col($self->{exists_expr}, $name);
     return unless @$result;
-    return { struct => $self->dump($self->one_row($self->{get_expr}, [$name])) };
+    return {
+        struct => $self->dump($self->one_row($self->{get_expr}, [$name])),
+        owner  => $self->{owner},
+    };
 }
 
 sub list
