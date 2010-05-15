@@ -104,6 +104,8 @@ sub get
     my ($name) = @_;
 
     my $data = $self->one_row($self->{get_expr}, $name);
+    return unless $data;
+
     my $result = { map { $_ => \"../$_" } @{$data->{contains}} };
 
     delete $data->{contains};
