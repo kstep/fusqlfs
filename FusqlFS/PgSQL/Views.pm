@@ -10,13 +10,13 @@ sub new
     my $class = shift;
     my $self = {};
 
-    $self->{'drop_expr'} = 'DROP VIEW "%s"';
-    $self->{'create_expr'} = 'CREATE VIEW "%s" AS SELECT 1';
-    $self->{'store_expr'} = 'CREATE OR REPLACE VIEW "%s" AS %s';
-    $self->{'rename_expr'} = 'ALTER VIEW "%s" RENAME TO "%s"';
+    $self->{drop_expr} = 'DROP VIEW "%s"';
+    $self->{create_expr} = 'CREATE VIEW "%s" AS SELECT 1';
+    $self->{store_expr} = 'CREATE OR REPLACE VIEW "%s" AS %s';
+    $self->{rename_expr} = 'ALTER VIEW "%s" RENAME TO "%s"';
 
-    $self->{'get_expr'} = $class->expr("SELECT definition FROM pg_catalog.pg_views WHERE viewname = ?");
-    $self->{'list_expr'} = $class->expr("SELECT viewname FROM pg_catalog.pg_views WHERE schemaname = 'public'");
+    $self->{get_expr} = $class->expr("SELECT definition FROM pg_catalog.pg_views WHERE viewname = ?");
+    $self->{list_expr} = $class->expr("SELECT viewname FROM pg_catalog.pg_views WHERE schemaname = 'public'");
 
     bless $self, $class;
 }
