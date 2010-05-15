@@ -26,7 +26,7 @@ sub get
     my ($name) = @_;
     my $result = $self->all_col($self->{exists_expr}, $name);
     return unless @$result;
-    return $self->dump($self->one_row($self->{get_expr}, [$name]));
+    return { definition => $self->dump($self->one_row($self->{get_expr}, [$name])) };
 }
 
 sub list
