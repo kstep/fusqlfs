@@ -15,6 +15,8 @@ sub new
     $self->{exists_expr} = $class->expr("SELECT 1 FROM pg_catalog.pg_class WHERE relkind = 'S' AND relname = ?");
     $self->{get_expr} = 'SELECT * FROM "%s"';
     $self->{rename_expr} = 'ALTER SEQUENCE "%s" RENAME TO "%s"';
+    $self->{create_expr} = 'CREATE SEQUENCE "%s"';
+    $self->{drop_expr} = 'DROP SEQUENCE "%s"';
 
     $self->{subpackages} = {
     };
@@ -86,6 +88,20 @@ sub rename
     my $self = shift;
     my ($name, $newname) = @_;
     $self->do($self->{rename_expr}, [$name, $newname]);
+}
+
+sub drop
+{
+    my $self = shift;
+    my ($name) = @_;
+    $self->do($self->{drop_expr}, [$name]);
+}
+
+sub create
+{
+    my $self = shift;
+    my ($name) = @_;
+    $self->do($self->{create_expr}, [$name]);
 }
 
 1;
