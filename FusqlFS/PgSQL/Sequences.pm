@@ -49,7 +49,7 @@ sub store
     $sql .= $data->{is_cycled}? 'CYCLE ': 'NO CYCLE ' if exists $data->{is_cycled};
 
     my $sth = $self->build($sql, sub{
-            my ($a, $b) = @_;
+            my ($a, $b) = @$_;
             return unless exists $data->{$a};
             if (!defined $data->{$a})
             {
@@ -57,11 +57,11 @@ sub store
                 return;
             }
             return "$b->[0] ? ", $data->{$a}, $b->[1];
-    }, increment_by => ['INCREMENT BY', SQL_INTEGER, 0],
-       cache_value  => ['CACHE', SQL_INTEGER, 0],
-       last_value   => ['RESTART WITH', SQL_INTEGER, 0],
-       max_value    => ['MAXVALUE', SQL_INTEGER, 1],
-       min_value    => ['MINVALUE', SQL_INTEGER, 1]);
+    }, [ increment_by => ['INCREMENT BY', SQL_INTEGER, 0] ],
+       [ cache_value  => ['CACHE', SQL_INTEGER, 0]        ],
+       [ last_value   => ['RESTART WITH', SQL_INTEGER, 0] ],
+       [ max_value    => ['MAXVALUE', SQL_INTEGER, 1]     ],
+       [ min_value    => ['MINVALUE', SQL_INTEGER, 1]     ]);
 
     $sth->execute();
 }

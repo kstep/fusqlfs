@@ -149,7 +149,7 @@ sub store
     $data = $self->load($data->{struct})||{};
 
     my $sth = $self->build("ALTER ROLE \"$name\" ", sub{
-            my ($a, $b) = @_;
+            my ($a, $b) = @$_;
             if (ref $b)
             {
                 return unless $data->{$a};
@@ -160,14 +160,14 @@ sub store
                 return unless exists $data->{$a};
                 return ($data->{$a}? 'NO': '') . "$b ";
             }
-    }, superuser   => 'SUPERUSER',
-       create_db   => 'CREATEDB',
-       create_role => 'CREATEROLE',
-       inherit     => 'INHERIT',
-       can_login   => 'LOGIN',
-       conn_limit  => ['CONNECTION LIMIT', SQL_INTEGER],
-       valid_until => ['VALID UNTIL', SQL_TIMESTAMP],
-       password    => ['PASSWORD', SQL_VARCHAR]);
+    }, [ superuser   => 'SUPERUSER'  ],
+       [ create_db   => 'CREATEDB'   ],
+       [ create_role => 'CREATEROLE' ],
+       [ inherit     => 'INHERIT'    ],
+       [ can_login   => 'LOGIN'      ],
+       [ conn_limit  => ['CONNECTION LIMIT', SQL_INTEGER] ],
+       [ valid_until => ['VALID UNTIL', SQL_TIMESTAMP]    ],
+       [ password    => ['PASSWORD', SQL_VARCHAR]         ]);
 
     $sth->execute();
 }

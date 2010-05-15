@@ -207,11 +207,12 @@ sub limit
 
 sub build
 {
-    my ($self, $sql, $filter, %iter) = @_;
+    my ($self, $sql, $filter, @iter) = @_;
     my (@binds, @bind);
-    while (my ($k, $v) = each(%iter))
+    foreach (@iter)
     {
-        next unless (@bind) = ($filter->($k, $v));
+        local $_ = $_;
+        next unless (@bind) = ($filter->());
         $sql .= shift @bind;
         push @binds, [ @bind ];
     }
