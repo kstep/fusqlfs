@@ -109,7 +109,7 @@ sub get
     my $result = { map { $_ => \"../$_" } @{$data->{contains}} };
 
     delete $data->{contains};
-    $result->{definition} = $self->dump($data);
+    $result->{struct} = $self->dump($data);
     return $result;
 }
 
@@ -146,7 +146,7 @@ sub store
     $self->do($self->{revoke_expr}, [$name, $_]) foreach @revoke;
     $self->do($self->{grant_expr}, [$name, $_]) foreach @grant;
 
-    $data = $self->load($data->{definition})||{};
+    $data = $self->load($data->{struct})||{};
 
     my $sql = "ALTER ROLE \"$name\" ";
 
