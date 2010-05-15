@@ -81,13 +81,19 @@ sub new
     my $self = {};
 
     $self->{list_expr} = $class->expr("SELECT rolname FROM pg_catalog.pg_roles");
-    $self->{get_expr} = $class->expr("SELECT rolcanlogin AS can_login, rolcatupdate AS cat_update, rolconfig AS config,
-            rolconnlimit AS conn_limit, rolcreatedb AS create_db, rolcreaterole AS create_role, rolinherit AS inherit,
-            rolsuper AS superuser, rolvaliduntil AS valid_until
-        FROM pg_catalog.pg_roles WHERE rolname = ?");
+    $self->{get_expr} = $class->expr("SELECT r.rolcanlogin AS can_login, r.rolcatupdate AS cat_update, r.rolconfig AS config,
+            r.rolconnlimit AS conn_limit, r.rolcreatedb AS create_db, r.rolcreaterole AS create_role, r.rolinherit AS inherit,
+            r.rolsuper AS superuser, r.rolvaliduntil AS valid_until,
+            ARRAY(SELECT b.rolname FROM pg_catalog.pg_roles AS b
+                    JOIN pg_catalog.pg_auth_members AS m ON (m.member = b.oid)
+                WHERE m.roleid = r.oid) AS contains
+        FROM pg_catalog.pg_roles AS r WHERE rolname = ?");
 
     $self->{rename_expr} = 'ALTER ROLE "%s" RENAME TO "%s"';
     $self->{drop_expr} = 'DROP ROLE "%s"';
+
+    $self->{revoke_expr} = 'REVOKE "%s" FROM "%s"';
+    $self->{grant_expr} = 'GRANT "%s" TO "%s"';
 
     bless $self, $class;
 }
@@ -96,7 +102,13 @@ sub get
 {
     my $self = shift;
     my ($name) = @_;
-    return $self->dump($self->one_row($self->{get_expr}, $name));
+
+    my $data = $self->one_row($self->{get_expr}, $name);
+    my $result = { map { $_ => \"../$_" } @{$data->{contains}} };
+
+    delete $data->{contains};
+    $result->{definition} = $self->dump($data);
+    return $result;
 }
 
 sub list
@@ -123,7 +135,17 @@ sub store
 {
     my $self = shift;
     my ($name, $data) = @_;
-    my $data = $self->load($data);
+
+    my $olddata = $self->one_row($self->{get_expr}, $name);
+    my %contains = map { $_ => 1 } @{$olddata->{contains}};
+    my @revoke = grep { !exists $data->{$_} } @{$olddata->{contains}};
+    my @grant = grep { ref $data->{$_} eq 'SCALAR' && !exists $contains{$_} } keys %{$data};
+
+    $self->do($self->{revoke_expr}, [$name, $_]) foreach @revoke;
+    $self->do($self->{grant_expr}, [$name, $_]) foreach @grant;
+
+    $data = $self->load($data->{definition})||{};
+
     my $sql = "ALTER ROLE \"$name\" ";
 
     my %options = qw(
