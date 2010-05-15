@@ -173,7 +173,7 @@ sub store
     my @types;
     foreach (keys %params)
     {
-        next unless exists $data->{$_};
+        next unless $data->{$_};
         $sql .= $params{$_}->[0].' ? ';
         push @binds, $data->{$_};
         push @types, $params{$_}->[1];
