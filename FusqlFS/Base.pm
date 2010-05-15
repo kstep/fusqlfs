@@ -205,6 +205,21 @@ sub limit
     return "LIMIT $limit" if $limit;
 }
 
+sub build
+{
+    my ($self, $sql, $filter, %iter) = @_;
+    my (@binds, @bind);
+    while (my ($k, $v) = each(%iter))
+    {
+        next unless (@bind) = ($filter->($k, $v));
+        $sql .= shift @bind;
+        push @binds, [ @bind ];
+    }
+    $sql = $FusqlFS::Base::instance->{dbh}->prepare($sql);
+    $sql->bind_param($_+1, @{$binds[$_]}) foreach (0..$#binds);
+    return $sql;
+}
+
 1;
 
 package FusqlFS::Base;

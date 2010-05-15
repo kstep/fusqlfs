@@ -46,40 +46,23 @@ sub store
     $data = $self->load($data->{struct})||{};
 
     my $sql = "ALTER SEQUENCE \"$name\" ";
+    $sql .= $data->{is_cycled}? 'CYCLE ': 'NO CYCLE ' if exists $data->{is_cycled};
 
-    my %params = (
-        increment_by => ['INCREMENT BY', SQL_INTEGER, 0],
-        cache_value  => ['CACHE', SQL_INTEGER, 0],
-        last_value   => ['RESTART WITH', SQL_INTEGER, 0],
-        max_value    => ['MAXVALUE', SQL_INTEGER, 1],
-        min_value    => ['MINVALUE', SQL_INTEGER, 1],
-    );
+    my $sth = $self->build($sql, sub{
+            my ($a, $b) = @_;
+            return unless exists $data->{$a};
+            if (!defined $data->{$a})
+            {
+                return "NO $b->[0] " if $b->[2];
+                return;
+            }
+            return "$b->[0] ? ", $data->{$a}, $b->[1];
+    }, increment_by => ['INCREMENT BY', SQL_INTEGER, 0],
+       cache_value  => ['CACHE', SQL_INTEGER, 0],
+       last_value   => ['RESTART WITH', SQL_INTEGER, 0],
+       max_value    => ['MAXVALUE', SQL_INTEGER, 1],
+       min_value    => ['MINVALUE', SQL_INTEGER, 1]);
 
-    my @binds = ();
-    my @types = ();
-    foreach (keys %params)
-    {
-        next unless exists $data->{$_};
-        if (!defined $data->{$_})
-        {
-            $sql .= 'NO '.$params{$_}->[0].' ' if $params{$_}->[2];
-            next;
-        }
-        $sql .= $params{$_}->[0].' ? ';
-        push @binds, $data->{$_};
-        push @types, $params{$_}->[1];
-    }
-
-    if (exists $data->{is_cycled})
-    {
-        $sql .= $data->{is_cycled}? 'CYCLE ': 'NO CYCLE ';
-    }
-
-    my $sth = $self->expr($sql);
-    foreach (0..$#binds)
-    {
-        $sth->bind_param($_+1, $binds[$_], $types[$_]);
-    }
     $sth->execute();
 }
 

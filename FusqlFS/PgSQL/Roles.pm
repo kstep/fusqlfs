@@ -148,44 +148,27 @@ sub store
 
     $data = $self->load($data->{struct})||{};
 
-    my $sql = "ALTER ROLE \"$name\" ";
+    my $sth = $self->build("ALTER ROLE \"$name\" ", sub{
+            my ($a, $b) = @_;
+            if (ref $b)
+            {
+                return unless $data->{$a};
+                return "$b->[0] ? ", $data->{$a}, $b->[1];
+            }
+            else
+            {
+                return unless exists $data->{$a};
+                return ($data->{$a}? 'NO': '') . "$b ";
+            }
+    }, superuser   => 'SUPERUSER',
+       create_db   => 'CREATEDB',
+       create_role => 'CREATEROLE',
+       inherit     => 'INHERIT',
+       can_login   => 'LOGIN',
+       conn_limit  => ['CONNECTION LIMIT', SQL_INTEGER],
+       valid_until => ['VALID UNTIL', SQL_TIMESTAMP],
+       password    => ['PASSWORD', SQL_VARCHAR]);
 
-    my %options = qw(
-        superuser   SUPERUSER
-        create_db   CREATEDB
-        create_role CREATEROLE
-        inherit     INHERIT
-        can_login   LOGIN
-    );
-
-    my %params = (
-        conn_limit  => ['CONNECTION LIMIT', SQL_INTEGER],
-        valid_until => ['VALID UNTIL', SQL_TIMESTAMP],
-        password    => ['PASSWORD', SQL_VARCHAR],
-    );
-
-    foreach (keys %options)
-    {
-        next unless exists $data->{$_};
-        $sql .= 'NO' unless $data->{$_};
-        $sql .= $options{$_}.' ';
-    }
-
-    my @binds;
-    my @types;
-    foreach (keys %params)
-    {
-        next unless $data->{$_};
-        $sql .= $params{$_}->[0].' ? ';
-        push @binds, $data->{$_};
-        push @types, $params{$_}->[1];
-    }
-
-    my $sth = $self->expr($sql);
-    foreach (0..$#binds)
-    {
-        $sth->bind_param($_+1, $binds[$_], $types[$_]);
-    }
     $sth->execute();
 }
 
