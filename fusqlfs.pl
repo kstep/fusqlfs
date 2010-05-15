@@ -192,10 +192,10 @@ __END__
 
     I recommend to set this value to at least 3/4 of total objects in your
     database (including all tables, sequences, views, data rows and other
-    objects, browsable with this program). But this is just a basic
-    recomendation based on educated guess and some tests with "entry" names
-    generated with normally distributed random generator. Experiment is your
-    best advisor in this case.
+    objects, browsable with this program), which is about 60% cache hits (~45%
+    for 1/2 and ~56% for 2/3). But this is just a basic recomendation based on
+    educated guess and some tests with "entry" names generated with normally
+    distributed random generator. Experiment is your best advisor in this case.
 
     Also set this value above zero only if you really have low memory issues
     with the program, as this cache method have to support additional
