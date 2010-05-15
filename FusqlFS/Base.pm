@@ -2,7 +2,6 @@ use v5.10.0;
 use strict;
 
 package FusqlFS::Base::Entry;
-use Carp;
 
 sub new
 {
@@ -152,21 +151,21 @@ sub expr
 {
     my ($self, $sql, @sprintf) = @_;
     $sql = sprintf($sql, @sprintf) if @sprintf;
-    return $FusqlFS::Base::dbh->prepare($sql);
+    return $FusqlFS::Base::instance->{dbh}->prepare($sql);
 }
 
 sub cexpr
 {
     my ($self, $sql, @sprintf) = @_;
     $sql = sprintf($sql, @sprintf) if @sprintf;
-    return $FusqlFS::Base::dbh->prepare_cached($sql, {}, 1);
+    return $FusqlFS::Base::instance->{dbh}->prepare_cached($sql, {}, 1);
 }
 
 sub do
 {
     my ($self, $sql, @binds) = @_;
     $sql = sprintf($sql, @{shift @binds}) if !ref($sql) && ref($binds[0]);
-    $FusqlFS::Base::dbh->do($sql, {}, @binds);
+    $FusqlFS::Base::instance->{dbh}->do($sql, {}, @binds);
 }
 
 sub cdo
@@ -180,24 +179,30 @@ sub one_row
 {
     my ($self, $sql, @binds) = @_;
     $sql = sprintf($sql, @{shift @binds}) if !ref($sql) && ref($binds[0]);
-    return $FusqlFS::Base::dbh->selectrow_hashref($sql, {}, @binds);
+    return $FusqlFS::Base::instance->{dbh}->selectrow_hashref($sql, {}, @binds);
 }
 
 sub all_col
 {
     my ($self, $sql, @binds) = @_;
     $sql = sprintf($sql, @{shift @binds}) if !ref($sql) && ref($binds[0]);
-    return $FusqlFS::Base::dbh->selectcol_arrayref($sql, {}, @binds);
+    return $FusqlFS::Base::instance->{dbh}->selectcol_arrayref($sql, {}, @binds);
 }
 
 sub load
 {
-    return $FusqlFS::Base::loader->($_[1]);
+    return $FusqlFS::Base::instance->{loader}->($_[1]);
 }
 
 sub dump
 {
-    return $FusqlFS::Base::dumper->($_[1]) if $_[1];
+    return $FusqlFS::Base::instance->{dumper}->($_[1]) if $_[1];
+}
+
+sub limit
+{
+    my $limit = $FusqlFS::Base::instance->{limit};
+    return "LIMIT $limit" if $limit;
 }
 
 1;
@@ -208,13 +213,7 @@ use base 'FusqlFS::Base::Interface';
 use DBI;
 use YAML::Tiny;
 
-our $dbh;
-our $dumper;
-our $loader;
 our $instance;
-our $limit;
-
-our %cache;
 
 sub new
 {
@@ -222,25 +221,27 @@ sub new
 
     my $class = shift;
     my %options = @_;
-    my $self = { subpackages => {} };
+    my $dsn = 'DBI:'.$class->dsn(@options{qw(host port database)});
+    my $self = {
+        subpackages => {},
+        dumper => \&YAML::Tiny::Dump,
+        loader => \&YAML::Tiny::Load,
+        limit  => 0 + $options{limit},
+        cache  => {},
+        dbh => DBI->connect($dsn, @options{qw(user password)}),
+    };
     bless $self, $class;
 
-    my $dsn = 'DBI:'.$self->dsn(@options{qw(host port database)});
-    $dbh = DBI->connect($dsn, @options{qw(user password)});
-    $dumper = \&YAML::Tiny::Dump;
-    $loader = \&YAML::Tiny::Load;
-    $limit = 0 + $options{limit} if $options{limit};
-
-    %cache = ();
     if ($options{maxcached} && $options{maxcached} > 0)
     {
         use FusqlFS::Cache;
-        tie %cache, 'FusqlFS::Cache', $options{maxcached};
+        tie %{$self->{cache}}, 'FusqlFS::Cache', $options{maxcached};
     }
-    $SIG{'USR1'} = sub () { %cache = (); };
+    $SIG{'USR1'} = sub{ $self->{cache} = {}; };
 
-    $self->init();
     $instance = $self;
+    $self->init();
+    return $self;
 }
 
 sub dsn
@@ -259,8 +260,9 @@ sub init
 
 sub by_path
 {
-    $cache{$_[1]} = new FusqlFS::Base::Entry(@_) unless defined $cache{$_[1]};
-    return $cache{$_[1]};
+    my ($self, $path) = @_;
+    $self->{cache}->{$path} = new FusqlFS::Base::Entry(@_) unless defined $self->{cache}->{$path};
+    return $self->{cache}->{$path};
 }
 
 sub by_path_uncached
@@ -270,15 +272,16 @@ sub by_path_uncached
 
 sub clear_cache
 {
-    delete $cache{$_[1]};
+    my $self = shift;
+    delete $self->{cache}->{$_[1]};
     if (defined $_[2])
     {
         my $key = $_[1];
         $key =~ s{/[^/]+$}{} for (0..$_[2]);
-        foreach (keys %cache)
+        foreach (keys %{$self->{cache}})
         {
             next unless /^$key/;
-            delete $cache{$_};
+            delete $self->{cache}->{$_};
         }
     }
 }
@@ -288,13 +291,5 @@ sub destroy
     undef $instance;
 }
 
-sub DESTROY
-{
-    $dbh->disconnect();
-    undef $dbh;
-    undef $dumper;
-    undef $loader;
-    undef %cache;
-}
 1;
 

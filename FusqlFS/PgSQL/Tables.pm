@@ -21,8 +21,7 @@ sub list
     my $self = shift;
     my ($table) = @_;
     my $primary_key = join " || '.' || ", $self->get_primary_key($table);
-    my $limit = $FusqlFS::Base::limit? "LIMIT $FusqlFS::Base::limit": "";
-    my $sth = $self->cexpr('SELECT %s FROM "%s" %s', $primary_key, $table, $limit);
+    my $sth = $self->cexpr('SELECT %s FROM "%s" %s', $primary_key, $table, $self->limit());
     return $self->all_col($sth);
 }
 
