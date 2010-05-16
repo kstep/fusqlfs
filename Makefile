@@ -83,7 +83,8 @@ test-tables-drop:
 	test ! -d $(TABLEDIR)
 
 .PHONY: mount unmount remount \
-	test test-fs test-basic \
+	test test-run test-fs test-basic test-syntax test-lint \
 	test-tables test-tables-ls test-tables-create test-tables-struct \
-	test-tables-indices test-tables-data test-tables-drop
+	test-tables-indices test-tables-data test-tables-drop \
+	clean-cache
 
