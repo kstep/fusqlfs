@@ -31,7 +31,6 @@ sub new
             {
                 when ('HASH')  { $entry = $entry->{$p} || undef }
                 when ('ARRAY') { $entry = $entry->[$p] || undef }
-                when ('CODE')  { $entry = $entry->($p) || undef }
                 default        { undef $entry }
             }
             push @tail, $p;
@@ -112,7 +111,6 @@ sub tailref
     {
         when ('HASH')  { if (defined $data) { $tailref->{$tail} = $data } else { delete $tailref->{$tail} } }
         when ('ARRAY') { if (defined $data) { $tailref->[$tail] = $data } else { delete $tailref->[$tail] } }
-        when ('CODE')  { if (defined $data) { $tailref->($tail, $data)  } else { $tailref->($tail, undef) } }
     }
     return $entry;
 }
