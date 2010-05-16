@@ -7,21 +7,24 @@ sub new
 {
     my $class = shift;
     my %cache;
-    tie %cache, $class, @_;
+    tie %cache, $class, @_ if $class->is_needed(@_);
     return \%cache;
 }
 
-sub TIEHASH
+sub is_needed
 {
-    my $class = shift;
-    my $self = {};
-    bless $self, $class;
+    return;
 }
 
 1;
 
 package FusqlFS::Cache::File;
 use base 'FusqlFS::Cache';
+
+sub is_needed
+{
+    return $_[1] > 0;
+}
 
 sub TIEHASH
 {
@@ -87,7 +90,11 @@ sub cleanup
 
 package FusqlFS::Cache::Limited;
 use base 'FusqlFS::Cache';
-#use Carp;
+
+sub is_needed
+{
+    return $_[1] > 0;
+}
 
 sub TIEHASH
 {
