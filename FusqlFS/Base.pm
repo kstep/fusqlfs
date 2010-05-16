@@ -247,12 +247,6 @@ sub new
     };
     bless $self, $class;
 
-    if ($options{maxcached} && $options{maxcached} > 0)
-    {
-        $self->{cache} = new FusqlFS::Cache::Limited($options{maxcached});
-    }
-    $SIG{'USR1'} = sub{ %{$self->{cache}} = (); };
-
     $instance = $self;
     $self->init();
     return $self;
@@ -272,33 +266,6 @@ sub init
     return;
 }
 
-sub by_path
-{
-    my ($self, $path) = @_;
-    $self->{cache}->{$path} = new FusqlFS::Base::Entry(@_) unless defined $self->{cache}->{$path};
-    return $self->{cache}->{$path};
-}
-
-sub by_path_uncached
-{
-    new FusqlFS::Base::Entry(@_);
-}
-
-sub clear_cache
-{
-    my $self = shift;
-    delete $self->{cache}->{$_[0]};
-    if (defined $_[1])
-    {
-        my $key = $_[0];
-        $key =~ s{/[^/]+$}{} for (0..$_[1]);
-        foreach (keys %{$self->{cache}})
-        {
-            next unless /^$key/;
-            delete $self->{cache}->{$_};
-        }
-    }
-}
 
 sub destroy
 {

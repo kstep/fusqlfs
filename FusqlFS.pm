@@ -4,11 +4,15 @@ use v5.10.0;
 package FusqlFS;
 use POSIX qw(:fcntl_h :errno_h mktime);
 use Fcntl qw(:mode);
-use Data::Dump qw(dump);
+use Carp;
 use Fuse;
+
+use FusqlFS::Base;
+use FusqlFS::Cache;
 
 our $fusqlh;
 our $def_time;
+our $cache;
 
 sub init
 {
@@ -22,6 +26,20 @@ sub init
     require $filename;
     $fusqlh = $package->new(@_);
     $def_time = mktime(localtime());
+    $cache = {};
+
+    if ($options{cache_strategy})
+    {
+        given ($options{cache_strategy})
+        {
+            when ('limited') { $cache = new FusqlFS::Cache::Limited($options{cache_threshold}); }
+            when ('file')    { $cache = new FusqlFS::Cache::File($options{cache_threshold}); }
+            when ('memory')  { }
+            default { carp "Undefined cache strategy \"$options{cache_strategy}\" is used, fall back to \"memory\"" }
+        }
+    }
+
+    $SIG{USR1} = sub () { %$cache = (); };
 }
 
 sub mount
@@ -61,7 +79,7 @@ sub getdir
 {
     
     my ($path) = @_;
-    my $entry = $fusqlh->by_path($path);
+    my $entry = by_path($path);
     return -ENOENT() unless $entry;
     return -ENOTDIR() unless $entry->isdir();
     return ('.', '..', @{$entry->list()}, 0);
@@ -70,7 +88,7 @@ sub getdir
 sub getattr
 {
     my ($path) = @_;
-    my $entry = $fusqlh->by_path($path);
+    my $entry = by_path($path);
     return -ENOENT() unless $entry;
     return file_struct($entry);
 }
@@ -78,7 +96,7 @@ sub getattr
 sub readlink
 {
     my ($path) = @_;
-    my $entry = $fusqlh->by_path($path);
+    my $entry = by_path($path);
     return -ENOENT() unless $entry;
     return -EINVAL() unless $entry->islink();
     return ${$entry->get()};
@@ -87,7 +105,7 @@ sub readlink
 sub read
 {
     my ($path, $size, $offset) = @_;
-    my $entry = $fusqlh->by_path($path);
+    my $entry = by_path($path);
     return -ENOENT() unless $entry;
     return -EINVAL() unless $entry->isfile();
     return substr($entry->get(), $offset, $size);
@@ -96,7 +114,7 @@ sub read
 sub write
 {
     my ($path, $buffer, $offset) = @_;
-    my $entry = $fusqlh->by_path($path);
+    my $entry = by_path($path);
     return -ENOENT() unless $entry;
     return -EINVAL() unless $entry->isfile();
     return -EACCES() unless $entry->writable();
@@ -108,13 +126,13 @@ sub write
 sub flush
 {
     my ($path) = @_;
-    my $entry = $fusqlh->by_path($path);
+    my $entry = by_path($path);
     return -ENOENT() unless $entry;
 
     if ($entry->isdirty())
     {
         $entry->flush();
-        $fusqlh->clear_cache($path);
+        clear_cache($path);
     }
     return 0;
 }
@@ -122,7 +140,7 @@ sub flush
 sub open
 {
     my ($path, $mode) = @_;
-    my $entry = $fusqlh->by_path($path);
+    my $entry = by_path($path);
     return -ENOENT() unless $entry;
     return -EISDIR() if $entry->isdir();
     return 0;
@@ -131,7 +149,7 @@ sub open
 sub truncate
 {
     my ($path, $offset) = @_;
-    my $entry = $fusqlh->by_path($path);
+    my $entry = by_path($path);
     return -ENOENT() unless $entry;
     return -EINVAL() unless $entry->isfile();
     return -EACCES() unless $entry->writable();
@@ -146,27 +164,27 @@ sub symlink
     return -EOPNOTSUPP() if $path =~ /^\//;
 
     $path = fold_path($symlink, '..', $path);
-    my $origin = $fusqlh->by_path($path);
+    my $origin = by_path($path);
     return -ENOENT() unless $origin;
 
     my ($tail) = ($path =~ m{/([^/]+)$});
-    my $entry = $fusqlh->by_path_uncached($symlink, \$tail);
+    my $entry = by_path_uncached($symlink, \$tail);
     return -EEXIST() unless $entry->get() == \$tail;
 
     $entry->store();
-    $fusqlh->clear_cache($symlink, $entry->depth());
+    clear_cache($symlink, $entry->depth());
     return 0;
 }
 
 sub unlink
 {
     my ($path) = @_;
-    my $entry = $fusqlh->by_path($path);
+    my $entry = by_path($path);
     return -ENOENT() unless $entry;
     return -EACCES() unless $entry->writable();
 
     $entry->drop();
-    $fusqlh->clear_cache($path, $entry->depth());
+    clear_cache($path, $entry->depth());
     return 0;
 }
 
@@ -174,47 +192,47 @@ sub mkdir
 {
     my ($path, $mode) = @_;
     my $newdir = {};
-    my $entry = $fusqlh->by_path_uncached($path, $newdir);
+    my $entry = by_path_uncached($path, $newdir);
     return -ENOENT() unless $entry;
     return -EEXIST() unless $entry->get() == $newdir;
 
     $entry->create();
-    $fusqlh->clear_cache($path, $entry->depth());
+    clear_cache($path, $entry->depth());
     return 0;
 }
 
 sub rmdir
 {
     my ($path) = @_;
-    my $entry = $fusqlh->by_path($path);
+    my $entry = by_path($path);
     return -ENOENT() unless $entry;
     return -EACCES() unless $entry->writable();
 
     $entry->drop();
-    $fusqlh->clear_cache($path, $entry->depth());
+    clear_cache($path, $entry->depth());
     return 0;
 }
 
 sub mknod
 {
     my ($path, $mode, $dev) = @_;
-    my $entry = $fusqlh->by_path_uncached($path, '');
+    my $entry = by_path_uncached($path, '');
     return -ENOENT() unless $entry;
     return -EEXIST() unless $entry->get() eq '';
 
     $entry->create();
-    $fusqlh->clear_cache($path, $entry->depth());
+    clear_cache($path, $entry->depth());
     return 0;
 }
 
 sub rename
 {
     my ($path, $name) = @_;
-    my $entry = $fusqlh->by_path($path);
+    my $entry = by_path($path);
     return -ENOENT() unless $entry;
     return -EACCES() unless $entry->writable();
 
-    my $target = $fusqlh->by_path_uncached($name, $entry->get());
+    my $target = by_path_uncached($name, $entry->get());
     return -ENOENT() unless $target;
     return -EEXIST() unless $entry->get() == $target->get();
     return -EACCES() unless $target->writable();
@@ -223,25 +241,25 @@ sub rename
                              && $entry->height() == $target->height();
 
     $entry->move($target);
-    $fusqlh->clear_cache($path, $entry->depth());
+    clear_cache($path, $entry->depth());
     return 0;
 }
 
 sub fsync
 {
     my ($path, $flags) = @_;
-    my $entry = $fusqlh->by_path($path);
+    my $entry = by_path($path);
     return -ENOENT() unless $entry;
 
     $entry->flush();
-    $fusqlh->clear_cache($path, $flags? undef: $entry->depth());
+    clear_cache($path, $flags? undef: $entry->depth());
     return 0;
 }
 
 sub utime
 {
     my ($path, $atime, $mtime) = @_;
-    my $entry = $fusqlh->by_path($path);
+    my $entry = by_path($path);
     return -ENOENT() unless $entry;
     return 0;
 }
@@ -298,6 +316,34 @@ sub file_struct
     }
 
     return @fileinfo;
+}
+
+sub by_path
+{
+    my ($path) = @_;
+    $cache->{$path} = new FusqlFS::Base::Entry($fusqlh, @_) unless defined $cache->{$path};
+    return $cache->{$path};
+}
+
+sub by_path_uncached
+{
+    new FusqlFS::Base::Entry($fusqlh, @_);
+}
+
+sub clear_cache
+{
+    delete $cache->{$_[0]};
+    if (defined $_[1])
+    {
+        my $key = $_[0];
+        my $re = "/[^/]+" x $_[1];
+        $key =~ s{$re$}{};
+        while (my $_ = each %$cache)
+        {
+            next unless /^$key/;
+            delete $cache->{$_};
+        }
+    }
 }
 
 1;
