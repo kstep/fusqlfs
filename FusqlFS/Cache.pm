@@ -21,6 +21,8 @@ sub is_needed
 package FusqlFS::Cache::File;
 use base 'FusqlFS::Cache';
 
+use Carp;
+
 sub is_needed
 {
     return $_[1] > 0;
@@ -30,60 +32,115 @@ sub TIEHASH
 {
     my $class = shift;
     my $threshold = shift;
-    # real storage, size threshold
-    my $self = [ {}, 0+$threshold ];
+    # real storage, cache dir, size threshold
+
+    my $cachedir = "/tmp/fusqlfs-$$.cache";
+    mkdir $cachedir or croak "Unable to create cache dir $cachedir: $@";
+
+    my $self = [ {}, $cachedir, 0+$threshold ];
     bless $self, $class;
 }
 
 sub FETCH
 {
     my ($self, $key) = @_;
+    return unless exists $self->[0]->{$key};
+
+    my $value = $self->[0]->{$key};
+    return $value if ref $value || $value ne "\000";
+
+    $key = $self->cachefile($key);
+    open my $fh, '<', $key or croak "Unable to open cache file $key: $@";
+
+    my $buffer;
+    read $fh, $buffer, -s $fh or croak "Unable to read cache file $key: $@";
+    close $fh;
+
+    return $buffer;
 }
 
 sub STORE
 {
     my ($self, $key, $value) = @_;
+    unless (!ref $value && length($value) > $self->[2])
+    {
+        $self->[0]->{$key} = $value;
+    }
+    else
+    {
+        $self->[0]->{$key} = "\000";
+
+        $key = $self->cachefile($key);
+        open my $fh, '>', $key or croak "Unable to open cache file $key: $@";
+
+        print $fh $value or croak "Unable to write cache file $key: $@";
+        close $fh;
+    }
 }
 
 sub CLEAR
 {
     my ($self) = @_;
+    $self->[0] = {};
+    open my $dh, $self->[1] or croak "Unable to open cache dir $self->[1]: $@";
+    while (my $file = readdir($dh))
+    {
+        my $key = "$self->[1]/$file";
+        next unless -f $key;
+        unlink $key or carp "Unable to remove cache file $key: $@";
+    }
+    closedir $dh;
 }
 
 sub DELETE
 {
     my ($self, $key) = @_;
+    return unless exists $self->[0]->{$key};
+    if ($self->[0]->{$key} eq "\000")
+    {
+        $key = $self->cachefile($key);
+        unlink "$self->[1]/$key";
+    }
+    delete $self->[0]->{$key};
 }
 
 sub EXISTS
 {
     my ($self, $key) = @_;
+    return $self->[0]->{$key};
 }
 
 sub FIRSTKEY
 {
     my ($self) = @_;
+    my @keys = keys %{$self->[0]};
+    each %{$self->[0]};
 }
 
 sub NEXTKEY
 {
     my ($self, $lastkey) = @_;
+    each %{$self->[0]};
 }
 
 sub SCALAR
 {
     my ($self) = @_;
+    return scalar(%{$self->[0]});
 }
 
 sub UNTIE
 {
     my ($self) = @_;
-    $self->cleanup();
+    $self->CLEAR();
+    rmdir $self->[1] or carp "Unable to remove cache dir $self->[1]: $@";
 }
 
-sub cleanup
+sub cachefile
 {
-    my ($self) = @_;
+    my ($self, $key) = @_;
+    $key =~ s/([^a-zA-Z0-9])/sprintf('_%02x'.ord($1))/ge;
+    return "$self->[1]/$key";
 }
 
 1;
@@ -100,6 +157,7 @@ sub TIEHASH
 {
     my $class = shift;
     my $threshold = shift;
+
     # real hash, hits count, total count, threshold, cleanups count
     my $self = [ {}, {}, 0, 0+$threshold, 0 ];
 
