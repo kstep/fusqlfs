@@ -67,7 +67,7 @@ test-tables-drop:
 	test ! -d $(TABLEDIR)
 
 .PHONY: mount unmount remount \
-	test-basic \
+	test test-fs test-basic \
 	test-tables test-tables-ls test-tables-create test-tables-struct \
 	test-tables-indices test-tables-data test-tables-drop
 
