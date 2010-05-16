@@ -2,6 +2,26 @@ use strict;
 use v5.10.0;
 
 package FusqlFS::Cache;
+
+sub new
+{
+    my $class = shift;
+    my %cache;
+    tie %cache, $class, @_;
+    return \%cache;
+}
+
+sub TIEHASH
+{
+    my $class = shift;
+    my $self = {};
+    bless $self, $class;
+}
+
+1;
+
+package FusqlFS::Cache::Limited;
+use base 'FusqlFS::Cache';
 #use Carp;
 
 sub TIEHASH

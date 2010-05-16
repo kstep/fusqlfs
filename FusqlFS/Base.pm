@@ -226,6 +226,7 @@ use base 'FusqlFS::Base::Interface';
 
 use DBI;
 use YAML::Tiny;
+use FusqlFS::Cache;
 
 our $instance;
 
@@ -248,10 +249,9 @@ sub new
 
     if ($options{maxcached} && $options{maxcached} > 0)
     {
-        use FusqlFS::Cache;
-        tie %{$self->{cache}}, 'FusqlFS::Cache', $options{maxcached};
+        $self->{cache} = new FusqlFS::Cache::Limited($options{maxcached});
     }
-    $SIG{'USR1'} = sub{ $self->{cache} = {}; };
+    $SIG{'USR1'} = sub{ %{$self->{cache}} = (); };
 
     $instance = $self;
     $self->init();
