@@ -24,7 +24,7 @@ test-run:
 	pgrep fusqlfs.pl
 
 test-syntax:
-	@echo Syntax is correct
+	@echo Simple syntax test
 	find . -xdev -name "*.pl" -or -name "*.pm" -exec perl -c {} \;
 
 test-lint:
