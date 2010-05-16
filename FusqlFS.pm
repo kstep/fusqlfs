@@ -1,5 +1,5 @@
-use v5.10.0;
 use strict;
+use v5.10.0;
 
 package FusqlFS;
 use POSIX qw(:fcntl_h :errno_h mktime);
