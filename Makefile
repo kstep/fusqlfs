@@ -18,7 +18,10 @@ mount:
 clean-cache:
 	pkill -USR1 fusqlfs.pl
 
-test: test-syntax test-fs
+test: test-syntax test-run test-fs
+
+test-run:
+	pgrep fusqlfs.pl
 
 test-syntax:
 	@echo Syntax is correct
