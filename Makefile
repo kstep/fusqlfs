@@ -15,6 +15,8 @@ umount:
 mount:
 	fusqlfs.pl $(DEBUG) -u postgres -e PgSQL -L $L unite_dev $(DIR)/mnt
 
+test: test-syntax test-fs
+
 test-syntax:
 	find . -xdev -name "*.pl" -or -name "*.pm" -exec perl -c {} \;
 
