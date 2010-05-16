@@ -20,6 +20,71 @@ sub TIEHASH
 
 1;
 
+package FusqlFS::Cache::File;
+use base 'FusqlFS::Cache';
+
+sub TIEHASH
+{
+    my $class = shift;
+    my $threshold = shift;
+    # real storage, size threshold
+    my $self = [ {}, 0+$threshold ];
+    bless $self, $class;
+}
+
+sub FETCH
+{
+    my ($self, $key) = @_;
+}
+
+sub STORE
+{
+    my ($self, $key, $value) = @_;
+}
+
+sub CLEAR
+{
+    my ($self) = @_;
+}
+
+sub DELETE
+{
+    my ($self, $key) = @_;
+}
+
+sub EXISTS
+{
+    my ($self, $key) = @_;
+}
+
+sub FIRSTKEY
+{
+    my ($self) = @_;
+}
+
+sub NEXTKEY
+{
+    my ($self, $lastkey) = @_;
+}
+
+sub SCALAR
+{
+    my ($self) = @_;
+}
+
+sub UNTIE
+{
+    my ($self) = @_;
+    $self->cleanup();
+}
+
+sub cleanup
+{
+    my ($self) = @_;
+}
+
+1;
+
 package FusqlFS::Cache::Limited;
 use base 'FusqlFS::Cache';
 #use Carp;
