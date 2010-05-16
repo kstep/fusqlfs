@@ -19,22 +19,23 @@ if ($locale =~ /\.([-A-Za-z0-9]+)$/) {
 }
 
 my %options = (
-    'host'          => 'localhost',
-    'port'          => '',
-    'database'      => '',
-    'user'          => 'root',
-    'password'      => '',
-    'mountpoint'    => '',
-    'debug'         => 0,
-    'help'          => 0,
-    'charset'       => $locale,
-    'daemon'        => 1,
-    'logfile'       => '',
-    'fnsep'         => '.',
-    'engine'        => 'PgSQL',
-    'innodb'        => 0,
-    'limit'         => 0,
-    'maxcached'     => 0,
+    'host'            => 'localhost',
+    'port'            => '',
+    'database'        => '',
+    'user'            => 'root',
+    'password'        => '',
+    'mountpoint'      => '',
+    'debug'           => 0,
+    'help'            => 0,
+    'charset'         => $locale,
+    'daemon'          => 1,
+    'logfile'         => '',
+    'fnsep'           => '.',
+    'engine'          => 'PgSQL',
+    'innodb'          => 0,
+    'limit'           => 0,
+    'cache_strategy'  => 'memory',
+    'cache_threshold' => 0,
 );
 
 GetOptions(
@@ -53,7 +54,8 @@ GetOptions(
     'engine|e:s'      => \$options{'engine'},
     'innodb!'         => \$options{'innodb'},
     'limit|L:i'       => \$options{'limit'},
-    'maxcached|M:i'   => \$options{'maxcached'},
+    'cache|c:s'       => \$options{'cache_strategy'},
+    'cache-limit|M:i' => \$options{'cache_threshold'},
 ) or pod2usage(2);
 
 $options{'database'} ||= $ARGV[0];
@@ -70,7 +72,7 @@ daemonize($options{'logfile'}) if $options{'daemon'};
 
 FusqlFS::init(%options);
 
-FusqlFS::mount( $options{'mountpoint'}, 
+FusqlFS::mount( $options{'mountpoint'},
     'mountopts'  => $options{'allow_other'}? 'allow_other': '',
     'debug'      => $options{'debug'},
     'threaded'   => $use_threads,
@@ -177,18 +179,37 @@ __END__
 
     You can also limit number of cache entries with --maxcached options (see
     below). HDD-backed cache can be implemented in the future.
-    
+
     If this is an issue for you, use this option to limit number of listed
     table rows. You can still get record by requesting filename equal to
     primary key value (id usually) directly, if you know it, even if you don't
     see it in directory listing.
 
-=item B<--maxcached, -M>
+=item B<--cache, -c>
 
-    Integer, number of max cache items to store. If number of cached items
-    exceeds this number, cache cleanup is forced, least used entries removed
-    first. Values below or equal to zero means unlimited cache entries.
-    Defaults to 0, i.e. unlimited cache.
+    Cache strategy to choose. There're three strategies for now (in order
+    of speed decreasing):
+
+        * memory - store everything in memory, fastest but can be overkill
+            for your memory in case of big databases,
+        * limited - like memory, but number of stored elements is limited
+            to some defined value, and cache is cleared down to this limit
+            if it's exceeded (least used entries removed first);
+            good if you have limited memory space,
+        * file - store some data in files, good if you are going to work
+            with really big databases, e.g. with large blobs.
+
+    For details see --cache-limit option description below.
+
+=item B<--cache-limit, -M>
+
+    Integer, threshold for cache strategy (see --cache option for details),
+    defaults to 0, which means back up to "memory" strategy.
+    Meaning depends on chosen cache strategy.
+
+    For "limited" cache strategy it means number of max cache items to store.
+    If number of cached items exceeds this value, cache cleanup is forced,
+    least used entries removed first.
 
     I recommend to set this value to at least 3/4 of total objects in your
     database (including all tables, sequences, views, data rows and other
@@ -197,10 +218,22 @@ __END__
     educated guess and some tests with "entry" names generated with normally
     distributed random generator. Experiment is your best advisor in this case.
 
-    Also set this value above zero only if you really have low memory issues
-    with the program, as this cache method have to support additional
-    structures to analyze data usage, and so it's slower than simple unlimited
-    cache strategy (it's still much faster than database requests, however).
+    For "file" strategy it means max entry size in bytes to store on disk
+    (caches simple files only for now, dirs/symlinks and the like are not
+    cached, which is ok in most cases). If file size is smaller then given
+    size, then it is stored in memory. Useful if you are going to review big
+    chucks of data in your database, e.g. large blobs etc.
+
+    Common advise: set --cache-limit above zero and --cache to anything but
+    "memory" only if you really have low memory issues with the program, as all
+    other cache strategies are slower than simple memory access. "Limited"
+    cache method has to support additional structures to analyze data usage,
+    and so it's slower than simple "memory" cache strategy, while "file" cache
+    method has to check and update real files on your disk, so both of them are
+    slower than simple "memory" caching (they're still faster than database
+    requests, however).
+
+
 
 =head2 Boolean options
 
