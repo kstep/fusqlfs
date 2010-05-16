@@ -15,6 +15,9 @@ umount:
 mount:
 	fusqlfs.pl $(DEBUG) -u postgres -e PgSQL -L $L unite_dev $(DIR)/mnt
 
+clean-cache:
+	pkill -USR1 fusqlfs.pl
+
 test: test-syntax test-fs
 
 test-syntax:
