@@ -289,11 +289,11 @@ sub by_path_uncached
 sub clear_cache
 {
     my $self = shift;
-    delete $self->{cache}->{$_[1]};
-    if (defined $_[2])
+    delete $self->{cache}->{$_[0]};
+    if (defined $_[1])
     {
-        my $key = $_[1];
-        $key =~ s{/[^/]+$}{} for (0..$_[2]);
+        my $key = $_[0];
+        $key =~ s{/[^/]+$}{} for (0..$_[1]);
         foreach (keys %{$self->{cache}})
         {
             next unless /^$key/;
