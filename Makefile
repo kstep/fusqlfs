@@ -18,6 +18,10 @@ mount:
 test-syntax:
 	find . -xdev -name "*.pl" -or -name "*.pm" -exec perl -c {} \;
 
+test-lint:
+	@echo Extended lint test
+	find . -xdev -name "*.pl" -or -name "*.pm" -exec perl -MO=Lint,no-context {} \;
+
 test-fs: test-basic test-tables
 
 test-basic:
