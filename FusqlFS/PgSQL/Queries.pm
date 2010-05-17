@@ -30,7 +30,11 @@ sub create
 {
     my $self = shift;
     my ($name) = @_;
-    $self->{$name} = { 'query.sql' => '' };
+    $self->{$name} = sub () {
+        my $query = shift;
+        my $expr = $self->expr($query);
+        return $self->dump($self->all_row($expr));
+    };
 }
 
 sub drop
@@ -38,17 +42,6 @@ sub drop
     my $self = shift;
     my ($name) = @_;
     delete $self->{$name};
-}
-
-sub store
-{
-    my $self = shift;
-    my ($name, $data) = @_;
-    my $expr = $self->expr($data);
-    my $query = sub () {
-        return $self->dump($self->all_row($expr));
-    };
-    $self->{$name} = { 'query.sql' => $data->{'query.sql'}, 'data' => $query };
 }
 
 1;
