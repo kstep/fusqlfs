@@ -315,13 +315,10 @@ sub file_struct
         $fileinfo[2] |= S_IFLNK;
         $fileinfo[7] = 0 + length(${$entry->get()});
     }
-    elsif ($entry->ispipe())
-    {
-        $fileinfo[2] |= S_IFREG|S_ISVTX;
-    }
     else
     {
         $fileinfo[2] |= S_IFREG;
+        $fileinfo[2] |= S_ISVTX if $entry->ispipe();
         $fileinfo[7] = 0 + length($entry->get());
     }
 
