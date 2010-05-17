@@ -29,15 +29,15 @@ sub new
         {
             given ($ref)
             {
-                when ('HASH')  { $entry = $entry->{$p} || undef }
-                when ('ARRAY') { $entry = $entry->[$p] || undef }
+                when ('HASH')  { $entry = defined $entry->{$p}? $entry->{$p}: undef }
+                when ('ARRAY') { $entry = defined $entry->[$p]? $entry->[$p]: undef }
                 default        { undef $entry }
             }
             push @tail, $p;
         }
     }
 
-    $entry ||= $leaf_absent;
+    $entry = $leaf_absent unless defined $entry;
     return unless defined $entry;
     my $list;
     if (UNIVERSAL::isa($entry, 'FusqlFS::Base::Interface'))
