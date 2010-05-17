@@ -1,4 +1,4 @@
-DEBUG="--logfile=fusqlfs.log"
+DEBUG=--logfile=fusqlfs.log --cache=file --cache-limit=20
 DIR=`pwd`
 L=100
 M=5000
