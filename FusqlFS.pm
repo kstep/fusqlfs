@@ -346,6 +346,7 @@ sub by_path_uncached
 
 sub clear_cache
 {
+    return if $cache->{$_[0]}->isdirty();
     delete $cache->{$_[0]};
     if (defined $_[1])
     {
