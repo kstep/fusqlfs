@@ -1,2 +1,5 @@
 .*
 *.sw?
+/fusqlfs.log
+/test.*
+/doc
