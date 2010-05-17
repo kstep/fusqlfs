@@ -71,8 +71,8 @@
     (means all rows). Useful if you are going to browse really big databases,
     as listing all data records as files can be very slow and memory consuming.
 
-    You can also limit number of cache entries with --maxcached options (see
-    below). HDD-backed cache can be implemented in the future.
+    You can also try to change and tune your cache strategy with --cache and
+    --cache-limit options (see below).
 
     If this is an issue for you, use this option to limit number of listed
     table rows. You can still get record by requesting filename equal to
