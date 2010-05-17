@@ -187,6 +187,13 @@ sub all_col
     return $FusqlFS::Base::instance->{dbh}->selectcol_arrayref($sql, {}, @binds);
 }
 
+sub all_row
+{
+    my ($self, $sql, @binds) = @_;
+    $sql = sprintf($sql, @{shift @binds}) if !ref($sql) && ref($binds[0]);
+    return $FusqlFS::Base::instance->{dbh}->selectall_arrayref($sql, { Slice => {} }, @binds);
+}
+
 sub load
 {
     return $FusqlFS::Base::instance->{loader}->($_[1]);
