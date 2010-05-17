@@ -191,6 +191,7 @@ sub unlink
     my $entry = by_path($path);
     return -ENOENT() unless $entry;
     return -EACCES() unless $entry->writable();
+    return -EACCES() if $entry->ispipe();
 
     $entry->drop();
     clear_cache($path, $entry->depth());
