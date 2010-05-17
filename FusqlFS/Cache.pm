@@ -23,6 +23,8 @@ use base 'FusqlFS::Cache';
 
 use Carp;
 
+use FusqlFS::Base;
+
 sub is_needed
 {
     return $_[1] > 0;
@@ -44,37 +46,18 @@ sub TIEHASH
 sub FETCH
 {
     my ($self, $key) = @_;
-    return unless exists $self->[0]->{$key};
-
-    my $value = $self->[0]->{$key};
-    return $value if ref $value || $value ne "\000";
-
-    $key = $self->cachefile($key);
-    open my $fh, '<', $key or croak "Unable to open cache file $key: $@";
-
-    my $buffer;
-    read $fh, $buffer, -s $fh or croak "Unable to read cache file $key: $@";
-    close $fh;
-
-    return $buffer;
+    return $self->[0]->{$key}||undef;
 }
 
 sub STORE
 {
     my ($self, $key, $value) = @_;
-    unless (!ref $value && length($value) > $self->[2])
-    {
-        $self->[0]->{$key} = $value;
-    }
-    else
-    {
-        $self->[0]->{$key} = "\000";
+    $self->[0]->{$key} = $value;
+    return if tied $value->[2];
 
-        $key = $self->cachefile($key);
-        open my $fh, '>', $key or croak "Unable to open cache file $key: $@";
-
-        print $fh $value or croak "Unable to write cache file $key: $@";
-        close $fh;
+    if (!ref($value->[2]) && length($value->[2]) > $self->[2])
+    {
+        tie $value->[2], 'FusqlFS::Cache::File::Record', $self->cachefile($key), $value->[2];
     }
 }
 
@@ -96,11 +79,6 @@ sub DELETE
 {
     my ($self, $key) = @_;
     return unless exists $self->[0]->{$key};
-    if ($self->[0]->{$key} eq "\000")
-    {
-        $key = $self->cachefile($key);
-        unlink "$self->[1]/$key";
-    }
     delete $self->[0]->{$key};
 }
 
@@ -136,11 +114,61 @@ sub UNTIE
     rmdir $self->[1] or carp "Unable to remove cache dir $self->[1]: $@";
 }
 
+sub DESTROY
+{
+    $_[0]->UNTIE();
+}
+
 sub cachefile
 {
     my ($self, $key) = @_;
     $key =~ s/([^a-zA-Z0-9])/sprintf('_%02x'.ord($1))/ge;
     return "$self->[1]/$key";
+}
+
+1;
+
+package FusqlFS::Cache::File::Record;
+use Carp;
+
+sub TIESCALAR
+{
+    my $value = $_[1];
+    my $self = bless \$value, $_[0];
+    $self->STORE($_[2]) if defined $_[2];
+    return $self;
+}
+
+sub FETCH
+{
+    my $self = shift;
+    open my $fh, '<', $$self or croak "Unable to open cache file $$self: $@";
+
+    my $buffer;
+    read $fh, $buffer, -s $fh or croak "Unable to read cache file $$self: $@";
+    close $fh;
+
+    return $buffer;
+}
+
+sub STORE
+{
+    my $self = shift;
+
+    open my $fh, '>', $$self or croak "Unable to open cache file $$self: $@";
+
+    print $fh $_[0] or croak "Unable to write cache file $$self: $@";
+    close $fh;
+}
+
+sub UNTIE
+{
+    unlink ${$_[0]} or carp "Unable to remove cache file ${$_[0]}: $@";
+}
+
+sub DESTROY
+{
+    $_[0]->UNTIE();
 }
 
 1;
