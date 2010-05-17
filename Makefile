@@ -21,6 +21,7 @@ clean-cache:
 test: test-syntax test-run test-fs
 
 test-run:
+	mount -t fuse | grep -q $(MDIR)
 	pgrep fusqlfs.pl
 
 test-syntax:
