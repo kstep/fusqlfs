@@ -3,25 +3,6 @@ use v5.10.0;
 
 use FusqlFS::Base;
 
-package FusqlFS::PgSQL::Query;
-use base 'FusqlFS::Base::Interface';
-
-sub new
-{
-    my $class = shift;
-    my $self = [$class->expr($_[0])];
-
-    bless $self, $class;
-}
-
-sub get
-{
-    my $self = shift;
-    return $self->dump($self->all_row($self->[0]));
-}
-
-1;
-
 package FusqlFS::PgSQL::Queries;
 use base 'FusqlFS::Base::Interface';
 
@@ -63,7 +44,11 @@ sub store
 {
     my $self = shift;
     my ($name, $data) = @_;
-    $self->{$name} = { 'query.sql' => $data->{'query.sql'}, 'data' => new FusqlFS::PgSQL::Query($data->{'query.sql'}) };
+    my $expr = $self->expr($data);
+    my $query = sub () {
+        return $self->dump($self->all_row($expr));
+    };
+    $self->{$name} = { 'query.sql' => $data->{'query.sql'}, 'data' => $query };
 }
 
 1;
