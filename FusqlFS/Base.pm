@@ -52,6 +52,7 @@ sub new
         {
             when ('HASH')  { $list = [ keys %$entry ] }
             when ('ARRAY') { $list = [ 0..$#{$entry} ] }
+            when ('CODE')  { $pkg = $entry; $entry = '' }
             #when ('SCALAR') {}
         }
     }
@@ -132,7 +133,9 @@ sub height { scalar @{$_[0]->[1]} }
 
 sub entry { $_[0]->[0]->get(@{$_[0]->[1]}) }
 sub write { $_[0]->[5] = 1; substr($_[0]->[2], $_[1], length($_[2]||$_[0]->[2])) = $_[2]||''; }
-sub flush { return unless defined $_[0]->[5]; $_[0]->store($_[0]->[2]); pop @{$_[0]}; }
+sub flush { return unless defined $_[0]->[5]; return $_[0]->pipein() if $_[0]->ispipe(); $_[0]->store($_[0]->[2]); pop @{$_[0]}; }
+
+sub pipein { $_[0]->[2] = $_[0]->[0]->($_[0]->[2]); }
 
 1;
 
