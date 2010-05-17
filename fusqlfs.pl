@@ -121,9 +121,9 @@ __END__
 
 =head1 OPTIONS
 
-=over 8
-
 =head2 Basic options
+
+=over 8
 
 =item B<--host, -h>
 
@@ -154,7 +154,11 @@ __END__
     DB engine to use. Can be either PgSQL or MySQL for now. PgSQL is really
     implemented, MySQL is in my todo list. Defaults to PgSQL.
 
+=back
+
 =head2 Other options with values
+
+=over 8
 
 =item B<--charset, -C>
 
@@ -233,9 +237,11 @@ __END__
     slower than simple "memory" caching (they're still faster than database
     requests, however).
 
-
+=back
 
 =head2 Boolean options
+
+=over 8
 
 =item B<--innodb>
 
