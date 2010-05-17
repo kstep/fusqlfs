@@ -316,7 +316,7 @@ sub file_struct
     }
     elsif ($entry->ispipe())
     {
-        $fileinfo[2] |= S_IFIFO;
+        $fileinfo[2] |= S_IFREG|S_ISVTX;
     }
     else
     {
