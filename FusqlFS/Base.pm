@@ -52,7 +52,7 @@ sub new
         {
             when ('HASH')  { $list = [ keys %$entry ] }
             when ('ARRAY') { $list = [ 0..$#{$entry} ] }
-            when ('CODE')  { $pkg = $entry; $entry = '' }
+            when ('CODE')  { $pkg = $entry; $entry = ''; }
             #when ('SCALAR') {}
         }
     }
@@ -60,7 +60,7 @@ sub new
     bless $self, $class;
 }
 
-sub get { $_[0]->[2] }
+sub get { $_[0]->[5]||$_[0]->[2] }
 sub list { $_[0]->[3] }
 sub move
 {
@@ -80,7 +80,21 @@ sub move
 }
 sub drop { $_[0]->put(undef) or $_[0]->[0]->drop(@{$_[0]->[1]}); }
 sub create { $_[0]->put('') or $_[0]->[0]->create(@{$_[0]->[1]}); }
-sub store { my $data = $_[1]||$_[0]->[2]; $_[0]->put($data) or $_[0]->[0]->store(@{$_[0]->[1]}, $data); }
+sub store
+{
+    my $self = shift;
+    my $data = shift||$self->[2];
+    if ($self->ispipe())
+    {
+        $self->[5] = $self->[0]->($data);
+        return;
+    }
+    else
+    {
+        $self->put($data) or $_[0]->[0]->store(@{$_[0]->[1]}, $data);
+        return 1;
+    }
+}
 
 sub put
 {
@@ -119,7 +133,7 @@ sub tailref
 sub isdir { defined $_[0]->[3] }
 sub islink { ref $_[0]->[2] eq 'SCALAR' }
 sub isfile { !(defined $_[0]->[3] || ref $_[0]->[2]) }
-sub ispipe { ref $_[0]->[2] eq 'CODE' }
+sub ispipe { ref $_[0]->[0] eq 'CODE' }
 sub isdirty { defined $_[0]->[5] }
 
 sub writable { !UNIVERSAL::isa($_[0]->[2], 'FusqlFS::Base::Interface') }
@@ -131,11 +145,9 @@ sub name { $_[0]->[4]->[-1] || $_[0]->[1]->[-1] }
 sub depth { scalar @{$_[0]->[4]} }
 sub height { scalar @{$_[0]->[1]} }
 
-sub entry { $_[0]->[0]->get(@{$_[0]->[1]}) }
-sub write { $_[0]->[5] = 1; substr($_[0]->[2], $_[1], length($_[2]||$_[0]->[2])) = $_[2]||''; }
-sub flush { return unless defined $_[0]->[5]; return $_[0]->pipein() if $_[0]->ispipe(); $_[0]->store($_[0]->[2]); pop @{$_[0]}; }
-
-sub pipein { $_[0]->[2] = $_[0]->[0]->($_[0]->[2]); }
+sub entry { return $_[0]->[0] if $_[0]->ispipe(); $_[0]->[0]->get(@{$_[0]->[1]}) }
+sub write { $_[0]->[5] = ''; substr($_[0]->[2], $_[1], length($_[2]||$_[0]->[2])) = $_[2]||''; }
+sub flush { return unless defined $_[0]->[5]; $_[0]->store($_[0]->[2]) and pop @{$_[0]}; }
 
 1;
 
