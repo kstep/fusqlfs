@@ -14,6 +14,8 @@ sub new
     $self->{get_primary_expr} = $class->expr("SELECT indkey FROM pg_catalog.pg_index
             WHERE indisprimary AND indrelid = (SELECT oid FROM pg_catalog.pg_class as c WHERE c.relname = ? AND relkind = 'r')");
 
+    $self->{query_cache} = {};
+
     bless $self, $class;
 }
 
@@ -43,7 +45,10 @@ sub get
     my ($where_clause, @binds) = $self->where_clause($table, $name);
     return unless $where_clause;
 
-    my $sth = $self->cexpr('SELECT * FROM "%s" WHERE %s LIMIT 1', $table, $where_clause);
+    $self->{query_cache}->{$table} ||= {};
+    $self->{query_cache}->{$table}->{$where_clause} ||= $self->expr('SELECT * FROM "%s" WHERE %s LIMIT 1', $table, $where_clause);
+
+    my $sth = $self->{query_cache}->{$table}->{$where_clause};
     return $self->dump($sth->fetchrow_hashref) if $sth->execute(@binds);
 }
 
