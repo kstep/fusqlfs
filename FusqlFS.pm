@@ -333,8 +333,10 @@ sub file_struct
 sub by_path
 {
     my ($path) = @_;
-    $cache->{$path} = new FusqlFS::Base::Entry($fusqlh, @_) unless defined $cache->{$path};
-    return $cache->{$path};
+    return $cache->{$path} if exists $cache->{$path};
+    my $entry = new FusqlFS::Base::Entry($fusqlh, @_);
+    $cache->{$path} = $entry if $entry;
+    return $entry;
 }
 
 sub by_path_uncached
@@ -344,7 +346,7 @@ sub by_path_uncached
 
 sub clear_cache
 {
-    return if $cache->{$_[0]}->isdirty();
+    return if $cache->{$_[0]} && $cache->{$_[0]}->isdirty();
     delete $cache->{$_[0]};
     if (defined $_[1])
     {
