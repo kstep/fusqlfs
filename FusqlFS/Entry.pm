@@ -177,6 +177,7 @@ sub init
 }
 
 sub ispipe { return 1; }
+sub isfile { return 1; }
 
 sub size { length $_[0]->[5] }
 sub get { my $buffer = $_[0]->[5]; $_[0]->[5] = $_[0]->[2]->(); return $buffer; }
