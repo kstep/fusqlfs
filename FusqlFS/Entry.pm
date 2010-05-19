@@ -151,6 +151,7 @@ sub height { scalar @{$_[0]->[1]} }
 sub entry { $_[0]->[0]->get(@{$_[0]->[1]}) }
 sub write { $_[0]->[5] = ''; substr($_[0]->[2], $_[1], length($_[2]||$_[0]->[2])) = $_[2]||''; }
 sub flush { return unless defined $_[0]->[5]; $_[0]->store($_[0]->[2]) and pop @{$_[0]}; }
+sub read { }
 
 1;
 
@@ -158,6 +159,8 @@ package FusqlFS::Entry::File;
 use base 'FusqlFS::Entry';
 
 sub isfile { return 1; }
+
+sub read { substr($_[0]->[2], $_[1], $_[2]) }
 
 1;
 
