@@ -227,7 +227,7 @@ sub mknod
     return -EEXIST() unless $entry->get() eq '';
 
     $entry->create();
-    clear_cache($path, $entry->depth());
+    clear_cache($path, 1+$entry->depth());
     return 0;
 }
 
