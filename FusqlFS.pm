@@ -172,7 +172,7 @@ sub symlink
     return -ENOENT() unless $origin;
 
     my ($tail) = ($path =~ m{/([^/]+)$});
-    my $entry = by_path_uncached($symlink, \$tail);
+    my $entry = $fusqlh->by_path($symlink, \$tail);
     return -EEXIST() unless $entry->get() == \$tail;
 
     $entry->store();
@@ -198,7 +198,7 @@ sub mkdir
 {
     my ($path, $mode) = @_;
     my $newdir = {};
-    my $entry = by_path_uncached($path, $newdir);
+    my $entry = $fusqlh->by_path($path, $newdir);
     return -ENOENT() unless $entry;
     return -EEXIST() unless $entry->get() == $newdir;
 
@@ -223,7 +223,7 @@ sub rmdir
 sub mknod
 {
     my ($path, $mode, $dev) = @_;
-    my $entry = by_path_uncached($path, '');
+    my $entry = $fusqlh->by_path($path, '');
     return -ENOENT() unless $entry;
     return -EEXIST() unless $entry->get() eq '';
 
@@ -239,7 +239,7 @@ sub rename
     return -ENOENT() unless $entry;
     return -EACCES() unless $entry->writable();
 
-    my $target = by_path_uncached($name, $entry->get());
+    my $target = $fusqlh->by_path($name, $entry->get());
     return -ENOENT() unless $target;
     return -EEXIST() unless $entry->get() == $target->get();
     return -EACCES() unless $target->writable();
@@ -330,14 +330,9 @@ sub by_path
 {
     my ($path) = @_;
     return $cache->{$path} if exists $cache->{$path};
-    my $entry = new FusqlFS::Base::Entry($fusqlh, @_);
+    my $entry = $fusqlh->by_path(@_);
     $cache->{$path} = $entry if $entry;
     return $entry;
-}
-
-sub by_path_uncached
-{
-    new FusqlFS::Base::Entry($fusqlh, @_);
 }
 
 sub clear_cache
