@@ -342,7 +342,8 @@ sub get
     my $self = shift;
     my ($name) = @_;
     my $result = $self->all_col($self->{get_expr}, $name);
-    return $self->{subpackages} if @$result;
+    return unless @$result;
+    return $self->{subpackages};
 }
 
 sub drop
