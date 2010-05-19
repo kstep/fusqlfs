@@ -120,6 +120,7 @@ sub write
     my ($path, $buffer, $offset) = @_;
     my $entry = by_path($path);
     return -ENOENT() unless $entry;
+    return -EISDIR() if $entry->isdir();
     return -EINVAL() unless $entry->isfile();
     return -EACCES() unless $entry->writable();
 
