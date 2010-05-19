@@ -112,7 +112,7 @@ sub read
     my $entry = by_path($path);
     return -ENOENT() unless $entry;
     return -EINVAL() unless $entry->isfile();
-    return substr($entry->get(), $offset, $size);
+    return $entry->read($offset, $size);
 }
 
 sub write
