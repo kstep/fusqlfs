@@ -99,7 +99,6 @@ use base 'FusqlFS::Base::Interface';
 
 use DBI;
 use YAML::Tiny;
-use FusqlFS::Cache;
 use FusqlFS::Entry;
 
 our $instance;
@@ -116,7 +115,6 @@ sub new
         dumper => \&YAML::Tiny::Dump,
         loader => \&YAML::Tiny::Load,
         limit  => 0 + $options{limit},
-        cache  => {},
         dbh => DBI->connect($dsn, @options{qw(user password)}),
     };
     bless $self, $class;
