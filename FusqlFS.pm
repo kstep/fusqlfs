@@ -6,7 +6,6 @@ use POSIX qw(:fcntl_h :errno_h mktime);
 use Fcntl qw(:mode);
 use Carp;
 use Fuse;
-use Carp;
 
 use FusqlFS::Base;
 use FusqlFS::Cache;
@@ -119,7 +118,6 @@ sub read
 sub write
 {
     my ($path, $buffer, $offset) = @_;
-    carp "path: $path, buffer: $buffer, offset: $offset";
     my $entry = by_path($path);
     return -ENOENT() unless $entry;
     return -EINVAL() unless $entry->isfile();
@@ -132,7 +130,6 @@ sub write
 sub flush
 {
     my ($path) = @_;
-    carp "path: $path";
     my $entry = by_path($path);
     return -ENOENT() unless $entry;
 
@@ -147,7 +144,6 @@ sub flush
 sub open
 {
     my ($path, $mode) = @_;
-    carp "path: $path, mode: $mode";
     my $entry = by_path($path);
     return -ENOENT() unless $entry;
     return -EISDIR() if $entry->isdir();
@@ -157,7 +153,6 @@ sub open
 sub truncate
 {
     my ($path, $offset) = @_;
-    carp "path: $path, offset: $offset";
     my $entry = by_path($path);
     return -ENOENT() unless $entry;
     return -EINVAL() unless $entry->isfile();
@@ -258,7 +253,6 @@ sub rename
 sub fsync
 {
     my ($path, $flags) = @_;
-    carp "path: $path, flags: $flags";
     my $entry = by_path($path);
     return -ENOENT() unless $entry;
 
