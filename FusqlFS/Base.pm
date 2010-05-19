@@ -68,6 +68,7 @@ sub load
 sub dump
 {
     return $FusqlFS::Base::instance->{dumper}->($_[1]) if $_[1];
+    return;
 }
 
 sub limit
