@@ -187,6 +187,7 @@ sub unlink
     return -ENOENT() unless $entry;
     return -EACCES() unless $entry->writable();
     return -EACCES() if $entry->ispipe();
+    return -EISDIR() if $entry->isdir();
 
     $entry->drop();
     clear_cache($path, $entry->depth());
@@ -212,6 +213,7 @@ sub rmdir
     my $entry = by_path($path);
     return -ENOENT() unless $entry;
     return -EACCES() unless $entry->writable();
+    return -ENOTDIR() unless $entry->isdir();
 
     $entry->drop();
     clear_cache($path, $entry->depth());
