@@ -34,6 +34,7 @@ my %options = (
     'engine'          => 'PgSQL',
     'innodb'          => 0,
     'limit'           => 0,
+    'format'          => 'yaml',
     'cache_strategy'  => 'memory',
     'cache_threshold' => 0,
 );
@@ -56,6 +57,7 @@ GetOptions(
     'limit|L:i'       => \$options{'limit'},
     'cache|c:s'       => \$options{'cache_strategy'},
     'cache-limit|M:i' => \$options{'cache_threshold'},
+    'format|f:s'      => \$options{'format'},
 ) or pod2usage(2);
 
 $options{'database'} ||= $ARGV[0];
@@ -236,6 +238,11 @@ __END__
     method has to check and update real files on your disk, so both of them are
     slower than simple "memory" caching (they're still faster than database
     requests, however).
+
+=item B<--format, -f>
+
+    Format used to output different text data, like rows, columns description etc.
+    Can be "xml" or "yaml" for now, defaults to "yaml".
 
 =back
 

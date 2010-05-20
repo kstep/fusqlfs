@@ -99,7 +99,6 @@ package FusqlFS::Base;
 use base 'FusqlFS::Base::Interface';
 
 use DBI;
-use YAML::Tiny;
 use FusqlFS::Entry;
 
 our $instance;
@@ -113,11 +112,32 @@ sub new
     my $dsn = 'DBI:'.$class->dsn(@options{qw(host port database)});
     my $self = {
         subpackages => {},
-        dumper => \&YAML::Tiny::Dump,
-        loader => \&YAML::Tiny::Load,
         limit  => 0 + $options{limit},
         dbh => DBI->connect($dsn, @options{qw(user password)}),
     };
+
+    given ($options{format})
+    {
+        when ('xml')
+        {
+            use XML::Simple;
+            $self->{dumper} = \&XMLout;
+            $self->{loader} = \&XMLin;
+        }
+        when ('yaml')
+        {
+            use YAML::Tiny;
+            $self->{dumper} = \&YAML::Tiny::Dump;
+            $self->{loader} = \&YAML::Tiny::Load;
+        }
+        default
+        {
+            use YAML::Tiny;
+            $self->{dumper} = \&YAML::Tiny::Dump;
+            $self->{loader} = \&YAML::Tiny::Load;
+        }
+    }
+
     bless $self, $class;
 
     $instance = $self;
