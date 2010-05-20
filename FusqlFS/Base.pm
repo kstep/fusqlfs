@@ -130,6 +130,12 @@ sub new
             $self->{dumper} = \&YAML::Tiny::Dump;
             $self->{loader} = \&YAML::Tiny::Load;
         }
+        when ('json')
+        {
+            use JSON::Syck;
+            $self->{dumper} = \&JSON::Syck::Dump;
+            $self->{loader} = \&JSON::Syck::Load;
+        }
         default
         {
             use YAML::Tiny;

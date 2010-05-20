@@ -242,7 +242,7 @@ __END__
 =item B<--format, -f>
 
     Format used to output different text data, like rows, columns description etc.
-    Can be "xml" or "yaml" for now, defaults to "yaml".
+    Can be "xml", "json" or "yaml" for now, defaults to "yaml".
 
 =back
 
