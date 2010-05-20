@@ -121,8 +121,8 @@ sub new
         when ('xml')
         {
             use XML::Simple;
-            $self->{dumper} = \&XMLout;
-            $self->{loader} = \&XMLin;
+            $self->{dumper} = sub () { XMLout($_[0], NoAttr => 1) };
+            $self->{loader} = sub () { XMLin($_[0], NoAttr => 1) };
         }
         when ('yaml')
         {
