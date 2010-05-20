@@ -114,9 +114,7 @@ sub read
     return -ENOENT() unless $entry;
     return -EINVAL() unless $entry->isfile();
 
-    my $result = $entry->read($offset, $size);
-    return -EWOULDBLOCK() if $entry->ispipe() && !$result;
-    return $result;
+    return $entry->read($offset, $size);
 }
 
 sub write
@@ -189,7 +187,6 @@ sub unlink
     my $entry = by_path($path);
     return -ENOENT() unless $entry;
     return -EACCES() unless $entry->writable();
-    return -EACCES() if $entry->ispipe();
     return -EISDIR() if $entry->isdir();
 
     $entry->drop();
@@ -317,11 +314,7 @@ sub file_struct
     else
     {
         $fileinfo[2] |= S_IFREG;
-        if ($entry->ispipe())
-        {
-            $fileinfo[2] |= S_ISVTX;
-            $fileinfo[10] = $fileinfo[9] = mktime(localtime());
-        }
+        $fileinfo[2] |= S_ISVTX if $entry->ispipe();
         $fileinfo[7] = $entry->size();
     }
 
