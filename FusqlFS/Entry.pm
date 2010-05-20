@@ -137,7 +137,6 @@ sub isdir { }
 sub islink { }
 sub isfile { }
 sub ispipe { }
-sub isdirty { defined $_[0]->[5] }
 
 sub writable { !UNIVERSAL::isa($_[0]->[2], 'FusqlFS::Base::Interface') }
 
@@ -150,7 +149,6 @@ sub height { scalar @{$_[0]->[1]} }
 
 sub entry { $_[0]->[0]->get(@{$_[0]->[1]}) }
 sub write { }
-sub flush { }
 sub read { }
 
 1;
@@ -160,8 +158,7 @@ use base 'FusqlFS::Entry';
 
 sub isfile { return 1; }
 
-sub write { $_[0]->[5] = ''; substr($_[0]->[2], $_[1], length($_[2]||$_[0]->[2])) = $_[2]||''; }
-sub flush { return unless defined $_[0]->[5]; $_[0]->store($_[0]->[2]) and pop @{$_[0]}; }
+sub write { substr($_[0]->[2], $_[1], length($_[2]||$_[0]->[2])) = $_[2]||''; $_[0]->store($_[0]->[2]) }
 sub read { substr($_[0]->[2], $_[1], $_[2]) }
 
 1;
@@ -171,18 +168,16 @@ use base 'FusqlFS::Entry';
 
 sub init
 {
-    # 0=pkg, 1=names, 2=filter sub, 3=input buffer, 4=tail, 5=output buffer
-    undef $_[0]->[3];
-    $_[0]->[5] = $_[0]->[2]->();
+    # 0=pkg, 1=names, 2=output buffer, 3=filter sub, 4=tail
+    ($_[0]->[3], $_[0]->[2]) = ($_[0]->[2], $_[0]->[2]->());
 }
 
 sub ispipe { return 1; }
 sub isfile { return 1; }
 
-sub size { length $_[0]->[5] }
+sub size { return 0 }
 sub get { my $buffer = $_[0]->[5]; $_[0]->[5] = $_[0]->[2]->(); return $buffer; }
-sub write { $_[0]->[3] ||= ''; substr($_[0]->[3], $_[1], length($_[2]||$_[0]->[3])) = $_[2]||''; }
-sub flush { return unless defined $_[0]->[3]; $_[0]->[5] = $_[0]->[2]->($_[0]->[3]); undef $_[0]->[3]; }
+sub write { $_[0]->[2] = $_[0]->[3]->($_[2]); }
 
 1;
 

@@ -13,6 +13,7 @@ use FusqlFS::Cache;
 our $fusqlh;
 our $def_time;
 our $cache;
+our %inbuffer;
 
 sub init
 {
@@ -124,7 +125,8 @@ sub write
     return -EINVAL() unless $entry->isfile();
     return -EACCES() unless $entry->writable();
 
-    $entry->write($offset, $buffer);
+    $inbuffer{$path} ||= $entry->get();
+    substr($inbuffer{$path}, $offset, length($buffer)) = $buffer;
     return length($buffer);
 }
 
@@ -134,11 +136,8 @@ sub flush
     my $entry = by_path($path);
     return -ENOENT() unless $entry;
 
-    if ($entry->isdirty())
-    {
-        $entry->flush();
-        clear_cache($path);
-    }
+    flush_inbuffer($path, $entry);
+    clear_cache($path);
     return 0;
 }
 
@@ -259,8 +258,8 @@ sub fsync
     my $entry = by_path($path);
     return -ENOENT() unless $entry;
 
-    $entry->flush();
-    clear_cache($path, $flags? undef: $entry->depth());
+    flush_inbuffer($path, $entry);
+    clear_cache($path, $flags? $entry->depth(): undef);
     return 0;
 }
 
@@ -338,7 +337,6 @@ sub by_path
 
 sub clear_cache
 {
-    return if $cache->{$_[0]} && $cache->{$_[0]}->isdirty();
     delete $cache->{$_[0]};
     if (defined $_[1])
     {
@@ -350,6 +348,16 @@ sub clear_cache
             next unless /^$key/;
             delete $cache->{$_};
         }
+    }
+}
+
+sub flush_inbuffer
+{
+    my ($path, $entry) = @_;
+    if (exists $inbuffer{$path})
+    {
+        $entry->write(0, $inbuffer{$path});
+        delete $inbuffer{$path};
     }
 }
 
