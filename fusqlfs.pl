@@ -108,11 +108,11 @@ __END__
 
 =head1 NAME
 
-    fusqlfs - FUSE file system to mount DB and provide tools to control and admin it
+fusqlfs - FUSE file system to mount DB and provide tools to control and admin it
 
 =head1 SYNOPSIS
 
-    fusqlfs [options] database directory
+fusqlfs [options] database directory
 
 =head1 EXAMPLES
 
@@ -125,144 +125,154 @@ __END__
 
 =head2 Basic options
 
-=over 8
+=over
 
 =item B<--host, -h>
 
-    Host name to connect, defaults to localhost.
+Host name to connect, defaults to localhost.
 
 =item B<--port, -P>
 
-    Port number to connect to, default depends on database engine in use.
+Port number to connect to, default depends on database engine in use.
 
 =item B<--user, -u>
 
-    Username to authorize.
+Username to authorize.
 
 =item B<--password, -p>
 
-    Password to authorize.
+Password to authorize.
 
 =item B<--database, --db, -d>
 
-    Database name to connect to. Mandatory.
+Database name to connect to. Mandatory.
 
 =item B<--mountpoint, -m>
 
-    Mointpoint, must be an empty directory. Mandatory.
+Mointpoint, must be an empty directory. Mandatory.
 
 =item B<--engine, -e>
 
-    DB engine to use. Can be either PgSQL or MySQL for now. PgSQL is really
-    implemented, MySQL is in my todo list. Defaults to PgSQL.
+DB engine to use. Can be either PgSQL or MySQL for now. PgSQL is really
+implemented, MySQL is in my todo list. Defaults to PgSQL.
 
 =back
 
 =head2 Other options with values
 
-=over 8
+=over
 
 =item B<--charset, -C>
 
-    Default charset, used for tables creation, results display etc.
-    Defaults to current locale's charset.
+Default charset, used for tables creation, results display etc.
+Defaults to current locale's charset.
 
 =item B<--fnsep, -s>
 
-    File name fields separator, used to compose filenames out from multi-field
-    primary keys. If you have table with primary key like (obj_id, name), every
-    record in DB will be visible as a file with its name composed of this two
-    fields (like "12.odrie", "43.nanny" etc.) This option's value is used as a
-    separator to glue field values togather. Defaults to single dot (.).
-    You may wish to change it if you have table with text fields in primary key
-    with a dot in them.
+File name fields separator, used to compose filenames out from multi-field
+primary keys. If you have table with primary key like (obj_id, name), every
+record in DB will be visible as a file with its name composed of this two
+fields (like "12.odrie", "43.nanny" etc.) This option's value is used as a
+separator to glue field values togather. Defaults to single dot (.). You may
+wish to change it if you have table with text fields in primary key with a dot
+in them.
 
 =item B<--limit, -L>
 
-    Integer, number of data rows to show in table's data subdir, defaults to 0
-    (means all rows). Useful if you are going to browse really big databases,
-    as listing all data records as files can be very slow and memory consuming.
+Integer, number of data rows to show in table's data subdir, defaults to 0
+(means all rows). Useful if you are going to browse really big databases, as
+listing all data records as files can be very slow and memory consuming.
 
-    You can also try to change and tune your cache strategy with --cache and
-    --cache-limit options (see below).
+You can also try to change and tune your cache strategy with C<--cache> and
+C<--cache-limit> options (see below).
 
-    If this is an issue for you, use this option to limit number of listed
-    table rows. You can still get record by requesting filename equal to
-    primary key value (id usually) directly, if you know it, even if you don't
-    see it in directory listing.
+If this is an issue for you, use this option to limit number of listed table
+rows. You can still get record by requesting filename equal to primary key
+value (id usually) directly, if you know it, even if you don't see it in
+directory listing.
 
 =item B<--cache, -c>
 
-    Cache strategy to choose. There're three strategies for now (in order
-    of speed decreasing):
+Cache strategy to choose. There're three strategies for now (in order of speed
+decreasing):
 
-        * memory - store everything in memory, fastest but can be overkill
-            for your memory in case of big databases,
-        * limited - like memory, but number of stored elements is limited
-            to some defined value, and cache is cleared down to this limit
-            if it's exceeded (least used entries removed first);
-            good if you have limited memory space,
-        * file - store some data in files, good if you are going to work
-            with really big databases, e.g. with large blobs.
+=over
 
-    For details see --cache-limit option description below.
+=item memory
+
+store everything in memory, fastest but can be overkill for your
+memory in case of big databases,
+
+=item limited
+
+like memory, but number of stored elements is limited to some
+defined value, and cache is cleared down to this limit if it's exceeded (least
+used entries removed first); good if you have limited memory space,
+
+=item file
+
+store some data in files, good if you are going to work with really
+big databases, e.g. with large blobs.
+
+=back
+
+For details see C<--cache-limit> option description below.
 
 =item B<--cache-limit, -M>
 
-    Integer, threshold for cache strategy (see --cache option for details),
-    defaults to 0, which means back up to "memory" strategy.
-    Meaning depends on chosen cache strategy.
+Integer, threshold for cache strategy (see C<--cache> option for details),
+defaults to 0, which means back up to "memory" strategy.
+Meaning depends on chosen cache strategy.
 
-    For "limited" cache strategy it means number of max cache items to store.
-    If number of cached items exceeds this value, cache cleanup is forced,
-    least used entries removed first.
+For "limited" cache strategy it means number of max cache items to store. If
+number of cached items exceeds this value, cache cleanup is forced, least used
+entries removed first.
 
-    I recommend to set this value to at least 3/4 of total objects in your
-    database (including all tables, sequences, views, data rows and other
-    objects, browsable with this program), which is about 60% cache hits (~45%
-    for 1/2 and ~56% for 2/3). But this is just a basic recomendation based on
-    educated guess and some tests with "entry" names generated with normally
-    distributed random generator. Experiment is your best advisor in this case.
+I recommend to set this value to at least 3/4 of total objects in your database
+(including all tables, sequences, views, data rows and other objects, browsable
+with this program), which is about 60% cache hits (~45% for 1/2 and ~56% for
+2/3). But this is just a basic recomendation based on educated guess and some
+tests with "entry" names generated with normally distributed random generator.
+Experiment is your best advisor in this case.
 
-    For "file" strategy it means max entry size in bytes to store on disk
-    (caches simple files only for now, dirs/symlinks and the like are not
-    cached, which is ok in most cases). If file size is smaller then given
-    size, then it is stored in memory. Useful if you are going to review big
-    chucks of data in your database, e.g. large blobs etc.
+For "file" strategy it means max entry size in bytes to store on disk (caches
+simple files only for now, dirs/symlinks and the like are not cached, which is
+ok in most cases). If file size is smaller then given size, then it is stored
+in memory. Useful if you are going to review big chucks of data in your
+database, e.g. large blobs etc.
 
-    Common advise: set --cache-limit above zero and --cache to anything but
-    "memory" only if you really have low memory issues with the program, as all
-    other cache strategies are slower than simple memory access. "Limited"
-    cache method has to support additional structures to analyze data usage,
-    and so it's slower than simple "memory" cache strategy, while "file" cache
-    method has to check and update real files on your disk, so both of them are
-    slower than simple "memory" caching (they're still faster than database
-    requests, however).
+Common advise: set C<--cache-limit> above zero and C<--cache> to anything but
+"memory" only if you really have low memory issues with the program, as all
+other cache strategies are slower than simple memory access. "Limited" cache
+method has to support additional structures to analyze data usage, and so it's
+slower than simple "memory" cache strategy, while "file" cache method has to
+check and update real files on your disk, so both of them are slower than
+simple "memory" caching (they're still faster than database requests, however).
 
 =item B<--format, -f>
 
-    Format used to output different text data, like rows, columns description etc.
-    Can be "xml", "json" or "yaml" for now, defaults to "yaml".
+Format used to output different text data, like rows, columns description etc.
+Can be "xml", "json" or "yaml" for now, defaults to "yaml".
 
 =back
 
 =head2 Boolean options
 
-=over 8
+=over
 
 =item B<--innodb>
 
-    Boolean, MySQL specific. If set, new tables created by the program use
-    InnoDB backend, MyISAM is used otherwise. Defaults to false (MyISAM).
+Boolean, MySQL specific. If set, new tables created by the program use InnoDB
+backend, MyISAM is used otherwise. Defaults to false (MyISAM).
 
 =item B<--debug, -D>
 
-    Boolean, if set you will see more debug info.
+Boolean, if set you will see more debug info.
 
 =item B<--daemon>
 
-    Boolean, if set the program will daemonize itself. Defaults to true. You
-    may wish to use it as --nodeamon to debug the program.
+Boolean, if set the program will daemonize itself. Defaults to true. You may
+wish to use it as C<--nodeamon> to debug the program.
 
 =back
 
@@ -282,7 +292,25 @@ Just mount your DB and enjoy!
 
 =head1 TODO
 
-    * Implement MySQL support.
-    * Implement PgSQL views, functions, sequences etc.
-    * Write better docs: describe FS structure, rules and precautions to use it
-    as DB admin tool.
+=over
+
+=item * Implement MySQL support.
+
+=item * Implement PgSQL views, functions, sequences etc.
+
+=item * Write better docs: describe FS structure, rules and precautions to use
+it as DB admin tool.
+
+=back
+
+=head1 AUTHOR
+
+© 2010, Konstantin Stepanov E<lt>I<mailto:kstep@p-nut.info>E<gt>
+
+=head1 LICENSE
+
+This product is distributed AS IS without any warrantly under General Public
+License v.3 or higher in hope it will be useful for somebody.
+
+License text is included in F<LICENSE> file in this distribution.
+
