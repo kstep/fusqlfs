@@ -176,26 +176,10 @@ sub init
 sub ispipe { 1 }
 sub isfile { 1 }
 
-sub size { 4096 }
+sub size { length $_[0]->[2] }
 sub get { $_[0]->[3] }
-sub read
-{
-    carp "pipe read $_[1], $_[2]";
-    do {
-        while (length($_[0]->[2]) < $_[2])
-        {
-            my $buffer = $_[0]->[3]->();
-            last unless defined $buffer;
-            $_[0]->[2] .= $buffer;
-        }
-    } until $_[0]->[2];
-    $_[2] = length($_[0]->[2]) if $_[2] > length($_[0]->[2]);
-    my $result = substr($_[0]->[2], 0, $_[2], '');
-
-    carp "pipe out $result, rest $_[0]->[2]";
-    return $result;
-}
-sub write { carp "pipe write $_[1], $_[2]"; $_[0]->[2] = $_[0]->[3]->($_[2]); } 
+sub read { substr($_[0]->[2], $_[1], $_[2]) }
+sub write { $_[0]->[2] = $_[0]->[3]->($_[2]); } 
 
 1;
 

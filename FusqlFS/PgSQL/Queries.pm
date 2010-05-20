@@ -31,17 +31,9 @@ sub create
     my $self = shift;
     my ($name) = @_;
     $self->{$name} = sub () {
-        state $expr;
         my $query = shift;
-        return unless $expr || $query;
-        if ($query)
-        {
-            undef $expr;
-            $expr = $self->expr($query);
-            $expr->execute;
-        }
-
-        return $self->dump($expr->fetchrow_hashref);
+        return '' unless $query;
+        return $self->dump($self->all_row($query));
     };
 }
 
