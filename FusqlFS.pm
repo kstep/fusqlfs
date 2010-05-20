@@ -113,6 +113,7 @@ sub read
     my $entry = by_path($path);
     return -ENOENT() unless $entry;
     return -EINVAL() unless $entry->isfile();
+
     return $entry->read($offset, $size);
 }
 
@@ -313,6 +314,7 @@ sub file_struct
     else
     {
         $fileinfo[2] |= S_IFREG;
+        $fileinfo[2] |= S_ISVTX if $entry->ispipe();
         $fileinfo[7] = $entry->size();
     }
 

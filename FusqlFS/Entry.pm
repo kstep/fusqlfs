@@ -175,9 +175,10 @@ sub init
 sub ispipe { 1 }
 sub isfile { 1 }
 
-sub size { return 0 }
-sub get { my $buffer = $_[0]->[5]; $_[0]->[5] = $_[0]->[2]->(); return $buffer; }
-sub write { $_[0]->[2] = $_[0]->[3]->($_[2]); }
+sub size { length $_[0]->[2] }
+sub get { $_[0]->[3] }
+sub read { substr($_[0]->[2], $_[1], $_[2]) }
+sub write { $_[0]->[2] = $_[0]->[3]->($_[2]); } 
 
 1;
 
