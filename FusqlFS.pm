@@ -301,17 +301,17 @@ sub file_struct
     if ($entry->isdir())
     {
         $fileinfo[2] |= (S_IFDIR|0111);
-        $fileinfo[3] = 2 + scalar(@{$entry->list()});
+        $fileinfo[3] = 2 + $entry->size();
     }
     elsif ($entry->islink())
     {
         $fileinfo[2] |= S_IFLNK;
-        $fileinfo[7] = 0 + length(${$entry->get()});
+        $fileinfo[7] = $entry->size();
     }
     else
     {
         $fileinfo[2] |= S_IFREG;
-        $fileinfo[7] = 0 + length($entry->get());
+        $fileinfo[7] = $entry->size();
     }
 
     unless ($entry->writable())
