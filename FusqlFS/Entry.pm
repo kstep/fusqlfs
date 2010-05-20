@@ -97,7 +97,7 @@ sub move
 }
 sub drop { $_[0]->put(undef) or $_[0]->[0]->drop(@{$_[0]->[1]}); }
 sub create { $_[0]->put('') or $_[0]->[0]->create(@{$_[0]->[1]}); }
-sub store { my $data = $_[1]||$_[0]->[2]; $_[0]->put($data) or $_[0]->[0]->store(@{$_[0]->[1]}, $data); return 1; }
+sub store { my $data = $_[1]||$_[0]->[2]; $_[0]->put($data) or $_[0]->[0]->store(@{$_[0]->[1]}, $data); }
 
 sub put
 {
@@ -156,7 +156,7 @@ sub read { }
 package FusqlFS::Entry::File;
 use base 'FusqlFS::Entry';
 
-sub isfile { return 1; }
+sub isfile { 1 }
 
 sub write { substr($_[0]->[2], $_[1], length($_[2]||$_[0]->[2])) = $_[2]||''; $_[0]->store($_[0]->[2]) }
 sub read { substr($_[0]->[2], $_[1], $_[2]) }
@@ -172,8 +172,8 @@ sub init
     ($_[0]->[3], $_[0]->[2]) = ($_[0]->[2], $_[0]->[2]->());
 }
 
-sub ispipe { return 1; }
-sub isfile { return 1; }
+sub ispipe { 1 }
+sub isfile { 1 }
 
 sub size { return 0 }
 sub get { my $buffer = $_[0]->[5]; $_[0]->[5] = $_[0]->[2]->(); return $buffer; }
@@ -192,7 +192,7 @@ sub init
 }
 
 sub size { scalar @{$_[0]->[3]} }
-sub isdir { return 1; }
+sub isdir { 1 }
 sub list { $_[0]->[3] }
 
 1;
@@ -201,7 +201,7 @@ package FusqlFS::Entry::Symlink;
 use base 'FusqlFS::Entry';
 
 sub size { length ${$_[0]->[2]} }
-sub islink { return 1; }
+sub islink { 1 }
 
 1;
 
