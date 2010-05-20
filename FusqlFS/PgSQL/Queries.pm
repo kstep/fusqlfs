@@ -36,6 +36,7 @@ sub create
         return unless $expr || $query;
         if ($query)
         {
+            undef $expr;
             $expr = $self->expr($query);
             $expr->execute;
         }

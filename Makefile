@@ -1,4 +1,4 @@
-DEBUG=--logfile=fusqlfs.log --cache=file --cache-limit=20
+DEBUG=--logfile=fusqlfs.log --cache=memory --cache-limit=20
 DIR=`pwd`
 L=100
 M=5000
@@ -72,6 +72,16 @@ test-tables-struct:
 	@echo Field field drop
 	rm -f $(STRUCTDIR)/notidbak
 	test ! -f $(STRUCTDIR)/notidbak
+
+test-queries:
+	@echo Queries module is sane
+	test -d $(MDIR)/queries
+	@echo Create pseudopipe
+	touch $(MDIR)/queries/test
+	test -k $(MDIR)/queries/test
+	@echo Test query
+	echo "SELECT * FROM users" > $(MDIR)/queries/test
+	cat $(MDIR)/queries/test
 
 test-tables-indices:
 	echo TODO

@@ -113,7 +113,10 @@ sub read
     my $entry = by_path($path);
     return -ENOENT() unless $entry;
     return -EINVAL() unless $entry->isfile();
-    return $entry->read($offset, $size);
+
+    my $result = $entry->read($offset, $size);
+    return -EWOULDBLOCK() if $entry->ispipe() && !$result;
+    return $result;
 }
 
 sub write
@@ -314,7 +317,11 @@ sub file_struct
     else
     {
         $fileinfo[2] |= S_IFREG;
-        $fileinfo[2] |= S_ISVTX if $entry->ispipe();
+        if ($entry->ispipe())
+        {
+            $fileinfo[2] |= S_ISVTX;
+            $fileinfo[10] = $fileinfo[9] = mktime(localtime());
+        }
         $fileinfo[7] = $entry->size();
     }
 
