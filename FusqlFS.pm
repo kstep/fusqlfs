@@ -8,6 +8,7 @@ use Carp;
 use Fuse;
 
 use FusqlFS::Cache;
+use FusqlFS::Backend;
 
 our $fusqlh;
 our $def_time;
@@ -18,16 +19,8 @@ sub init
 {
     my %options = @_;
 
-    my $engine = $options{engine};
-    croak "Incorrect engine name $engine" if $engine =~ /[^a-zA-Z0-9]/;
-
-    my $filename = "FusqlFS/Backend/${engine}.pm";
-    my $package = "FusqlFS::Backend::${engine}";
-
-    require $filename or croak "Unable to load perl module for engine $engine";
-
-    $fusqlh = $package->new(@_);
-    croak "Unable to initialize engine $engine" unless defined $fusqlh;
+    $fusqlh = FusqlFS::Backend->new(@_);
+    croak "Unable to initialize database backend" unless defined $fusqlh;
 
     $def_time = mktime(localtime());
 
