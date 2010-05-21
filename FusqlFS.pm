@@ -119,7 +119,7 @@ sub flush
     return -ENOENT() unless $entry;
 
     flush_inbuffer($path, $entry);
-    clear_cache($path);
+    clear_cache($path) unless $entry->ispipe();
     return 0;
 }
 
