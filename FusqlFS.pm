@@ -11,7 +11,7 @@ use FusqlFS::Cache;
 
 our $fusqlh;
 our $def_time;
-our $cache;
+our %cache;
 our %inbuffer;
 
 sub init
@@ -30,20 +30,9 @@ sub init
     croak "Unable to initialize engine $engine" unless defined $fusqlh;
 
     $def_time = mktime(localtime());
-    $cache = {};
 
-    if ($options{cache_strategy})
-    {
-        given ($options{cache_strategy})
-        {
-            when ('limited') { $cache = new FusqlFS::Cache::Limited($options{cache_threshold}); }
-            when ('file')    { $cache = new FusqlFS::Cache::File($options{cache_threshold}); }
-            when ('memory')  { }
-            default { carp "Undefined cache strategy \"$options{cache_strategy}\" is used, fall back to \"memory\"" }
-        }
-    }
-
-    $SIG{USR1} = sub () { %$cache = (); };
+    FusqlFS::Cache->init(\%cache, @options{qw(cache_strategy cache_threshold)});
+    $SIG{USR1} = sub () { %cache = (); };
 }
 
 sub mount
@@ -328,24 +317,24 @@ sub file_struct
 sub by_path
 {
     my ($path) = @_;
-    return $cache->{$path} if exists $cache->{$path};
+    return $cache{$path} if exists $cache{$path};
     my $entry = $fusqlh->by_path(@_);
-    $cache->{$path} = $entry if $entry;
+    $cache{$path} = $entry if $entry;
     return $entry;
 }
 
 sub clear_cache
 {
-    delete $cache->{$_[0]};
+    delete $cache{$_[0]};
     if (defined $_[1])
     {
         my $key = $_[0];
         my $re = "/[^/]+" x $_[1];
         $key =~ s{$re$}{};
-        while (my $_ = each %$cache)
+        while (my $_ = each %cache)
         {
             next unless /^$key/;
-            delete $cache->{$_};
+            delete $cache{$_};
         }
     }
 }
