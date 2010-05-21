@@ -1,11 +1,11 @@
 use strict;
 use v5.10.0;
 
-use FusqlFS::Base;
+use FusqlFS::Interface;
 
-package FusqlFS::PgSQL::Sequences;
-use base 'FusqlFS::Base::Interface';
-use FusqlFS::PgSQL::Roles;
+package FusqlFS::Backend::PgSQL::Sequences;
+use base 'FusqlFS::Interface';
+use FusqlFS::Backend::PgSQL::Roles;
 use DBI qw(:sql_types);
 
 sub new
@@ -20,7 +20,7 @@ sub new
     $self->{create_expr} = 'CREATE SEQUENCE "%s"';
     $self->{drop_expr} = 'DROP SEQUENCE "%s"';
 
-    $self->{owner} = new FusqlFS::PgSQL::Role::Owner('S', 2);
+    $self->{owner} = new FusqlFS::Backend::PgSQL::Role::Owner('S', 2);
 
     bless $self, $class;
 }

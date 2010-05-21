@@ -23,8 +23,6 @@ use base 'FusqlFS::Cache';
 
 use Carp;
 
-use FusqlFS::Base;
-
 sub is_needed
 {
     return $_[1] > 0;

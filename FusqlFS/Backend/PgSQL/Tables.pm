@@ -1,16 +1,16 @@
 use strict;
 use v5.10.0;
 
-use FusqlFS::Base;
+use FusqlFS::Interface;
 
-package FusqlFS::PgSQL::Tables;
-use base 'FusqlFS::Base::Interface';
+package FusqlFS::Backend::PgSQL::Tables;
+use base 'FusqlFS::Interface';
 
-use FusqlFS::PgSQL::Roles;
-use FusqlFS::PgSQL::Table::Indices;
-use FusqlFS::PgSQL::Table::Struct;
-use FusqlFS::PgSQL::Table::Data;
-use FusqlFS::PgSQL::Table::Constraints;
+use FusqlFS::Backend::PgSQL::Roles;
+use FusqlFS::Backend::PgSQL::Table::Indices;
+use FusqlFS::Backend::PgSQL::Table::Struct;
+use FusqlFS::Backend::PgSQL::Table::Data;
+use FusqlFS::Backend::PgSQL::Table::Constraints;
 
 sub new
 {
@@ -24,11 +24,11 @@ sub new
     $self->{get_expr} = $class->expr("SELECT 1 FROM pg_catalog.pg_tables WHERE schemaname = 'public' AND tablename = ?");
 
     $self->{subpackages} = {
-        indices     => new FusqlFS::PgSQL::Table::Indices(),
-        struct      => new FusqlFS::PgSQL::Table::Struct(),
-        data        => new FusqlFS::PgSQL::Table::Data(),
-        constraints => new FusqlFS::PgSQL::Table::Constraints(),
-        owner       => new FusqlFS::PgSQL::Role::Owner('r', 2),
+        indices     => new FusqlFS::Backend::PgSQL::Table::Indices(),
+        struct      => new FusqlFS::Backend::PgSQL::Table::Struct(),
+        data        => new FusqlFS::Backend::PgSQL::Table::Data(),
+        constraints => new FusqlFS::Backend::PgSQL::Table::Constraints(),
+        owner       => new FusqlFS::Backend::PgSQL::Role::Owner('r', 2),
     };
 
     bless $self, $class;

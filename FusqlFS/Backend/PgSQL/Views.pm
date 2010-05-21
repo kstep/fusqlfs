@@ -1,10 +1,10 @@
 use strict;
 use v5.10.0;
-use FusqlFS::Base;
+use FusqlFS::Interface;
 
-package FusqlFS::PgSQL::Views;
-use base 'FusqlFS::Base::Interface';
-use FusqlFS::PgSQL::Roles;
+package FusqlFS::Backend::PgSQL::Views;
+use base 'FusqlFS::Interface';
+use FusqlFS::Backend::PgSQL::Roles;
 
 sub new
 {
@@ -19,7 +19,7 @@ sub new
     $self->{get_expr} = $class->expr("SELECT definition FROM pg_catalog.pg_views WHERE viewname = ?");
     $self->{list_expr} = $class->expr("SELECT viewname FROM pg_catalog.pg_views WHERE schemaname = 'public'");
 
-    $self->{owner} = new FusqlFS::PgSQL::Role::Owner('v', 2);
+    $self->{owner} = new FusqlFS::Backend::PgSQL::Role::Owner('v', 2);
 
     bless $self, $class;
 }

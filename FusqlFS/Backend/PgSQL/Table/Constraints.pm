@@ -1,10 +1,10 @@
 use strict;
 use v5.10.0;
 
-use FusqlFS::Base;
+use FusqlFS::Interface;
 
-package FusqlFS::PgSQL::Table::Constraints;
-use base 'FusqlFS::Base::Interface';
+package FusqlFS::Backend::PgSQL::Table::Constraints;
+use base 'FusqlFS::Interface';
 
 sub new
 {

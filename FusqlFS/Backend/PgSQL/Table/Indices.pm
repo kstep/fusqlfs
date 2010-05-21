@@ -1,12 +1,12 @@
 use strict;
 use v5.10.0;
 
-use FusqlFS::Base;
+use FusqlFS::Interface;
 
-package FusqlFS::PgSQL::Table::Indices;
-use base 'FusqlFS::Base::Interface';
+package FusqlFS::Backend::PgSQL::Table::Indices;
+use base 'FusqlFS::Interface';
 
-use FusqlFS::PgSQL::Table::Struct;
+use FusqlFS::Backend::PgSQL::Table::Struct;
 
 sub new
 {
@@ -39,7 +39,7 @@ sub get
     return unless $result;
     if ($result->{'.order'})
     {
-        my @fields = @{FusqlFS::PgSQL::Table::Struct->new()->list($table)};
+        my @fields = @{FusqlFS::Backend::PgSQL::Table::Struct->new()->list($table)};
         $result->{'.order'} = [ map { $fields[$_-1] } split / /, $result->{'.order'} ];
         $result->{$_} = \"../../struct/$_" foreach @{$result->{'.order'}};
     }

@@ -7,7 +7,6 @@ use Fcntl qw(:mode);
 use Carp;
 use Fuse;
 
-use FusqlFS::Base;
 use FusqlFS::Cache;
 
 our $fusqlh;
@@ -22,8 +21,8 @@ sub init
     my $engine = $options{engine};
     croak "Incorrect engine name $engine" if $engine =~ /[^a-zA-Z0-9]/;
 
-    my $filename = "FusqlFS/${engine}.pm";
-    my $package = "FusqlFS::${engine}";
+    my $filename = "FusqlFS/Backend/${engine}.pm";
+    my $package = "FusqlFS::Backend::${engine}";
 
     require $filename or croak "Unable to load perl module for engine $engine";
 

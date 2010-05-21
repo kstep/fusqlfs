@@ -1,12 +1,12 @@
 use strict;
 use v5.10.0;
 
-use FusqlFS::Base;
+use FusqlFS::Interface;
 
-package FusqlFS::PgSQL::Table::Data;
-use base 'FusqlFS::Base::Interface';
+package FusqlFS::Backend::PgSQL::Table::Data;
+use base 'FusqlFS::Interface';
 
-use FusqlFS::PgSQL::Table::Struct;
+use FusqlFS::Backend::PgSQL::Table::Struct;
 
 sub new
 {
@@ -103,7 +103,7 @@ sub get_primary_key
     my $data = $self->all_col($self->{get_primary_expr}, $table);
     if ($data)
     {
-        my $fields = FusqlFS::PgSQL::Table::Struct->new()->list($table);
+        my $fields = FusqlFS::Backend::PgSQL::Table::Struct->new()->list($table);
         @result = map { $fields->[$_-1] } split / /, $data->[0];
     }
     return @result;

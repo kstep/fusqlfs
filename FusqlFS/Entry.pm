@@ -19,7 +19,7 @@ sub new
     foreach my $p (@path)
     {
         return unless defined $entry;
-        if (UNIVERSAL::isa($entry, 'FusqlFS::Base::Interface'))
+        if (UNIVERSAL::isa($entry, 'FusqlFS::Interface'))
         {
             @tail = ();
             $pkg = $entry;
@@ -41,7 +41,7 @@ sub new
     $entry = $leaf_absent unless defined $entry;
     return unless defined $entry;
     my $list;
-    if (UNIVERSAL::isa($entry, 'FusqlFS::Base::Interface'))
+    if (UNIVERSAL::isa($entry, 'FusqlFS::Interface'))
     {
         $pkg = $entry;
         $list = $pkg->list(@names);
@@ -138,7 +138,7 @@ sub islink { }
 sub isfile { }
 sub ispipe { }
 
-sub writable { !UNIVERSAL::isa($_[0]->[2], 'FusqlFS::Base::Interface') }
+sub writable { !UNIVERSAL::isa($_[0]->[2], 'FusqlFS::Interface') }
 
 sub pkg { $_[0]->[0] }
 sub names { @{$_[0]->[1]} }
