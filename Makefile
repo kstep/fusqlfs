@@ -1,101 +1,37 @@
-DEBUG=--logfile=fusqlfs.log --cache=memory --cache-limit=20
-DIR=`pwd`
-L=100
-M=5000
 
-MDIR=$(DIR)/mnt
-TABLEDIR=$(MDIR)/tables/testtable1
-STRUCTDIR=$(TABLEDIR)/struct
+PERL ?= /usr/bin/perl
 
-remount: umount mount
+INSTALL_OPTS = $(if $(DESTDIR),--installdirs vendor --destdir $(DESTDIR),)
 
-umount:
-	fusermount -u -z $(DIR)/mnt
+all: build
 
-mount:
-	fusqlfs.pl $(DEBUG) -u postgres -e PgSQL -L $L unite_dev $(DIR)/mnt
+Build: Build.PL
+	$(PERL) $<
 
-clean-cache:
-	pkill -USR1 fusqlfs.pl
+manifest build test: Build
+	./Build $@
 
-test: test-syntax test-run test-fs
+install: Build
+	./Build $@ $(INSTALL_OPTS)
 
-test-run:
-	mount -t fuse | grep -q $(MDIR)
-	pgrep fusqlfs.pl
+debian: dist
+	./Build $@
 
-test-syntax:
-	@echo Simple syntax test
-	find . -xdev -name "*.pl" -or -name "*.pm" -exec perl -c {} \;
+dist: manifest
+	./Build $@
 
-test-lint:
-	@echo Extended lint test
-	find . -xdev -name "*.pl" -or -name "*.pm" -exec perl -MO=Lint,no-context {} \;
+clean:
+	test ! -e Build || ./Build $@
 
-test-fs: test-basic test-tables
+realclean distclean:
+	test ! -e Build || ./Build $@
+	rm -f META.yml MANIFEST
 
-test-basic:
-	@echo Common struct is sane
-	test -d $(MDIR)/tables
-	test -d $(MDIR)/views
-	test -d $(MDIR)/roles
-	test -d $(MDIR)/sequences
+debianclean:
+	rm -rf debian
 
-test-tables: test-tables-ls test-tables-create test-tables-struct test-tables-indices test-tables-data test-tables-drop
+cleanall: realclean debianclean
 
-test-tables-ls:
-	@echo Tables listing
-	test -d $(DIR)/mnt/tables
-	ls $(DIR)/mnt/tables/
-
-test-tables-create:
-	@echo Table create
-	mkdir $(TABLEDIR)
-	test -d $(TABLEDIR)
-	test -d $(TABLEDIR)/struct 
-	test -d $(TABLEDIR)/indices 
-	test -d $(TABLEDIR)/data
-	test -h $(TABLEDIR)/owner
-
-test-tables-struct:
-	@echo Table struct is sane
-	test -d $(STRUCTDIR) -a -f $(STRUCTDIR)/id
-	grep -q "^type: integer" $(STRUCTDIR)/id
-	@echo Field rename
-	mv $(STRUCTDIR)/id $(STRUCTDIR)/notid
-	test ! -f $(STRUCTDIR)/id -a -f $(STRUCTDIR)/notid
-	@echo Field create and change
-	sed -ibak -e 's/type: integer/type: numeric(10,0)/' $(STRUCTDIR)/notid
-	test -f $(STRUCTDIR)/notid -a -f $(STRUCTDIR)/notidbak
-	grep -q "^type: integer" $(STRUCTDIR)/notidbak
-	grep -q "^type: numeric(10,0)" $(STRUCTDIR)/notid
-	@echo Field field drop
-	rm -f $(STRUCTDIR)/notidbak
-	test ! -f $(STRUCTDIR)/notidbak
-
-test-queries:
-	@echo Queries module is sane
-	test -d $(MDIR)/queries
-	@echo Create pseudopipe
-	touch $(MDIR)/queries/test
-	test -k $(MDIR)/queries/test
-	@echo Test query
-	echo "SELECT * FROM users" > $(MDIR)/queries/test
-	cat $(MDIR)/queries/test
-
-test-tables-indices:
-	echo TODO
-
-test-tables-data:
-	echo TODO
-
-test-tables-drop:
-	rmdir $(TABLEDIR)
-	test ! -d $(TABLEDIR)
-
-.PHONY: mount unmount remount \
-	test test-run test-fs test-basic test-syntax test-lint \
-	test-tables test-tables-ls test-tables-create test-tables-struct \
-	test-tables-indices test-tables-data test-tables-drop \
-	clean-cache
+.PHONY: all manifest build test install debian dist \
+	clean distclean realclean debianclean cleanall
 
