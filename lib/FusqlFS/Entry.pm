@@ -154,7 +154,7 @@ sub read { }
 1;
 
 package FusqlFS::Entry::File;
-use base 'FusqlFS::Entry';
+use parent 'FusqlFS::Entry';
 
 sub isfile { 1 }
 
@@ -164,7 +164,7 @@ sub read { substr($_[0]->[2], $_[1], $_[2]) }
 1;
 
 package FusqlFS::Entry::Pipe;
-use base 'FusqlFS::Entry';
+use parent 'FusqlFS::Entry';
 
 sub init
 {
@@ -183,7 +183,7 @@ sub write { $_[0]->[2] = $_[0]->[3]->($_[2]); }
 1;
 
 package FusqlFS::Entry::Dir;
-use base 'FusqlFS::Entry';
+use parent 'FusqlFS::Entry';
 
 sub init
 {
@@ -199,7 +199,7 @@ sub list { $_[0]->[3] }
 1;
 
 package FusqlFS::Entry::Symlink;
-use base 'FusqlFS::Entry';
+use parent 'FusqlFS::Entry';
 
 sub size { length ${$_[0]->[2]} }
 sub islink { 1 }

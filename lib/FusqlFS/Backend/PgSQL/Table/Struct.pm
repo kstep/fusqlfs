@@ -1,10 +1,8 @@
 use strict;
 use v5.10.0;
 
-use FusqlFS::Interface;
-
 package FusqlFS::Backend::PgSQL::Table::Struct;
-use base 'FusqlFS::Interface';
+use parent 'FusqlFS::Interface';
 
 sub new
 {

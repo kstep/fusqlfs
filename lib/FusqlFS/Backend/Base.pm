@@ -1,10 +1,8 @@
 use strict;
 use v5.10.0;
 
-use FusqlFS::Interface;
-
 package FusqlFS::Backend::Base;
-use base 'FusqlFS::Interface';
+use parent 'FusqlFS::Interface';
 
 use DBI;
 use FusqlFS::Entry;

@@ -1,10 +1,8 @@
 use strict;
 use v5.10.0;
 
-use FusqlFS::Cache::Base;
-
 package FusqlFS::Cache::Limited;
-use base 'FusqlFS::Cache::Base';
+use parent 'FusqlFS::Cache::Base';
 
 sub is_needed
 {

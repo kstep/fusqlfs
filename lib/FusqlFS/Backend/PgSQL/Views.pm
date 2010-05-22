@@ -1,9 +1,8 @@
 use strict;
 use v5.10.0;
-use FusqlFS::Interface;
 
 package FusqlFS::Backend::PgSQL::Views;
-use base 'FusqlFS::Interface';
+use parent 'FusqlFS::Interface';
 use FusqlFS::Backend::PgSQL::Roles;
 
 sub new

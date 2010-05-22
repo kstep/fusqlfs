@@ -1,14 +1,14 @@
 use strict;
 use v5.10.0;
-use FusqlFS::Backend::Base;
+
+package FusqlFS::Backend::PgSQL;
+use parent 'FusqlFS::Backend::Base';
+
 use FusqlFS::Backend::PgSQL::Tables;
 use FusqlFS::Backend::PgSQL::Views;
 use FusqlFS::Backend::PgSQL::Sequences;
 use FusqlFS::Backend::PgSQL::Roles;
 use FusqlFS::Backend::PgSQL::Queries;
-
-package FusqlFS::Backend::PgSQL;
-use base 'FusqlFS::Backend::Base';
 
 sub init
 {

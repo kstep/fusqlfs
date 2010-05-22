@@ -1,10 +1,8 @@
 use strict;
 use v5.10.0;
 
-use FusqlFS::Interface;
-
 package FusqlFS::Backend::PgSQL::Tables;
-use base 'FusqlFS::Interface';
+use parent 'FusqlFS::Interface';
 
 use FusqlFS::Backend::PgSQL::Roles;
 use FusqlFS::Backend::PgSQL::Table::Indices;
