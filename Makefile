@@ -1,7 +1,7 @@
 
 PERL ?= /usr/bin/perl
 
-INSTALL_OPTS = $(if $(DESTDIR),--installdirs vendor --destdir $(DESTDIR),)
+INSTALL_OPTS = --installdirs vendor $(if $(DESTDIR),--destdir $(DESTDIR),)
 
 all: build
 
