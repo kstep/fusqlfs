@@ -16,7 +16,7 @@ sub new
     my $dsn = 'DBI:'.$class->dsn(@options{qw(host port database)});
     my $self = {
         subpackages => {},
-        limit  => 0 + $options{limit},
+        limit  => 0 + ($options{limit}||0),
         dbh => DBI->connect($dsn, @options{qw(user password)}),
     };
 

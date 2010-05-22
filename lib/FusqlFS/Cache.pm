@@ -11,7 +11,7 @@ sub init
 {
     my $class = shift;
     my $hash = shift;
-    my $strategy = shift;
+    my $strategy = shift || 'memory';
     my $subclass = '';
 
     given ($strategy)
