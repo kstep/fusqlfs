@@ -9,6 +9,25 @@ my $class = Module::Build->subclass(
     class => 'FusqlFS::Builder',
     code  => q{
         eval 'use Module::Build::Debian';
+
+        sub ACTION_buildtests
+        {
+            my $self = shift;
+            my $base_dir = $self->base_dir();
+            my $autotests_dir = $base_dir.'/t/auto';
+
+            use Test::Inline;
+            mkdir $autotests_dir unless -d $autotests_dir;
+            my $tests = Test::Inline->new(
+                verbose  => 1,
+                readonly => 0,
+                input    => 'lib',
+                output   => 't/auto',
+                manifest => 't/auto/manifest',
+            );
+            $tests->add_all;
+            $tests->save;
+        }
     },
 );
 
@@ -35,6 +54,7 @@ my $build = $class->new(
     },
     build_requires => {
         'Test::More'   => 0,
+        'Test::Inline' => 0,
     },
     recommends => {
         'DBD::mysql'   => 0,
