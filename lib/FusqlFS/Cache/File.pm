@@ -45,7 +45,7 @@ sub CLEAR
 {
     my ($self) = @_;
     $self->[0] = {};
-    open my $dh, $self->[1] or croak "Unable to open cache dir $self->[1]: $@";
+    opendir my $dh, $self->[1] or croak "Unable to open cache dir $self->[1]: $@";
     while (my $file = readdir($dh))
     {
         my $key = "$self->[1]/$file";
@@ -122,10 +122,13 @@ sub TIESCALAR
 sub FETCH
 {
     my $self = shift;
+    my $size = -s $$self;
+    return '' if !$size || $size == 0;
+
     open my $fh, '<', $$self or croak "Unable to open cache file $$self: $@";
 
     my $buffer;
-    read $fh, $buffer, -s $fh or croak "Unable to read cache file $$self: $@";
+    read $fh, $buffer, $size or croak "Unable to read cache file $$self: $@";
     close $fh;
 
     return $buffer;
