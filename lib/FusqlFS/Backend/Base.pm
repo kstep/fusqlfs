@@ -60,6 +60,13 @@ sub by_path
     return FusqlFS::Entry->new(@_);
 }
 
+=begin testing
+
+require_ok 'FusqlFS::Backend::Base';
+is FusqlFS::Backend::Base->dsn('host', 'port', 'database'), 'host=host;port=port;database=database;', 'FusqlFS::Backend::Base->dsn is sane';
+
+=end testing
+=cut
 sub dsn
 {
     my $dsn = "";
