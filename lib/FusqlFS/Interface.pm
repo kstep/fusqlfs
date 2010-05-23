@@ -88,7 +88,7 @@ sub build
         local $_ = $_;
         next unless (@bind) = ($filter->());
         $sql .= shift @bind;
-        push @binds, [ @bind ];
+        push @binds, [ @bind ] if @bind;
     }
     $sql = $instance->{dbh}->prepare($sql);
     $sql->bind_param($_+1, @{$binds[$_]}) foreach (0..$#binds);
