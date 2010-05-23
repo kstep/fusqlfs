@@ -11,6 +11,9 @@ Build: Build.PL
 manifest build test: Build
 	./Build $@
 
+buildtests: build
+	./Build $@
+
 install: Build
 	./Build $@ $(INSTALL_OPTS)
 
