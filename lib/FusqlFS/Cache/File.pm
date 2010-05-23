@@ -5,10 +5,80 @@ package FusqlFS::Cache::File;
 use parent 'FusqlFS::Cache::Base';
 use Carp;
 
+=begin testing
+
+require_ok 'FusqlFS::Cache::File';
+
+ok FusqlFS::Cache::File->is_needed(10), 'File cache is needed';
+ok !FusqlFS::Cache::File->is_needed(0), 'File cache isn\'t needed';
+
+=end testing
+=cut
+
 sub is_needed
 {
     return $_[1] > 0;
 }
+
+=begin testing
+
+# Tie tests
+my %cache;
+isa_ok tie(%cache, 'FusqlFS::Cache::File', 10), 'FusqlFS::Cache::File', 'File cache tied';
+
+ok !scalar(%cache), 'Cache is empty';
+
+# Store & fetch tests
+$cache{'shorttest'} = [ 'pkg', 'names', 'entry' ];
+$cache{'longtest'}  = [ 'pkg', 'names', 'long entry' ];
+
+# Exists tests
+is_deeply $cache{'shorttest'}, [ 'pkg', 'names', 'entry' ], 'Fetch short entry';
+is_deeply $cache{'longtest'} , [ 'pkg', 'names', 'long entry' ], 'Fetch long entry';
+ok !defined($cache{'unknown'}), 'Unknown entry is undef';
+
+ok scalar(%cache), 'Cache is not empty';
+
+# Rewrite store tests
+$cache{'shorttest'} = [ 'pkg', 'names', 'entri' ];
+$cache{'longtest'}  = [ 'pkg', 'names', 'very long entry' ];
+is_deeply $cache{'shorttest'}, [ 'pkg', 'names', 'entri' ], 'Fetch short entry after rewrite';
+is_deeply $cache{'longtest'} , [ 'pkg', 'names', 'very long entry' ], 'Fetch long entry after rewrite';
+
+# Iterate tests
+while (my ($key, $val) = each %cache)
+{
+    if ($key eq 'shorttest')
+    {
+        is_deeply $val, [ 'pkg', 'names', 'entri' ], 'Fetch short entry (iterating)';
+    }
+    elsif ($key eq 'longtest')
+    {
+        is_deeply $val, [ 'pkg', 'names', 'very long entry' ], 'Fetch long entry (iterating)';
+    }
+    else
+    {
+        fail "Key-value pair not stored before: $key => $val";
+    }
+}
+
+# Delete & clear tests
+delete $cache{'shorttest'};
+ok !exists($cache{'shorttest'}), 'Short entry deleted';
+ok !defined($cache{'shorttest'}), 'Short entry undefined';
+
+delete $cache{'longtest'};
+ok !exists($cache{'longtest'}), 'Long entry deleted';
+ok !defined($cache{'longtest'}), 'Long entry undefined';
+
+ok !scalar(%cache), 'Cache is empty after delete';
+
+$cache{'othertest'} = [ 'pkg', 'names', '' ];
+%cache = ();
+ok !scalar(%cache), 'Cache is empty after cleanup';
+
+=end testing
+=cut
 
 sub TIEHASH
 {
@@ -110,6 +180,23 @@ sub cachefile
 
 package FusqlFS::Cache::File::Record;
 use Carp;
+
+=begin testing
+
+require_ok 'FusqlFS::Cache::File';
+
+my $string = '';
+
+use File::Temp qw(:mktemp);
+my $tempfile = mktemp('fusqlfs_test_XXXXXXX');
+
+isa_ok tie($string, 'FusqlFS::Cache::File::Record', $tempfile, 'stored value'), 'FusqlFS::Cache::File::Record', 'File cache record tied';
+is $string, 'stored value', 'File cache record is sane';
+$string = 'new value';
+is $string, 'new value', 'File cache record is sane after rewrite';
+
+=end testing
+=cut
 
 sub TIESCALAR
 {

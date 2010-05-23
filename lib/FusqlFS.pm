@@ -17,6 +17,14 @@ our %inbuffer;
 
 our $VERSION = '0.001';
 
+=begin testing
+
+require_ok 'FusqlFS';
+eval { FusqlFS::init(engine => 'PgSQL', user => 'postgres', database => 'postgres') };
+is $@, '', 'FusqlFS initialization';
+
+=end testing
+=cut
 sub init
 {
     my %options = @_;
