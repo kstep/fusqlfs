@@ -6,17 +6,57 @@ use parent 'FusqlFS::Interface';
 
 use FusqlFS::Backend::PgSQL::Table::Struct;
 
-=doc
+=begin testing
 
-# TODO:
-# 1) create table,
-# 2) list data rows (must be empty),
-# 3) add new text field,
-# 4) add new row and test it is added,
-# 5) alter row and test it is altered,
-# 6) rename row and test it is renamed and unaccessible under old name,
-# 7) delete row and test it is really absent after it's removed.
+require_ok 'FusqlFS::Backend::PgSQL';
+my $fusqlh = FusqlFS::Backend::PgSQL->new(host => '', port => '', database => 'fusqlfs_test', user => 'postgres', password => '');
+ok $fusqlh, 'Backend initialized';
 
+require_ok 'FusqlFS::Backend::PgSQL::Table::Data';
+my $data = FusqlFS::Backend::PgSQL::Table::Data->new();
+ok $data, 'Table data module initialized';
+
+require_ok 'FusqlFS::Backend::PgSQL::Tables';
+my $tables = FusqlFS::Backend::PgSQL::Tables->new();
+ok $tables, 'Tables module initialized';
+ok $tables->create('fusqlfs_table'), 'Test table created';
+#ok $tables->{subpackages}->{struct}->create('fusqlfs_table', 'testfield');
+#ok $tables->{subpackages}->{struct}->store('fusqlfs_table', 'testfield', q{
+#---
+#});
+
+# List rows
+my $rows = $data->list('fusqlfs_table');
+ok $rows;
+is ref($rows), 'ARRAY';
+is scalar(@$rows), 0;
+
+# Add row
+ok !defined $data->get('fusqlfs_table', '1');
+ok $data->create('fusqlfs_table', '1');
+is $data->get('fusqlfs_table', '1'), q{---
+id: 1
+};
+is_deeply $data->list('fusqlfs_table'), [ 1 ];
+
+# Alter row - TODO
+
+# Rename row
+ok $data->rename('fusqlfs_table', '1', '2');
+ok !defined $data->get('fusqlfs_table', '1');
+is $data->get('fusqlfs_table', '2'), q{---
+id: 2
+};
+is_deeply $data->list('fusqlfs_table'), [ 2 ];
+
+# Delete row
+ok $data->drop('fusqlfs_table', '2');
+ok !defined $data->get('fusqlfs_table', '2');
+is scalar(@{$data->list('fusqlfs_table')}), 0;
+
+$tables->drop('fusqlfs_table');
+
+=end testing
 =cut
 
 sub new
@@ -38,7 +78,7 @@ sub list
     my ($table) = @_;
     my $primary_key = join " || '.' || ", $self->get_primary_key($table);
     my $sth = $self->cexpr('SELECT %s FROM "%s" %s', $primary_key, $table, $self->limit());
-    return $self->all_col($sth);
+    return $self->all_col($sth)||[];
 }
 
 sub where_clause
