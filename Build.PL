@@ -12,12 +12,7 @@ my $class = Module::Build->subclass(
 
         sub ACTION_buildtests
         {
-            my $self = shift;
-            my $base_dir = $self->base_dir();
-            my $autotests_dir = $base_dir.'/t/auto';
-
             use Test::Inline;
-            mkdir $autotests_dir unless -d $autotests_dir;
             my $tests = Test::Inline->new(
                 verbose     => 1,
                 readonly    => 0,
