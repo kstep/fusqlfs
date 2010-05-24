@@ -166,7 +166,7 @@ sub store
             else
             {
                 return unless exists $data->{$a};
-                return ($data->{$a}? 'NO': '') . "$b ";
+                return ($data->{$a}? '': 'NO') . "$b ";
             }
     }, [ superuser   => 'SUPERUSER'  ],
        [ create_db   => 'CREATEDB'   ],
