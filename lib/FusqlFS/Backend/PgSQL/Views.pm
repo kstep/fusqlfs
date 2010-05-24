@@ -23,12 +23,24 @@ sub new
     bless $self, $class;
 }
 
+=begin testing list
+
+list_ok $testclass->list(), [];
+
+=end testing
+=cut
 sub list
 {
     my $self = shift;
     return $self->all_col($self->{list_expr});
 }
 
+=begin testing get
+
+is $testclass->get('unknown'), undef;
+
+=end testing
+=cut
 sub get
 {
     my $self = shift;
@@ -41,6 +53,15 @@ sub get
     };
 }
 
+=begin testing rename after store
+
+isnt $testclass->rename('fusqlfs_view', 'new_fusqlfs_view'), undef;
+is $testclass->get('fusqlfs_view'), undef;
+is_deeply $testclass->get('new_fusqlfs_view'), { 'query.sql' => 'SELECT 2;', owner => $testclass->{owner} };
+is_deeply $testclass->list(), [ 'new_fusqlfs_view' ];
+
+=end testing
+=cut
 sub rename
 {
     my $self = shift;
@@ -48,6 +69,14 @@ sub rename
     $self->do($self->{'rename_expr'}, [$name, $newname]);
 }
 
+=begin testing drop after rename
+
+isnt $testclass->drop('new_fusqlfs_view'), undef;
+is_deeply $testclass->list(), [];
+is $testclass->get('new_fusqlfs_view'), undef;
+
+=end testing
+=cut
 sub drop
 {
     my $self = shift;
@@ -55,6 +84,14 @@ sub drop
     $self->do($self->{'drop_expr'}, [$name]);
 }
 
+=begin testing create after get list
+
+isnt $testclass->create('fusqlfs_view'), undef;
+is_deeply $testclass->list(), [ 'fusqlfs_view' ];
+is_deeply $testclass->get('fusqlfs_view'), { 'query.sql' => 'SELECT 1;', owner => $testclass->{owner} };
+
+=end testing
+=cut
 sub create
 {
     my $self = shift;
@@ -62,6 +99,13 @@ sub create
     $self->do($self->{'create_expr'}, [$name]);
 }
 
+=begin testing store after create
+
+isnt $testclass->store('fusqlfs_view', { 'query.sql' => 'SELECT 2' }), undef;
+is_deeply $testclass->get('fusqlfs_view'), { 'query.sql' => 'SELECT 2;', owner => $testclass->{owner} };
+
+=end testing
+=cut
 sub store
 {
     my $self = shift;
@@ -71,3 +115,10 @@ sub store
 
 1;
 
+__END__
+
+=begin testing SETUP
+
+#!class FusqlFS::Backend::PgSQL::Test
+
+=end testing
