@@ -1,7 +1,7 @@
 use strict;
 use v5.10.0;
 
-package FusqlFS::Interface;
+package FusqlFS::Artifact;
 
 our $instance;
 

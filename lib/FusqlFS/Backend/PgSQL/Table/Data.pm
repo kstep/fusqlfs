@@ -2,7 +2,7 @@ use strict;
 use v5.10.0;
 
 package FusqlFS::Backend::PgSQL::Table::Data;
-use parent 'FusqlFS::Interface';
+use parent 'FusqlFS::Artifact';
 
 use FusqlFS::Backend::PgSQL::Table::Struct;
 

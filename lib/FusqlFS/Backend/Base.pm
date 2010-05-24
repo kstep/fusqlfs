@@ -2,14 +2,14 @@ use strict;
 use v5.10.0;
 
 package FusqlFS::Backend::Base;
-use parent 'FusqlFS::Interface';
+use parent 'FusqlFS::Artifact';
 
 use DBI;
 use FusqlFS::Entry;
 
 sub new
 {
-    return $FusqlFS::Interface::instance if $FusqlFS::Interface::instance;
+    return $FusqlFS::Artifact::instance if $FusqlFS::Artifact::instance;
 
     my $class = shift;
     my %options = @_;
@@ -50,7 +50,7 @@ sub new
 
     bless $self, $class;
 
-    $FusqlFS::Interface::instance = $self;
+    $FusqlFS::Artifact::instance = $self;
     $self->init();
     return $self;
 }
@@ -84,7 +84,11 @@ sub init
 
 sub destroy
 {
-    undef $FusqlFS::Interface::instance;
+    if ($FusqlFS::Abstract::instance)
+    {
+        $FusqlFS::Abstract::instance->disconnect;
+        undef $FusqlFS::Abstract::instance;
+    }
 }
 
 1;

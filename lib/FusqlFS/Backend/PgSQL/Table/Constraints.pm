@@ -2,7 +2,7 @@ use strict;
 use v5.10.0;
 
 package FusqlFS::Backend::PgSQL::Table::Constraints;
-use parent 'FusqlFS::Interface';
+use parent 'FusqlFS::Artifact';
 
 sub new
 {

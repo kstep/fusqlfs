@@ -2,7 +2,7 @@ use strict;
 use v5.10.0;
 
 package FusqlFS::Backend::PgSQL::Role::Permissions;
-use parent 'FusqlFS::Interface';
+use parent 'FusqlFS::Artifact';
 
 sub get
 {
@@ -23,7 +23,7 @@ sub list
 1;
 
 package FusqlFS::Backend::PgSQL::Role::Owner;
-use parent 'FusqlFS::Interface';
+use parent 'FusqlFS::Artifact';
 
 our %relkinds = qw(
     r TABLE
@@ -67,12 +67,12 @@ sub store
 1;
 
 package FusqlFS::Backend::PgSQL::Role::Owned;
-use parent 'FusqlFS::Interface';
+use parent 'FusqlFS::Artifact';
 
 1;
 
 package FusqlFS::Backend::PgSQL::Roles;
-use parent 'FusqlFS::Interface';
+use parent 'FusqlFS::Artifact';
 use DBI qw(:sql_types);
 
 =begin testing

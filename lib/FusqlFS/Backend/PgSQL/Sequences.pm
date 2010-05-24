@@ -2,7 +2,7 @@ use strict;
 use v5.10.0;
 
 package FusqlFS::Backend::PgSQL::Sequences;
-use parent 'FusqlFS::Interface';
+use parent 'FusqlFS::Artifact';
 use FusqlFS::Backend::PgSQL::Roles;
 use DBI qw(:sql_types);
 
