@@ -4,6 +4,42 @@ use v5.10.0;
 package FusqlFS::Backend::PgSQL::Tables;
 use parent 'FusqlFS::Interface';
 
+=begin testing
+
+require_ok 'FusqlFS::Backend::PgSQL';
+my $fusqlh = FusqlFS::Backend::PgSQL->new(host => '', port => '', database => 'fusqlfs_test', user => 'postgres', password => '');
+ok $fusqlh, 'Backend initialized';
+
+require_ok 'FusqlFS::Backend::PgSQL::Tables';
+my $tables = FusqlFS::Backend::PgSQL::Tables->new();
+
+# List tables
+my $list = $tables->list();
+ok $list, 'Tables list is sane';
+is ref($list), 'ARRAY', 'Tables list is an array';
+is scalar(@$list), 0, 'Tables list is empty';
+
+# Get & create table
+ok !defined($tables->get('fusqlfs_table')), 'Test table doesn\'t exist';
+
+ok defined $tables->create('fusqlfs_table'), 'Table created';
+is_deeply $tables->get('fusqlfs_table'), $tables->{subpackages}, 'New table is sane';
+is_deeply $tables->list(), [ 'fusqlfs_table' ], 'New table is listed';
+
+# Rename table
+ok defined $tables->rename('fusqlfs_table', 'new_fusqlfs_table'), 'Table renamed';
+ok !defined($tables->get('fusqlfs_table')), 'Table is unaccessable under old name';
+is_deeply $tables->get('new_fusqlfs_table'), $tables->{subpackages}, 'Table renamed correctly';
+is_deeply $tables->list(), [ 'new_fusqlfs_table' ], 'Table is listed under new name';
+
+# Drop table
+ok defined $tables->drop('new_fusqlfs_table'), 'Table dropped';
+ok !defined($tables->get('new_fusqlfs_table')), 'Table dropped correctly';
+is_deeply $tables->list(), [], 'Tables list is empty';
+
+=end testing
+=cut
+
 use FusqlFS::Backend::PgSQL::Roles;
 use FusqlFS::Backend::PgSQL::Table::Indices;
 use FusqlFS::Backend::PgSQL::Table::Struct;
