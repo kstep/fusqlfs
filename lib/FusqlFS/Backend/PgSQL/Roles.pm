@@ -123,8 +123,8 @@ sub new
 
 =begin testing get
 
-ok !defined($testclass->get('unknown')), 'Unknown role not exists';
-is_deeply $testclass->get('postgres'), { struct => q{---
+ok !defined($_tobj->get('unknown')), 'Unknown role not exists';
+is_deeply $_tobj->get('postgres'), { struct => q{---
 can_login: 1
 cat_update: 1
 config: ~
@@ -155,7 +155,7 @@ sub get
 
 =begin testing list
 
-list_ok $testclass->list(), sub { grep { $_ eq 'postgres' } @_ }, 'Roles list is sane';
+list_ok $_tobj->list(), sub { grep { $_ eq 'postgres' } @_ }, 'Roles list is sane';
 
 =end testing
 =cut
@@ -167,10 +167,10 @@ sub list
 
 =begin testing rename after store
 
-ok defined $testclass->rename('fusqlfs_test', 'new_fusqlfs_test'), 'Role renamed';
-is_deeply $testclass->get('new_fusqlfs_test'), $new_role, 'Role renamed correctly';
-ok !defined($testclass->get('fusqlfs_test')), 'Role is unaccessable under old name';
-my $list = $testclass->list();
+ok defined $_tobj->rename('fusqlfs_test', 'new_fusqlfs_test'), 'Role renamed';
+is_deeply $_tobj->get('new_fusqlfs_test'), $new_role, 'Role renamed correctly';
+ok !defined($_tobj->get('fusqlfs_test')), 'Role is unaccessable under old name';
+my $list = $_tobj->list();
 ok grep { $_ eq 'new_fusqlfs_test' } @$list;
 ok !grep { $_ eq 'fusqlfs_test' } @$list;
 
@@ -185,9 +185,9 @@ sub rename
 
 =begin testing drop after rename
 
-ok defined $testclass->drop('new_fusqlfs_test'), 'Role deleted';
-ok !defined($testclass->get('new_fusqlfs_test')), 'Deleted role is absent';
-my $list = $testclass->list();
+ok defined $_tobj->drop('new_fusqlfs_test'), 'Role deleted';
+ok !defined($_tobj->get('new_fusqlfs_test')), 'Deleted role is absent';
+my $list = $_tobj->list();
 ok !grep { $_ eq 'new_fusqlfs_test' } @$list;
 
 =end testing
@@ -201,8 +201,8 @@ sub drop
 
 =begin testing create after get list
 
-ok defined $testclass->create('fusqlfs_test'), 'Role created';
-is $testclass->get('fusqlfs_test')->{struct}, q{---
+ok defined $_tobj->create('fusqlfs_test'), 'Role created';
+is $_tobj->get('fusqlfs_test')->{struct}, q{---
 can_login: 0
 cat_update: 0
 config: ~
@@ -214,7 +214,7 @@ superuser: 0
 valid_until: ~
 }, 'New role is sane';
 
-my $list = $testclass->list();
+my $list = $_tobj->list();
 ok grep { $_ eq 'fusqlfs_test' } @$list;
 
 =end testing
@@ -228,8 +228,8 @@ sub create
 
 =begin testing store after create
 
-ok defined $testclass->store('fusqlfs_test', $new_role), 'Role saved';
-is_deeply $testclass->get('fusqlfs_test'), $new_role, 'Role saved correctly';
+ok defined $_tobj->store('fusqlfs_test', $new_role), 'Role saved';
+is_deeply $_tobj->get('fusqlfs_test'), $new_role, 'Role saved correctly';
 
 =end testing
 =cut

@@ -21,7 +21,7 @@ sub new
 
 =begin testing list
 
-list_ok $testclass->list('fusqlfs_table'), [];
+list_ok $_tobj->list('fusqlfs_table'), [];
 
 =end testing
 =cut
@@ -46,7 +46,7 @@ sub where_clause
 
 =begin testing get
 
-ok !defined $testclass->get('fusqlfs_table', '1');
+ok !defined $_tobj->get('fusqlfs_table', '1');
 
 =end testing
 =cut
@@ -66,9 +66,9 @@ sub get
 
 =begin testing drop after rename
 
-ok $testclass->drop('fusqlfs_table', '2');
-ok !defined $testclass->get('fusqlfs_table', '2');
-is scalar(@{$testclass->list('fusqlfs_table')}), 0;
+ok $_tobj->drop('fusqlfs_table', '2');
+ok !defined $_tobj->get('fusqlfs_table', '2');
+is scalar(@{$_tobj->list('fusqlfs_table')}), 0;
 
 =end testing
 =cut
@@ -96,11 +96,11 @@ sub store
 
 =begin testing create after get list
 
-ok $testclass->create('fusqlfs_table', '1');
-is $testclass->get('fusqlfs_table', '1'), q{---
+ok $_tobj->create('fusqlfs_table', '1');
+is $_tobj->get('fusqlfs_table', '1'), q{---
 id: 1
 };
-is_deeply $testclass->list('fusqlfs_table'), [ 1 ];
+is_deeply $_tobj->list('fusqlfs_table'), [ 1 ];
 
 =end testing
 =cut
@@ -116,12 +116,12 @@ sub create
 
 =begin testing rename after create
 
-ok $testclass->rename('fusqlfs_table', '1', '2');
-ok !defined $testclass->get('fusqlfs_table', '1');
-is $testclass->get('fusqlfs_table', '2'), q{---
+ok $_tobj->rename('fusqlfs_table', '1', '2');
+ok !defined $_tobj->get('fusqlfs_table', '1');
+is $_tobj->get('fusqlfs_table', '2'), q{---
 id: 2
 };
-is_deeply $testclass->list('fusqlfs_table'), [ 2 ];
+is_deeply $_tobj->list('fusqlfs_table'), [ 2 ];
 
 =end testing
 =cut

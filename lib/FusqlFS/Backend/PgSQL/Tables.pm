@@ -34,7 +34,7 @@ sub new
 
 =begin testing get
 
-ok !defined($testclass->get('fusqlfs_table')), 'Test table doesn\'t exist';
+ok !defined($_tobj->get('fusqlfs_table')), 'Test table doesn\'t exist';
 
 =end testing
 =cut
@@ -49,9 +49,9 @@ sub get
 
 =begin testing drop after rename
 
-ok defined $testclass->drop('new_fusqlfs_table'), 'Table dropped';
-ok !defined($testclass->get('new_fusqlfs_table')), 'Table dropped correctly';
-is_deeply $testclass->list(), [], 'Tables list is empty';
+ok defined $_tobj->drop('new_fusqlfs_table'), 'Table dropped';
+ok !defined($_tobj->get('new_fusqlfs_table')), 'Table dropped correctly';
+is_deeply $_tobj->list(), [], 'Tables list is empty';
 
 =end testing
 =cut
@@ -64,9 +64,9 @@ sub drop
 
 =begin testing create after get list
 
-ok defined $testclass->create('fusqlfs_table'), 'Table created';
-is_deeply $testclass->get('fusqlfs_table'), $testclass->{subpackages}, 'New table is sane';
-is_deeply $testclass->list(), [ 'fusqlfs_table' ], 'New table is listed';
+ok defined $_tobj->create('fusqlfs_table'), 'Table created';
+is_deeply $_tobj->get('fusqlfs_table'), $_tobj->{subpackages}, 'New table is sane';
+is_deeply $_tobj->list(), [ 'fusqlfs_table' ], 'New table is listed';
 
 =end testing
 =cut
@@ -79,10 +79,10 @@ sub create
 
 =begin testing rename after create
 
-ok defined $testclass->rename('fusqlfs_table', 'new_fusqlfs_table'), 'Table renamed';
-ok !defined($testclass->get('fusqlfs_table')), 'Table is unaccessable under old name';
-is_deeply $testclass->get('new_fusqlfs_table'), $testclass->{subpackages}, 'Table renamed correctly';
-is_deeply $testclass->list(), [ 'new_fusqlfs_table' ], 'Table is listed under new name';
+ok defined $_tobj->rename('fusqlfs_table', 'new_fusqlfs_table'), 'Table renamed';
+ok !defined($_tobj->get('fusqlfs_table')), 'Table is unaccessable under old name';
+is_deeply $_tobj->get('new_fusqlfs_table'), $_tobj->{subpackages}, 'Table renamed correctly';
+is_deeply $_tobj->list(), [ 'new_fusqlfs_table' ], 'Table is listed under new name';
 
 =end testing
 =cut
@@ -95,7 +95,7 @@ sub rename
 
 =begin testing list
 
-list_ok $testclass->list(), [], 'Tables list is sane';
+list_ok $_tobj->list(), [], 'Tables list is sane';
 
 =end testing
 =cut

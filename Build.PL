@@ -49,8 +49,8 @@ my $class = Module::Build->subclass(
                     }
                     if ($instantiate)
                     {
-                        $result .= "our \$testclass = $class->new();\n";
-                        $result .= "isa_ok \$testclass, '$class', 'Class $class instantiated';\n\n";
+                        $result .= "our \$_tobj = $class->new();\n";
+                        $result .= "isa_ok \$_tobj, '$class', 'Class $class instantiated';\n\n";
                     }
                     $result .= $script->merged_content;
                     if ($testclass)

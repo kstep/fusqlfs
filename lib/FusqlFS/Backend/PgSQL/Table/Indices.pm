@@ -30,14 +30,14 @@ sub new
 
 =begin testing get
 
-is_deeply $testclass->get('fusqlfs_table', 'fusqlfs_table_pkey'), {
+is_deeply $_tobj->get('fusqlfs_table', 'fusqlfs_table_pkey'), {
     '.primary' => 1,
     '.unique'  => 1,
     '.order'   => [ 'id' ],
     'id'       => \'../../struct/id',
     'create.sql' => 'CREATE UNIQUE INDEX fusqlfs_table_pkey ON fusqlfs_table USING btree (id)',
 };
-ok !defined $testclass->get('fusqlfs_table', 'fusqlfs_index');
+ok !defined $_tobj->get('fusqlfs_table', 'fusqlfs_index');
 
 =end testing
 =cut
@@ -62,7 +62,7 @@ sub get
 
 =begin testing list
 
-list_ok $testclass->list('fusqlfs_table'), [ 'fusqlfs_table_pkey' ];
+list_ok $_tobj->list('fusqlfs_table'), [ 'fusqlfs_table_pkey' ];
 
 =end testing
 =cut
@@ -76,9 +76,9 @@ sub list
 
 =begin testing drop after store
 
-ok $testclass->drop('fusqlfs_table', 'fusqlfs_index');
-ok !defined $testclass->get('fusqlfs_table', 'fusqlfs_index');
-is_deeply $testclass->list('fusqlfs_table'), [ 'fusqlfs_table_pkey' ];
+ok $_tobj->drop('fusqlfs_table', 'fusqlfs_index');
+ok !defined $_tobj->get('fusqlfs_table', 'fusqlfs_index');
+is_deeply $_tobj->list('fusqlfs_table'), [ 'fusqlfs_table_pkey' ];
 
 =end testing
 =cut
@@ -91,14 +91,14 @@ sub drop
 
 =begin testing store after create
 
-ok $testclass->store('fusqlfs_table', 'fusqlfs_index', { 'id' => '../../struct/id', '.order' => [ 'id' ], '.unique' => 1 });
-is_deeply $testclass->get('fusqlfs_table', 'fusqlfs_index'), {
+ok $_tobj->store('fusqlfs_table', 'fusqlfs_index', { 'id' => '../../struct/id', '.order' => [ 'id' ], '.unique' => 1 });
+is_deeply $_tobj->get('fusqlfs_table', 'fusqlfs_index'), {
     '.unique' => 1,
     '.order'  => [ 'id' ],
     'id'      => \'../../struct/id',
     'create.sql' => 'CREATE UNIQUE INDEX fusqlfs_index ON fusqlfs_table USING btree (id)',
 };
-is_deeply [ sort(@{$testclass->list('fusqlfs_table')}) ], [ sort('fusqlfs_table_pkey', 'fusqlfs_index') ];
+is_deeply [ sort(@{$_tobj->list('fusqlfs_table')}) ], [ sort('fusqlfs_table_pkey', 'fusqlfs_index') ];
 
 =end testing
 =cut
@@ -138,11 +138,11 @@ sub parse_fields
 
 =begin testing create after get list
 
-ok $testclass->create('fusqlfs_table', 'fusqlfs_index');
-is_deeply $testclass->get('fusqlfs_table', 'fusqlfs_index'), {
+ok $_tobj->create('fusqlfs_table', 'fusqlfs_index');
+is_deeply $_tobj->get('fusqlfs_table', 'fusqlfs_index'), {
     '.order' => [],
 };
-is_deeply $testclass->list('fusqlfs_table'), [ 'fusqlfs_table_pkey', 'fusqlfs_index' ];
+is_deeply $_tobj->list('fusqlfs_table'), [ 'fusqlfs_table_pkey', 'fusqlfs_index' ];
 
 =end testing
 =cut

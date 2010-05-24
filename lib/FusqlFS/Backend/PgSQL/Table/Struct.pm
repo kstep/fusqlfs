@@ -37,8 +37,8 @@ sub new
 
 =begin testing list
 
-is $testclass->list('unknown'), undef;
-list_ok $testclass->list('fusqlfs_table'), [ 'id' ];
+is $_tobj->list('unknown'), undef;
+list_ok $_tobj->list('fusqlfs_table'), [ 'id' ];
 
 =end testing
 =cut
@@ -53,8 +53,8 @@ sub list
 
 =begin testing get
 
-is $testclass->get('fusqlfs_table', 'unknown'), undef;
-is $testclass->get('fusqlfs_table', 'id'), q{---
+is $_tobj->get('fusqlfs_table', 'unknown'), undef;
+is $_tobj->get('fusqlfs_table', 'id'), q{---
 default: "nextval('fusqlfs_table_id_seq'::regclass)"
 dimensions: 0
 nullable: 0
@@ -74,9 +74,9 @@ sub get
 
 =begin testing drop after rename
 
-isnt $testclass->drop('fusqlfs_table', 'new_field'), undef;
-is $testclass->get('fusqlfs_table', 'new_field'), undef;
-is_deeply $testclass->list('fusqlfs_table'), [ 'id', '........pg.dropped.2........' ];
+isnt $_tobj->drop('fusqlfs_table', 'new_field'), undef;
+is $_tobj->get('fusqlfs_table', 'new_field'), undef;
+is_deeply $_tobj->list('fusqlfs_table'), [ 'id', '........pg.dropped.2........' ];
 
 =end testing
 =cut
@@ -89,9 +89,9 @@ sub drop
 
 =begin testing create after get list
 
-isnt $testclass->create('fusqlfs_table', 'field'), undef;
-is_deeply $testclass->list('fusqlfs_table'), [ 'id', 'field' ];
-is $testclass->get('fusqlfs_table', 'field'), q{---
+isnt $_tobj->create('fusqlfs_table', 'field'), undef;
+is_deeply $_tobj->list('fusqlfs_table'), [ 'id', 'field' ];
+is $_tobj->get('fusqlfs_table', 'field'), q{---
 default: 0
 dimensions: 0
 nullable: 0
@@ -110,10 +110,10 @@ sub create
 
 =begin testing rename after store
 
-isnt $testclass->rename('fusqlfs_table', 'field', 'new_field'), undef;
-is_deeply $testclass->list('fusqlfs_table'), [ 'id', 'new_field' ];
-is $testclass->get('fusqlfs_table', 'field'), undef;
-is $testclass->get('fusqlfs_table', 'new_field'), $new_field;
+isnt $_tobj->rename('fusqlfs_table', 'field', 'new_field'), undef;
+is_deeply $_tobj->list('fusqlfs_table'), [ 'id', 'new_field' ];
+is $_tobj->get('fusqlfs_table', 'field'), undef;
+is $_tobj->get('fusqlfs_table', 'new_field'), $new_field;
 
 =end testing
 =cut
@@ -126,8 +126,8 @@ sub rename
 
 =begin testing store after create
 
-isnt $testclass->store('fusqlfs_table', 'field', $new_field), undef;
-is $testclass->get('fusqlfs_table', 'field'), $new_field;
+isnt $_tobj->store('fusqlfs_table', 'field', $new_field), undef;
+is $_tobj->get('fusqlfs_table', 'field'), $new_field;
 
 =end testing
 =cut

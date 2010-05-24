@@ -25,7 +25,7 @@ sub new
 
 =begin testing list
 
-list_ok $testclass->list(), [];
+list_ok $_tobj->list(), [];
 
 =end testing
 =cut
@@ -37,7 +37,7 @@ sub list
 
 =begin testing get
 
-is $testclass->get('unknown'), undef;
+is $_tobj->get('unknown'), undef;
 
 =end testing
 =cut
@@ -55,10 +55,10 @@ sub get
 
 =begin testing rename after store
 
-isnt $testclass->rename('fusqlfs_view', 'new_fusqlfs_view'), undef;
-is $testclass->get('fusqlfs_view'), undef;
-is_deeply $testclass->get('new_fusqlfs_view'), { 'query.sql' => 'SELECT 2;', owner => $testclass->{owner} };
-is_deeply $testclass->list(), [ 'new_fusqlfs_view' ];
+isnt $_tobj->rename('fusqlfs_view', 'new_fusqlfs_view'), undef;
+is $_tobj->get('fusqlfs_view'), undef;
+is_deeply $_tobj->get('new_fusqlfs_view'), { 'query.sql' => 'SELECT 2;', owner => $_tobj->{owner} };
+is_deeply $_tobj->list(), [ 'new_fusqlfs_view' ];
 
 =end testing
 =cut
@@ -71,9 +71,9 @@ sub rename
 
 =begin testing drop after rename
 
-isnt $testclass->drop('new_fusqlfs_view'), undef;
-is_deeply $testclass->list(), [];
-is $testclass->get('new_fusqlfs_view'), undef;
+isnt $_tobj->drop('new_fusqlfs_view'), undef;
+is_deeply $_tobj->list(), [];
+is $_tobj->get('new_fusqlfs_view'), undef;
 
 =end testing
 =cut
@@ -86,9 +86,9 @@ sub drop
 
 =begin testing create after get list
 
-isnt $testclass->create('fusqlfs_view'), undef;
-is_deeply $testclass->list(), [ 'fusqlfs_view' ];
-is_deeply $testclass->get('fusqlfs_view'), { 'query.sql' => 'SELECT 1;', owner => $testclass->{owner} };
+isnt $_tobj->create('fusqlfs_view'), undef;
+is_deeply $_tobj->list(), [ 'fusqlfs_view' ];
+is_deeply $_tobj->get('fusqlfs_view'), { 'query.sql' => 'SELECT 1;', owner => $_tobj->{owner} };
 
 =end testing
 =cut
@@ -101,8 +101,8 @@ sub create
 
 =begin testing store after create
 
-isnt $testclass->store('fusqlfs_view', { 'query.sql' => 'SELECT 2' }), undef;
-is_deeply $testclass->get('fusqlfs_view'), { 'query.sql' => 'SELECT 2;', owner => $testclass->{owner} };
+isnt $_tobj->store('fusqlfs_view', { 'query.sql' => 'SELECT 2' }), undef;
+is_deeply $_tobj->get('fusqlfs_view'), { 'query.sql' => 'SELECT 2;', owner => $_tobj->{owner} };
 
 =end testing
 =cut
