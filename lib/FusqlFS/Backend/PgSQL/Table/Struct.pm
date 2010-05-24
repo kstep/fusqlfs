@@ -39,7 +39,9 @@ sub list
 {
     my $self = shift;
     my ($table) = @_;
-    return $self->all_col($self->{list_expr}, $table);
+    my $list = $self->all_col($self->{list_expr}, $table);
+    return unless @$list;
+    return $list;
 }
 
 sub get
