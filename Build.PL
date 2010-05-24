@@ -19,11 +19,12 @@ my $class = Module::Build->subclass(
             use Test::Inline;
             mkdir $autotests_dir unless -d $autotests_dir;
             my $tests = Test::Inline->new(
-                verbose  => 1,
-                readonly => 0,
-                input    => 'lib',
-                output   => 't/auto',
-                manifest => 't/auto/manifest',
+                verbose     => 1,
+                readonly    => 0,
+                check_count => 2,
+                input       => 'lib',
+                output      => 't',
+                manifest    => 't/manifest',
             );
             $tests->add_all;
             $tests->save;
