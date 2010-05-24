@@ -89,6 +89,7 @@ sub new
                 WHERE m.roleid = r.oid) AS contains
         FROM pg_catalog.pg_roles AS r WHERE rolname = ?");
 
+    $self->{create_expr} = 'CREATE ROLE "%s"';
     $self->{rename_expr} = 'ALTER ROLE "%s" RENAME TO "%s"';
     $self->{drop_expr} = 'DROP ROLE "%s"';
 
@@ -131,6 +132,13 @@ sub drop
     my $self = shift;
     my ($name) = @_;
     $self->do($self->{drop_expr}, [$name]);
+}
+
+sub create
+{
+    my $self = shift;
+    my ($name) = @_;
+    $self->do($self->{create_expr}, [$name]);
 }
 
 sub store
