@@ -12,14 +12,15 @@ our $fusqlh;
 sub dbi_connect
 {
     use DBI;
-    return DBI->connect('DBI:Pg:database=postgres', 'postgres', '', { PrintError => 0, PrintWarn => 0 });
+    DBI->connect('DBI:Pg:database=postgres', 'postgres', '', { PrintError => 0, PrintWarn => 0 });
 }
 
 sub set_up
 {
     my $dbh = dbi_connect();
+    return unless $dbh;
     $dbh->do("DROP DATABASE IF EXISTS fusqlfs_test");
-    $dbh->do("CREATE DATABASE fusqlfs_test");
+    return unless $dbh->do("CREATE DATABASE fusqlfs_test");
     $dbh->disconnect;
 
     use FusqlFS::Backend::PgSQL;

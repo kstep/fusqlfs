@@ -12,6 +12,7 @@ our $fusqlh;
 sub set_up
 {
     $fusqlh = FusqlFS::Backend::PgSQL::Test->set_up();
+    return unless $fusqlh;
     $fusqlh->{subpackages}->{tables}->create('fusqlfs_table');
 }
 

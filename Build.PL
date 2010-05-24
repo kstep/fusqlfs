@@ -36,12 +36,13 @@ my $class = Module::Build->subclass(
                     $instantiate = 0 if ($content =~ /^#!noinst/m);
 
                     my $result = "use strict;\nuse v5.10.0;\n";
-                    $result .= "use Test::More;\n$plan\n\n";
+                    $result .= "use Test::More;\n";
                     if ($testclass)
                     {
-                        $result .= "use $testclass;\n" if $testclass;
-                        $result .= "$testclass->set_up() if $testclass->can('set_up');\n";
+                        $result .= "use $testclass;\n";
+                        $result .= "if ($testclass->can('set_up'))\n{ plan skip_all => 'Initialization failed' unless $testclass->set_up(); }\n";
                     }
+                    $result .= "$plan\n\n";
                     if ($require)
                     {
                         $result .= "require_ok '$require';\n";
