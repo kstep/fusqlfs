@@ -34,6 +34,7 @@ sub get
     my $self = shift;
     my ($name) = @_;
     my $result = $self->all_col($self->{get_expr}, $name);
+    return unless @$result;
     return {
         'query.sql' => $result->[0],
         owner => $self->{owner},
