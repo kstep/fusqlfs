@@ -75,6 +75,89 @@ package FusqlFS::Backend::PgSQL::Roles;
 use parent 'FusqlFS::Interface';
 use DBI qw(:sql_types);
 
+=begin testing
+
+require_ok 'FusqlFS::Backend::PgSQL';
+my $fusqlh = FusqlFS::Backend::PgSQL->new(host => '', port => '', database => 'fusqlfs_test', user => 'postgres', password => '');
+ok $fusqlh, 'Backend initialized';
+
+require_ok 'FusqlFS::Backend::PgSQL::Roles';
+my $roles = FusqlFS::Backend::PgSQL::Roles->new();
+
+# List roles
+my $list = $roles->list();
+ok $list, 'Roles list is sane';
+is ref($list), 'ARRAY', 'Roles list is an array';
+isnt scalar(@$list), 0, 'At least one role exist';
+ok grep { $_ eq 'postgres' } @{$list};
+
+# Get role
+ok !defined($roles->get('unknown')), 'Unknown role not exists';
+is_deeply $roles->get('postgres'), { struct => q{---
+can_login: 1
+cat_update: 1
+config: ~
+conn_limit: '-1'
+create_db: 1
+create_role: 1
+inherit: 1
+superuser: 1
+valid_until: ~
+} }, 'Known role is sane';
+
+# Create role
+ok defined $roles->create('fusqlfs_test'), 'Role created';
+is $roles->get('fusqlfs_test')->{struct}, q{---
+can_login: 0
+cat_update: 0
+config: ~
+conn_limit: '-1'
+create_db: 0
+create_role: 0
+inherit: 1
+superuser: 0
+valid_until: ~
+}, 'New role is sane';
+
+$list = $roles->list();
+ok grep { $_ eq 'fusqlfs_test' } @$list;
+
+# Alter role
+my $new_role = {
+    struct => q{---
+can_login: 1
+cat_update: 1
+config: ~
+conn_limit: 1
+create_db: 1
+create_role: 1
+inherit: 0
+superuser: 1
+valid_until: '2010-01-01 00:00:00+02'
+},
+    postgres => \"../postgres",
+};
+
+ok defined $roles->store('fusqlfs_test', $new_role), 'Role saved';
+is_deeply $roles->get('fusqlfs_test'), $new_role, 'Role saved correctly';
+
+# Rename role
+ok defined $roles->rename('fusqlfs_test', 'new_fusqlfs_test'), 'Role renamed';
+is_deeply $roles->get('new_fusqlfs_test'), $new_role, 'Role renamed correctly';
+ok !defined($roles->get('fusqlfs_test')), 'Role is unaccessable under old name';
+$list = $roles->list();
+ok grep { $_ eq 'new_fusqlfs_test' } @$list;
+ok !grep { $_ eq 'fusqlfs_test' } @$list;
+
+# Delete role
+ok defined $roles->drop('new_fusqlfs_test'), 'Role deleted';
+ok !defined($roles->get('new_fusqlfs_test')), 'Deleted role is absent';
+$list = $roles->list();
+ok !grep { $_ eq 'new_fusqlfs_test' } @$list;
+
+=end testing
+=cut
+
 sub new
 {
     my $class = shift;
