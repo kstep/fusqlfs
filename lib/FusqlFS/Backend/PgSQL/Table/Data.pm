@@ -6,59 +6,6 @@ use parent 'FusqlFS::Artifact';
 
 use FusqlFS::Backend::PgSQL::Table::Struct;
 
-=begin testing
-
-require_ok 'FusqlFS::Backend::PgSQL';
-my $fusqlh = FusqlFS::Backend::PgSQL->new(host => '', port => '', database => 'fusqlfs_test', user => 'postgres', password => '');
-ok $fusqlh, 'Backend initialized';
-
-require_ok 'FusqlFS::Backend::PgSQL::Table::Data';
-my $data = FusqlFS::Backend::PgSQL::Table::Data->new();
-ok $data, 'Table data module initialized';
-
-require_ok 'FusqlFS::Backend::PgSQL::Tables';
-my $tables = FusqlFS::Backend::PgSQL::Tables->new();
-ok $tables, 'Tables module initialized';
-ok $tables->create('fusqlfs_table'), 'Test table created';
-#ok $tables->{subpackages}->{struct}->create('fusqlfs_table', 'testfield');
-#ok $tables->{subpackages}->{struct}->store('fusqlfs_table', 'testfield', q{
-#---
-#});
-
-# List rows
-my $rows = $data->list('fusqlfs_table');
-ok $rows;
-is ref($rows), 'ARRAY';
-is scalar(@$rows), 0;
-
-# Add row
-ok !defined $data->get('fusqlfs_table', '1');
-ok $data->create('fusqlfs_table', '1');
-is $data->get('fusqlfs_table', '1'), q{---
-id: 1
-};
-is_deeply $data->list('fusqlfs_table'), [ 1 ];
-
-# Alter row - TODO
-
-# Rename row
-ok $data->rename('fusqlfs_table', '1', '2');
-ok !defined $data->get('fusqlfs_table', '1');
-is $data->get('fusqlfs_table', '2'), q{---
-id: 2
-};
-is_deeply $data->list('fusqlfs_table'), [ 2 ];
-
-# Delete row
-ok $data->drop('fusqlfs_table', '2');
-ok !defined $data->get('fusqlfs_table', '2');
-is scalar(@{$data->list('fusqlfs_table')}), 0;
-
-$tables->drop('fusqlfs_table');
-
-=end testing
-=cut
-
 sub new
 {
     my $class = shift;
@@ -72,6 +19,12 @@ sub new
     bless $self, $class;
 }
 
+=begin testing list
+
+list_ok $testclass->list('fusqlfs_table'), [];
+
+=end testing
+=cut
 sub list
 {
     my $self = shift;
@@ -91,6 +44,12 @@ sub where_clause
     return join(' AND ', map { "\"$_\" = ?" } @primary_key), @binds;
 }
 
+=begin testing get
+
+ok !defined $testclass->get('fusqlfs_table', '1');
+
+=end testing
+=cut
 sub get
 {
     my $self = shift;
@@ -105,6 +64,14 @@ sub get
     return $self->dump($sth->fetchrow_hashref) if $sth->execute(@binds);
 }
 
+=begin testing drop after rename
+
+ok $testclass->drop('fusqlfs_table', '2');
+ok !defined $testclass->get('fusqlfs_table', '2');
+is scalar(@{$testclass->list('fusqlfs_table')}), 0;
+
+=end testing
+=cut
 sub drop
 {
     my $self = shift;
@@ -127,6 +94,16 @@ sub store
     $self->cdo('UPDATE "%s" SET %s WHERE %s', [$table, $template, $where_clause], values %$data, @binds);
 }
 
+=begin testing create after get list
+
+ok $testclass->create('fusqlfs_table', '1');
+is $testclass->get('fusqlfs_table', '1'), q{---
+id: 1
+};
+is_deeply $testclass->list('fusqlfs_table'), [ 1 ];
+
+=end testing
+=cut
 sub create
 {
     my $self = shift;
@@ -137,6 +114,17 @@ sub create
     $self->cdo('INSERT INTO "%s" (%s) VALUES (%s)', [$table, join(', ', @primary_key), $pholders], split(/[.]/, $name));
 }
 
+=begin testing rename after create
+
+ok $testclass->rename('fusqlfs_table', '1', '2');
+ok !defined $testclass->get('fusqlfs_table', '1');
+is $testclass->get('fusqlfs_table', '2'), q{---
+id: 2
+};
+is_deeply $testclass->list('fusqlfs_table'), [ 2 ];
+
+=end testing
+=cut
 sub rename
 {
     my $self = shift;
@@ -162,3 +150,10 @@ sub get_primary_key
 
 1;
 
+__END__
+
+=begin testing SETUP
+
+#!class FusqlFS::Backend::PgSQL::Table::Test
+
+=end testing

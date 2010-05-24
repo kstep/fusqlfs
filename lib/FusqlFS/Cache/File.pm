@@ -7,7 +7,7 @@ use Carp;
 
 =begin testing
 
-require_ok 'FusqlFS::Cache::File';
+#!noinst
 
 ok FusqlFS::Cache::File->is_needed(10), 'File cache is needed';
 ok !FusqlFS::Cache::File->is_needed(0), 'File cache isn\'t needed';
@@ -183,7 +183,8 @@ use Carp;
 
 =begin testing
 
-require_ok 'FusqlFS::Cache::File';
+#!req FusqlFS::Cache::File
+#!noinst
 
 my $string = '';
 

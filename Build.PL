@@ -20,6 +20,45 @@ my $class = Module::Build->subclass(
                 input       => 'lib',
                 output      => 't',
                 manifest    => 't/manifest',
+                file_content => sub () {
+                    my ($inline, $script) = @_;
+                    my $testno = $script->tests;
+                    my $plan = $testno? "plan tests => $testno;": "plan 'no_plan';";
+                    my $content = $script->merged_content;
+                    my $class = $script->class;
+                    my $testclass = '';
+                    my $require = $class;
+                    my $instantiate = 1;
+
+                    $testclass = $1 if ($content =~ /^#!class (\S+)/m);
+                    $require = $1 if ($content =~ /^#!req (\S+)/m);
+                    $require = '' if ($content =~ /^#!noreq/m);
+                    $instantiate = 0 if ($content =~ /^#!noinst/m);
+
+                    my $result = "use strict;\nuse v5.10.0;\n";
+                    $result .= "use Test::More;\n$plan\n\n";
+                    if ($testclass)
+                    {
+                        $result .= "use $testclass;\n" if $testclass;
+                        $result .= "$testclass->set_up() if $testclass->can('set_up');\n";
+                    }
+                    if ($require)
+                    {
+                        $result .= "require_ok '$require';\n";
+                    }
+                    if ($instantiate)
+                    {
+                        $result .= "our \$testclass = $class->new();\n";
+                        $result .= "isa_ok \$testclass, '$class', 'Class $class instantiated';\n\n";
+                    }
+                    $result .= $script->merged_content;
+                    if ($testclass)
+                    {
+                        $result .= "\n$testclass->tear_down() if $testclass->can('tear_down');\n";
+                    }
+                    $result .= "\n1;";
+                    return $result;
+                },
             );
             $tests->add_all;
             $tests->save;

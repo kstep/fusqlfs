@@ -60,9 +60,10 @@ sub by_path
     return FusqlFS::Entry->new(@_);
 }
 
-=begin testing
+=begin testing dsn
 
-require_ok 'FusqlFS::Backend::Base';
+#!noinst
+
 is FusqlFS::Backend::Base->dsn('host', 'port', 'database'), 'host=host;port=port;database=database;', 'FusqlFS::Backend::Base->dsn is sane';
 
 =end testing

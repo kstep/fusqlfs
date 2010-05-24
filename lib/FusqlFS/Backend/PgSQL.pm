@@ -12,17 +12,9 @@ use FusqlFS::Backend::PgSQL::Queries;
 
 =begin testing
 
-# Testing environment preparation
-use DBI;
-my $dbh = DBI->connect('DBI:Pg:database=postgres', 'postgres', '');
-BAIL_OUT 'Unable to connect PostgreSQL' unless $dbh;
+#!class FusqlFS::Backend::PgSQL::Test
+#!noinst
 
-$dbh->do('DROP DATABASE IF EXISTS fusqlfs_test');
-$dbh->do('CREATE DATABASE fusqlfs_test') or BAIL_OUT 'Unable to create test database: '.$dbh->errstr;
-$dbh->disconnect;
-
-# Initialize backend
-require_ok 'FusqlFS::Backend::PgSQL';
 my $fusqlh = FusqlFS::Backend::PgSQL->new(
     host     => '',
     port     => '',
@@ -38,7 +30,6 @@ is $new_fusqlh, $fusqlh, 'PgSQL backend is singleton';
 
 =end testing
 =cut
-
 sub init
 {
     $_[0]->{subpackages} = {

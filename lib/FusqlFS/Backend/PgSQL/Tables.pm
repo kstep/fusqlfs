@@ -4,42 +4,6 @@ use v5.10.0;
 package FusqlFS::Backend::PgSQL::Tables;
 use parent 'FusqlFS::Artifact';
 
-=begin testing
-
-require_ok 'FusqlFS::Backend::PgSQL';
-my $fusqlh = FusqlFS::Backend::PgSQL->new(host => '', port => '', database => 'fusqlfs_test', user => 'postgres', password => '');
-ok $fusqlh, 'Backend initialized';
-
-require_ok 'FusqlFS::Backend::PgSQL::Tables';
-my $tables = FusqlFS::Backend::PgSQL::Tables->new();
-
-# List tables
-my $list = $tables->list();
-ok $list, 'Tables list is sane';
-is ref($list), 'ARRAY', 'Tables list is an array';
-is scalar(@$list), 0, 'Tables list is empty';
-
-# Get & create table
-ok !defined($tables->get('fusqlfs_table')), 'Test table doesn\'t exist';
-
-ok defined $tables->create('fusqlfs_table'), 'Table created';
-is_deeply $tables->get('fusqlfs_table'), $tables->{subpackages}, 'New table is sane';
-is_deeply $tables->list(), [ 'fusqlfs_table' ], 'New table is listed';
-
-# Rename table
-ok defined $tables->rename('fusqlfs_table', 'new_fusqlfs_table'), 'Table renamed';
-ok !defined($tables->get('fusqlfs_table')), 'Table is unaccessable under old name';
-is_deeply $tables->get('new_fusqlfs_table'), $tables->{subpackages}, 'Table renamed correctly';
-is_deeply $tables->list(), [ 'new_fusqlfs_table' ], 'Table is listed under new name';
-
-# Drop table
-ok defined $tables->drop('new_fusqlfs_table'), 'Table dropped';
-ok !defined($tables->get('new_fusqlfs_table')), 'Table dropped correctly';
-is_deeply $tables->list(), [], 'Tables list is empty';
-
-=end testing
-=cut
-
 use FusqlFS::Backend::PgSQL::Roles;
 use FusqlFS::Backend::PgSQL::Table::Indices;
 use FusqlFS::Backend::PgSQL::Table::Struct;
@@ -68,6 +32,12 @@ sub new
     bless $self, $class;
 }
 
+=begin testing get
+
+ok !defined($testclass->get('fusqlfs_table')), 'Test table doesn\'t exist';
+
+=end testing
+=cut
 sub get
 {
     my $self = shift;
@@ -77,6 +47,14 @@ sub get
     return $self->{subpackages};
 }
 
+=begin testing drop after rename
+
+ok defined $testclass->drop('new_fusqlfs_table'), 'Table dropped';
+ok !defined($testclass->get('new_fusqlfs_table')), 'Table dropped correctly';
+is_deeply $testclass->list(), [], 'Tables list is empty';
+
+=end testing
+=cut
 sub drop
 {
     my $self = shift;
@@ -84,6 +62,14 @@ sub drop
     $self->do($self->{drop_expr}, [$name]);
 }
 
+=begin testing create after get list
+
+ok defined $testclass->create('fusqlfs_table'), 'Table created';
+is_deeply $testclass->get('fusqlfs_table'), $testclass->{subpackages}, 'New table is sane';
+is_deeply $testclass->list(), [ 'fusqlfs_table' ], 'New table is listed';
+
+=end testing
+=cut
 sub create
 {
     my $self = shift;
@@ -91,6 +77,15 @@ sub create
     $self->do($self->{create_expr}, [$name]);
 }
 
+=begin testing rename after create
+
+ok defined $testclass->rename('fusqlfs_table', 'new_fusqlfs_table'), 'Table renamed';
+ok !defined($testclass->get('fusqlfs_table')), 'Table is unaccessable under old name';
+is_deeply $testclass->get('new_fusqlfs_table'), $testclass->{subpackages}, 'Table renamed correctly';
+is_deeply $testclass->list(), [ 'new_fusqlfs_table' ], 'Table is listed under new name';
+
+=end testing
+=cut
 sub rename
 {
     my $self = shift;
@@ -98,6 +93,12 @@ sub rename
     $self->do($self->{rename_expr}, [$name, $newname]);
 }
 
+=begin testing list
+
+list_ok $testclass->list(), [], 'Tables list is sane';
+
+=end testing
+=cut
 sub list
 {
     my $self = shift;
@@ -106,3 +107,10 @@ sub list
 
 1;
 
+__END__
+
+=begin testing SETUP
+
+#!class FusqlFS::Backend::PgSQL::Test
+
+=end testing

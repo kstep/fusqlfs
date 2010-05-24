@@ -6,64 +6,6 @@ use parent 'FusqlFS::Artifact';
 
 use FusqlFS::Backend::PgSQL::Table::Struct;
 
-=begin testing
-
-require_ok 'FusqlFS::Backend::PgSQL';
-my $fusqlh = FusqlFS::Backend::PgSQL->new(host => '', port => '', database => 'fusqlfs_test', user => 'postgres', password => '');
-ok $fusqlh, 'Backend initialized';
-
-require_ok 'FusqlFS::Backend::PgSQL::Table::Indices';
-my $indices = FusqlFS::Backend::PgSQL::Table::Indices->new();
-ok $indices, 'Table indices module initialized';
-
-require_ok 'FusqlFS::Backend::PgSQL::Tables';
-my $tables = FusqlFS::Backend::PgSQL::Tables->new();
-ok $tables, 'Tables module initialized';
-ok $tables->create('fusqlfs_table'), 'Test table created';
-
-# List indices
-my $list = $indices->list('fusqlfs_table');
-ok $list;
-is ref($list), 'ARRAY';
-is_deeply $list, [ 'fusqlfs_table_pkey' ];
-
-# Get index
-is_deeply $indices->get('fusqlfs_table', 'fusqlfs_table_pkey'), {
-    '.primary' => 1,
-    '.unique'  => 1,
-    '.order'   => [ 'id' ],
-    'id'       => \'../../struct/id',
-    'create.sql' => 'CREATE UNIQUE INDEX fusqlfs_table_pkey ON fusqlfs_table USING btree (id)',
-};
-ok !defined $indices->get('fusqlfs_table', 'fusqlfs_index');
-
-# Create index
-ok $indices->create('fusqlfs_table', 'fusqlfs_index');
-is_deeply $indices->get('fusqlfs_table', 'fusqlfs_index'), {
-    '.order' => [],
-};
-is_deeply $indices->list('fusqlfs_table'), [ 'fusqlfs_table_pkey', 'fusqlfs_index' ];
-
-# Store index
-ok $indices->store('fusqlfs_table', 'fusqlfs_index', { 'id' => '../../struct/id', '.order' => [ 'id' ], '.unique' => 1 });
-is_deeply $indices->get('fusqlfs_table', 'fusqlfs_index'), {
-    '.unique' => 1,
-    '.order'  => [ 'id' ],
-    'id'      => \'../../struct/id',
-    'create.sql' => 'CREATE UNIQUE INDEX fusqlfs_index ON fusqlfs_table USING btree (id)',
-};
-is_deeply [ sort(@{$indices->list('fusqlfs_table')}) ], [ sort('fusqlfs_table_pkey', 'fusqlfs_index') ];
-
-# Drop index
-ok $indices->drop('fusqlfs_table', 'fusqlfs_index');
-ok !defined $indices->get('fusqlfs_table', 'fusqlfs_index');
-is_deeply $indices->list('fusqlfs_table'), [ 'fusqlfs_table_pkey' ];
-
-# Cleanup
-ok $tables->drop('fusqlfs_table');
-
-=end testing
-=cut
 
 sub new
 {
@@ -86,6 +28,19 @@ sub new
     bless $self, $class;
 }
 
+=begin testing get
+
+is_deeply $testclass->get('fusqlfs_table', 'fusqlfs_table_pkey'), {
+    '.primary' => 1,
+    '.unique'  => 1,
+    '.order'   => [ 'id' ],
+    'id'       => \'../../struct/id',
+    'create.sql' => 'CREATE UNIQUE INDEX fusqlfs_table_pkey ON fusqlfs_table USING btree (id)',
+};
+ok !defined $testclass->get('fusqlfs_table', 'fusqlfs_index');
+
+=end testing
+=cut
 sub get
 {
     my $self = shift;
@@ -105,6 +60,12 @@ sub get
     return $result;
 }
 
+=begin testing list
+
+list_ok $testclass->list('fusqlfs_table'), [ 'fusqlfs_table_pkey' ];
+
+=end testing
+=cut
 sub list
 {
     my $self = shift;
@@ -113,6 +74,14 @@ sub list
     return [ (@{$self->all_col($self->{list_expr}, $table)}, @list) ] || \@list;
 }
 
+=begin testing drop after store
+
+ok $testclass->drop('fusqlfs_table', 'fusqlfs_index');
+ok !defined $testclass->get('fusqlfs_table', 'fusqlfs_index');
+is_deeply $testclass->list('fusqlfs_table'), [ 'fusqlfs_table_pkey' ];
+
+=end testing
+=cut
 sub drop
 {
     my $self = shift;
@@ -120,6 +89,19 @@ sub drop
     $self->do($self->{drop_expr}, [$name]);
 }
 
+=begin testing store after create
+
+ok $testclass->store('fusqlfs_table', 'fusqlfs_index', { 'id' => '../../struct/id', '.order' => [ 'id' ], '.unique' => 1 });
+is_deeply $testclass->get('fusqlfs_table', 'fusqlfs_index'), {
+    '.unique' => 1,
+    '.order'  => [ 'id' ],
+    'id'      => \'../../struct/id',
+    'create.sql' => 'CREATE UNIQUE INDEX fusqlfs_index ON fusqlfs_table USING btree (id)',
+};
+is_deeply [ sort(@{$testclass->list('fusqlfs_table')}) ], [ sort('fusqlfs_table_pkey', 'fusqlfs_index') ];
+
+=end testing
+=cut
 sub store
 {
     my $self = shift;
@@ -154,6 +136,16 @@ sub parse_fields
     return $fields;
 }
 
+=begin testing create after get list
+
+ok $testclass->create('fusqlfs_table', 'fusqlfs_index');
+is_deeply $testclass->get('fusqlfs_table', 'fusqlfs_index'), {
+    '.order' => [],
+};
+is_deeply $testclass->list('fusqlfs_table'), [ 'fusqlfs_table_pkey', 'fusqlfs_index' ];
+
+=end testing
+=cut
 sub create
 {
     my $self = shift;
@@ -171,3 +163,10 @@ sub rename
 
 1;
 
+__END__
+
+=begin testing SETUP
+
+#!class FusqlFS::Backend::PgSQL::Table::Test
+
+=end testing

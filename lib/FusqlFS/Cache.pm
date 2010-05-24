@@ -7,9 +7,9 @@ use Carp;
 use FusqlFS::Cache::Limited;
 use FusqlFS::Cache::File;
 
-=begin testing
+=begin testing init
 
-require_ok 'FusqlFS::Cache';
+#!noinst
 
 foreach (qw(Limited File))
 {
