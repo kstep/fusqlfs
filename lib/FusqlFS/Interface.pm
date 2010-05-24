@@ -64,6 +64,7 @@ sub all_row
 
 sub load
 {
+    return $_[1] if ref $_[1];
     return $instance->{loader}->($_[1]);
 }
 
@@ -76,7 +77,7 @@ sub dump
 sub limit
 {
     my $limit = $instance->{limit};
-    return "LIMIT $limit" if $limit;
+    return $limit? "LIMIT $limit": '';
 }
 
 sub build
