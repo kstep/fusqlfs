@@ -17,6 +17,13 @@ sub new
     bless $self, $class;
 }
 
+=begin testing get
+
+is $_tobj->get('fusqlfs_table', 'unknown'), undef;
+is_deeply $_tobj->get('fusqlfs_table', 'fusqlfs_table_pkey'), { struct => 'PRIMARY KEY (id)', '.type' => 'p' };
+
+=end testing
+=cut
 sub get
 {
     my $self = shift;
@@ -36,6 +43,13 @@ sub get
     return $data;
 }
 
+=begin testing list
+
+#is $_tobj->list('unknown'), undef;
+list_ok $_tobj->list('fusqlfs_table'), [ 'fusqlfs_table_pkey' ];
+
+=end testing
+=cut
 sub list
 {
     my $self = shift;
@@ -45,3 +59,11 @@ sub list
 
 1;
 
+__END__
+
+=begin testing SETUP
+
+#!class FusqlFS::Backend::PgSQL::Table::Test
+
+=end testing
+=cut
