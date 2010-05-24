@@ -14,7 +14,7 @@ manifest build: Build
 buildtests: build
 	./Build $@
 
-test: buildtests
+test testcover: buildtests
 	./Build $@
 
 install: Build
