@@ -17,6 +17,10 @@ buildtests: build
 test testcover: buildtests
 	./Build $@
 
+lint:
+	find ./lib -name "*.pm" -exec perl -M'lib "./lib"' -MO=Lint,no-context {} \;
+	find ./bin -name "*.pl" -exec perl -M'lib "./lib"' -MO=Lint,no-context {} \;
+
 install: Build
 	./Build $@ $(INSTALL_OPTS)
 
