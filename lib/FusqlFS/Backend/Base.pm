@@ -17,7 +17,7 @@ sub new
     my $self = {
         subpackages => {},
         limit  => 0 + ($options{limit}||0),
-        dbh => DBI->connect($dsn, @options{qw(user password)}),
+        dbh => DBI->connect($dsn, @options{qw(user password)}, { PrintError => $options{debug}||0, PrintWarn => $options{debug}||0 }),
     };
 
     given ($options{format})
