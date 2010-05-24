@@ -23,6 +23,12 @@ sub new
     bless $self, $class;
 }
 
+=begin testing get
+
+is $_tobj->get('unknown'), undef;
+
+=end testing
+=cut
 sub get
 {
     my $self = shift;
@@ -35,12 +41,25 @@ sub get
     };
 }
 
+=begin testing list
+
+list_ok $_tobj->list(), [];
+
+=end testing
+=cut
 sub list
 {
     my $self = shift;
     return $self->all_col($self->{list_expr}) || [];
 }
 
+=begin testing store after create
+
+isnt $_tobj->store('fusqlfs_sequence', $new_sequence), undef;
+is_deeply $_tobj->get('fusqlfs_sequence'), $new_sequence;
+
+=end testing
+=cut
 sub store
 {
     my $self = shift;
@@ -68,6 +87,15 @@ sub store
     $sth->execute();
 }
 
+=begin testing rename after store
+
+isnt $_tobj->rename('fusqlfs_sequence', 'new_fusqlfs_sequence'), undef;
+is $_tobj->get('fusqlfs_sequence'), undef;
+is_deeply $_tobj->get('new_fusqlfs_sequence'), $new_sequence;
+is_deeply $_tobj->list(), [ 'new_fusqlfs_sequence' ];
+
+=end testing
+=cut
 sub rename
 {
     my $self = shift;
@@ -75,6 +103,14 @@ sub rename
     $self->do($self->{rename_expr}, [$name, $newname]);
 }
 
+=begin testing drop after rename
+
+isnt $_tobj->drop('new_fusqlfs_sequence'), undef;
+is $_tobj->get('new_fusqlfs_sequence'), undef;
+is_deeply $_tobj->list(), [];
+
+=end testing
+=cut
 sub drop
 {
     my $self = shift;
@@ -82,6 +118,25 @@ sub drop
     $self->do($self->{drop_expr}, [$name]);
 }
 
+=begin testing create after get list
+
+isnt $_tobj->create('fusqlfs_sequence'), undef;
+is_deeply $_tobj->get('fusqlfs_sequence'), { struct => q{---
+cache_value: 1
+increment_by: 1
+is_called: 0
+is_cycled: 0
+last_value: 1
+log_cnt: 1
+max_value: 9223372036854775807
+min_value: 1
+sequence_name: fusqlfs_sequence
+start_value: 1
+}, owner => $_tobj->{owner} };
+is_deeply $_tobj->list(), [ 'fusqlfs_sequence' ]; 
+
+=end testing
+=cut
 sub create
 {
     my $self = shift;
@@ -91,3 +146,24 @@ sub create
 
 1;
 
+__END__
+
+=begin testing SETUP
+
+#!class FusqlFS::Backend::PgSQL::Test
+
+my $new_sequence = { struct => q{---
+cache_value: 4
+increment_by: 2
+is_called: 0
+is_cycled: 1
+last_value: 6
+log_cnt: 1
+max_value: 1000
+min_value: '-10'
+sequence_name: fusqlfs_sequence
+start_value: 1
+}, owner => $_tobj->{owner} };
+
+=end testing
+=cut
