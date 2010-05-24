@@ -15,7 +15,7 @@ use FusqlFS::Backend::PgSQL::Queries;
 # Testing environment preparation
 use DBI;
 my $dbh = DBI->connect('DBI:Pg:database=postgres', 'postgres', '');
-BAIL_OUT 'Unable to connect PostgreSQL: '.$DBI::errstr unless $dbh;
+BAIL_OUT 'Unable to connect PostgreSQL' unless $dbh;
 
 $dbh->do('DROP DATABASE IF EXISTS fusqlfs_test');
 $dbh->do('CREATE DATABASE fusqlfs_test') or BAIL_OUT 'Unable to create test database: '.$dbh->errstr;
