@@ -35,6 +35,13 @@ sub new
     bless $self, $class;
 }
 
+=begin testing list
+
+is $testclass->list('unknown'), undef;
+list_ok $testclass->list('fusqlfs_table'), [ 'id' ];
+
+=end testing
+=cut
 sub list
 {
     my $self = shift;
@@ -44,6 +51,19 @@ sub list
     return $list;
 }
 
+=begin testing get
+
+is $testclass->get('fusqlfs_table', 'unknown'), undef;
+is $testclass->get('fusqlfs_table', 'id'), q{---
+default: "nextval('fusqlfs_table_id_seq'::regclass)"
+dimensions: 0
+nullable: 0
+order: 1
+type: integer
+};
+
+=end testing
+=cut
 sub get
 {
     my $self = shift;
@@ -52,6 +72,14 @@ sub get
     return $self->dump($result);
 }
 
+=begin testing drop after rename
+
+isnt $testclass->drop('fusqlfs_table', 'new_field'), undef;
+is $testclass->get('fusqlfs_table', 'new_field'), undef;
+is_deeply $testclass->list('fusqlfs_table'), [ 'id', '........pg.dropped.2........' ];
+
+=end testing
+=cut
 sub drop
 {
     my $self = shift;
@@ -59,6 +87,20 @@ sub drop
     $self->do($self->{drop_expr}, [$table, $name]);
 }
 
+=begin testing create after get list
+
+isnt $testclass->create('fusqlfs_table', 'field'), undef;
+is_deeply $testclass->list('fusqlfs_table'), [ 'id', 'field' ];
+is $testclass->get('fusqlfs_table', 'field'), q{---
+default: 0
+dimensions: 0
+nullable: 0
+order: 2
+type: integer
+};
+
+=end testing
+=cut
 sub create
 {
     my $self = shift;
@@ -66,6 +108,15 @@ sub create
     $self->do($self->{create_expr}, [$table, $name]);
 }
 
+=begin testing rename after store
+
+isnt $testclass->rename('fusqlfs_table', 'field', 'new_field'), undef;
+is_deeply $testclass->list('fusqlfs_table'), [ 'id', 'new_field' ];
+is $testclass->get('fusqlfs_table', 'field'), undef;
+is $testclass->get('fusqlfs_table', 'new_field'), $new_field;
+
+=end testing
+=cut
 sub rename
 {
     my $self = shift;
@@ -73,6 +124,13 @@ sub rename
     $self->do($self->{rename_expr}, [$table, $name, $newname]);
 }
 
+=begin testing store after create
+
+isnt $testclass->store('fusqlfs_table', 'field', $new_field), undef;
+is $testclass->get('fusqlfs_table', 'field'), $new_field;
+
+=end testing
+=cut
 sub store
 {
     my $self = shift;
@@ -99,3 +157,19 @@ sub store
 
 1;
 
+__END__
+
+=begin testing SETUP
+
+#!class FusqlFS::Backend::PgSQL::Table::Test
+
+my $new_field = q{---
+default: "''::character varying"
+dimensions: 0
+nullable: 1
+order: 2
+type: 'character varying(255)'
+};
+
+=end testing
+=cut
