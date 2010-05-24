@@ -23,7 +23,8 @@ foreach (qw(Limited File))
 
 my %cache;
 ok !FusqlFS::Cache->init(\%cache, 'memory'), 'Memory cache strategy chosen';
-ok !FusqlFS::Cache->init(\%cache, 'xxxxxx'), 'Memory cache strategy chosen (fallback)';
+ok !FusqlFS::Cache->init(\%cache, 'xxxxxx'), 'Memory cache strategy chosen (fallback 1)';
+ok !FusqlFS::Cache->init(\%cache), 'Memory cache strategy chosen (fallback 2)';
 ok !tied(%cache), 'Memory cache handler is untied';
 
 =end testing
