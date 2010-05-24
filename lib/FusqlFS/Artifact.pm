@@ -5,6 +5,20 @@ package FusqlFS::Artifact;
 
 our $instance;
 
+=begin testing Artifact
+
+#!noinst
+
+isa_ok FusqlFS::Artifact->new(), 'FusqlFS::Artifact';
+is FusqlFS::Artifact->get(), '';
+is FusqlFS::Artifact->list(), undef;
+foreach my $method (qw(rename drop create store))
+{
+    is FusqlFS::Artifact->$method(), 1;
+}
+
+=end testing
+=cut
 sub new { bless {}, $_[0] }
 sub get { return '' }
 sub list { return }
