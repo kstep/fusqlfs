@@ -8,10 +8,13 @@ all: build
 Build: Build.PL
 	$(PERL) $<
 
-manifest build test: Build
+manifest build: Build
 	./Build $@
 
 buildtests: build
+	./Build $@
+
+test: buildtests
 	./Build $@
 
 install: Build
@@ -33,7 +36,10 @@ realclean distclean:
 debianclean:
 	rm -rf debian
 
-cleanall: realclean debianclean
+testsclean:
+	rm -f t/fusqlfs*.t t/manifest
+
+cleanall: realclean debianclean testsclean
 
 .PHONY: all manifest build test install debian dist \
 	clean distclean realclean debianclean cleanall
