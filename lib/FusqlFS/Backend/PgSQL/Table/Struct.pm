@@ -27,7 +27,7 @@ sub new
     $self->{create_expr} = 'ALTER TABLE "%s" ADD COLUMN "%s" INTEGER NOT NULL DEFAULT \'0\'';
     $self->{rename_expr} = 'ALTER TABLE "%s" RENAME COLUMN "%s" TO "%s"';
 
-    $self->{store_default_expr} = 'ALTER TABLE "%s" ALTER COLUMN "%s" SET DEFAULT ?';
+    $self->{store_default_expr} = 'ALTER TABLE "%s" ALTER COLUMN "%s" SET DEFAULT %s';
     $self->{drop_default_expr} = 'ALTER TABLE "%s" ALTER COLUMN "%s" DROP DEFAULT';
     $self->{set_nullable_expr} = 'ALTER TABLE "%s" ALTER COLUMN "%s" DROP NOT NULL';
     $self->{drop_nullable_expr} = 'ALTER TABLE "%s" ALTER COLUMN "%s" SET NOT NULL';
@@ -86,13 +86,15 @@ sub store
     my $using = $data->{'using'} || undef;
     $newtype .= " USING $using" if $using;
 
+    $self->do($self->{store_type_expr}, [$table, $name, $newtype]);
+
     if (defined $data->{'default'}) {
-        $self->do($self->{store_default_expr}, [$table, $name], $data->{'default'});
+        $self->do($self->{store_default_expr}, [$table, $name, $data->{'default'}]);
     } else {
         $self->do($self->{drop_default_expr}, [$table, $name]);
     }
     $self->do($self->{$data->{'nullable'}? 'set_nullable_expr': 'drop_nullable_expr'}, [$table, $name]);
-    $self->do($self->{store_type_expr}, [$table, $name, $newtype]);
+    return 1;
 }
 
 1;
