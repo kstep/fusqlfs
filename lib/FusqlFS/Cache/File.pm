@@ -65,7 +65,7 @@ sub DELETE
 sub EXISTS
 {
     my ($self, $key) = @_;
-    return $self->[0]->{$key};
+    return exists $self->[0]->{$key};
 }
 
 sub FIRSTKEY
