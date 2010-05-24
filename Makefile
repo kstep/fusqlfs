@@ -20,6 +20,7 @@ test testcover: buildtests
 lint:
 	find ./lib -name "*.pm" -exec perl -M'lib "./lib"' -MO=Lint,no-context {} \;
 	find ./bin -name "*.pl" -exec perl -M'lib "./lib"' -MO=Lint,no-context {} \;
+	find ./t -name "*.t" -exec perl -M'lib "./lib"' -MO=Lint,no-context {} \;
 
 install: Build
 	./Build $@ $(INSTALL_OPTS)
