@@ -6,6 +6,19 @@ use parent 'FusqlFS::Interface';
 
 use FusqlFS::Backend::PgSQL::Table::Struct;
 
+=doc
+
+# TODO:
+# 1) create table,
+# 2) list data rows (must be empty),
+# 3) add new text field,
+# 4) add new row and test it is added,
+# 5) alter row and test it is altered,
+# 6) rename row and test it is renamed and unaccessible under old name,
+# 7) delete row and test it is really absent after it's removed.
+
+=cut
+
 sub new
 {
     my $class = shift;
