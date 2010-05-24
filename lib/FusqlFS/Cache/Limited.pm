@@ -85,11 +85,9 @@ sub TIEHASH
 sub FETCH
 {
     my ($self, $key) = @_;
-    if (exists $self->[0]->{$key})
-    {
-        $self->[1]->{$key}++;
-        return $self->[0]->{$key};
-    }
+    return unless exists $self->[0]->{$key};
+    $self->[1]->{$key}++;
+    return $self->[0]->{$key};
 }
 
 sub STORE
