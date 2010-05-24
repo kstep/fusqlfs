@@ -46,7 +46,7 @@ sub where_clause
 
 =begin testing get
 
-ok !defined $_tobj->get('fusqlfs_table', '1');
+is $_tobj->get('fusqlfs_table', '1'), undef;
 
 =end testing
 =cut
@@ -66,9 +66,9 @@ sub get
 
 =begin testing drop after rename
 
-ok $_tobj->drop('fusqlfs_table', '2');
-ok !defined $_tobj->get('fusqlfs_table', '2');
-is scalar(@{$_tobj->list('fusqlfs_table')}), 0;
+isnt $_tobj->drop('fusqlfs_table', '2'), undef;
+is $_tobj->get('fusqlfs_table', '2'), undef;
+is_deeply $_tobj->list('fusqlfs_table'), [];
 
 =end testing
 =cut
@@ -116,8 +116,8 @@ sub create
 
 =begin testing rename after create
 
-ok $_tobj->rename('fusqlfs_table', '1', '2');
-ok !defined $_tobj->get('fusqlfs_table', '1');
+isnt $_tobj->rename('fusqlfs_table', '1', '2'), undef;
+is $_tobj->get('fusqlfs_table', '1'), undef;
 is $_tobj->get('fusqlfs_table', '2'), q{---
 id: 2
 };

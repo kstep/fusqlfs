@@ -35,7 +35,7 @@ $cache{'longtest'}  = [ 'pkg', 'names', 'long entry' ];
 # Exists tests
 is_deeply $cache{'shorttest'}, [ 'pkg', 'names', 'entry' ], 'Fetch short entry';
 is_deeply $cache{'longtest'} , [ 'pkg', 'names', 'long entry' ], 'Fetch long entry';
-ok !defined($cache{'unknown'}), 'Unknown entry is undef';
+is $cache{'unknown'}, undef, 'Unknown entry is undef';
 
 ok scalar(%cache), 'Cache is not empty';
 
@@ -65,11 +65,11 @@ while (my ($key, $val) = each %cache)
 # Delete & clear tests
 delete $cache{'shorttest'};
 ok !exists($cache{'shorttest'}), 'Short entry deleted';
-ok !defined($cache{'shorttest'}), 'Short entry undefined';
+is $cache{'shorttest'}, undef, 'Short entry undefined';
 
 delete $cache{'longtest'};
 ok !exists($cache{'longtest'}), 'Long entry deleted';
-ok !defined($cache{'longtest'}), 'Long entry undefined';
+is $cache{'longtest'}, undef, 'Long entry undefined';
 
 ok !scalar(%cache), 'Cache is empty after delete';
 

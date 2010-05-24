@@ -39,7 +39,7 @@ sub tear_down
 sub list_ok
 {
     my ($list, $expected, $name) = @_;
-    ok defined $list, $name;
+    isnt $list, undef, $name;
     is ref($list), 'ARRAY', $name;
     if (ref($expected) eq 'CODE')
     {

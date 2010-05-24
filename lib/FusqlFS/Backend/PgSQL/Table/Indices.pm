@@ -37,7 +37,7 @@ is_deeply $_tobj->get('fusqlfs_table', 'fusqlfs_table_pkey'), {
     'id'       => \'../../struct/id',
     'create.sql' => 'CREATE UNIQUE INDEX fusqlfs_table_pkey ON fusqlfs_table USING btree (id)',
 };
-ok !defined $_tobj->get('fusqlfs_table', 'fusqlfs_index');
+is $_tobj->get('fusqlfs_table', 'fusqlfs_index'), undef;
 
 =end testing
 =cut
@@ -76,8 +76,8 @@ sub list
 
 =begin testing drop after store
 
-ok $_tobj->drop('fusqlfs_table', 'fusqlfs_index');
-ok !defined $_tobj->get('fusqlfs_table', 'fusqlfs_index');
+isnt $_tobj->drop('fusqlfs_table', 'fusqlfs_index'), undef;
+is $_tobj->get('fusqlfs_table', 'fusqlfs_index'), undef;
 is_deeply $_tobj->list('fusqlfs_table'), [ 'fusqlfs_table_pkey' ];
 
 =end testing

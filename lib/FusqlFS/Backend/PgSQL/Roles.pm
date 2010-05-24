@@ -123,7 +123,7 @@ sub new
 
 =begin testing get
 
-ok !defined($_tobj->get('unknown')), 'Unknown role not exists';
+is $_tobj->get('unknown'), undef, 'Unknown role not exists';
 is_deeply $_tobj->get('postgres'), { struct => q{---
 can_login: 1
 cat_update: 1
@@ -167,9 +167,9 @@ sub list
 
 =begin testing rename after store
 
-ok defined $_tobj->rename('fusqlfs_test', 'new_fusqlfs_test'), 'Role renamed';
+isnt $_tobj->rename('fusqlfs_test', 'new_fusqlfs_test'), undef, 'Role renamed';
 is_deeply $_tobj->get('new_fusqlfs_test'), $new_role, 'Role renamed correctly';
-ok !defined($_tobj->get('fusqlfs_test')), 'Role is unaccessable under old name';
+is $_tobj->get('fusqlfs_test'), undef, 'Role is unaccessable under old name';
 my $list = $_tobj->list();
 ok grep { $_ eq 'new_fusqlfs_test' } @$list;
 ok !grep { $_ eq 'fusqlfs_test' } @$list;
@@ -185,8 +185,8 @@ sub rename
 
 =begin testing drop after rename
 
-ok defined $_tobj->drop('new_fusqlfs_test'), 'Role deleted';
-ok !defined($_tobj->get('new_fusqlfs_test')), 'Deleted role is absent';
+isnt $_tobj->drop('new_fusqlfs_test'), undef, 'Role deleted';
+is $_tobj->get('new_fusqlfs_test'), undef, 'Deleted role is absent';
 my $list = $_tobj->list();
 ok !grep { $_ eq 'new_fusqlfs_test' } @$list;
 
@@ -201,7 +201,7 @@ sub drop
 
 =begin testing create after get list
 
-ok defined $_tobj->create('fusqlfs_test'), 'Role created';
+isnt $_tobj->create('fusqlfs_test'), undef, 'Role created';
 is $_tobj->get('fusqlfs_test')->{struct}, q{---
 can_login: 0
 cat_update: 0
@@ -228,7 +228,7 @@ sub create
 
 =begin testing store after create
 
-ok defined $_tobj->store('fusqlfs_test', $new_role), 'Role saved';
+isnt $_tobj->store('fusqlfs_test', $new_role), undef, 'Role saved';
 is_deeply $_tobj->get('fusqlfs_test'), $new_role, 'Role saved correctly';
 
 =end testing
