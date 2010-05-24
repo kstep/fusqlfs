@@ -14,10 +14,10 @@ manifest build: Build
 buildtests: build
 	./Build $@
 
-test testcover: buildtests
+test testcover: buildtests testlint
 	./Build $@
 
-lint:
+testlint:
 	find ./lib -name "*.pm" -exec perl -M'lib "./lib"' -MO=Lint,no-context {} \;
 	find ./bin -name "*.pl" -exec perl -M'lib "./lib"' -MO=Lint,no-context {} \;
 	find ./t -name "*.t" -exec perl -M'lib "./lib"' -MO=Lint,no-context {} \;
