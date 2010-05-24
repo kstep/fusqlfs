@@ -120,7 +120,7 @@ sub CLEAR
     {
         my $key = "$self->[1]/$file";
         next unless -f $key;
-        unlink $key or carp "Unable to remove cache file $key: $@";
+        unlink $key ;#or carp "Unable to remove cache file $key: $@";
     }
     closedir $dh;
 }
@@ -161,7 +161,7 @@ sub UNTIE
 {
     my ($self) = @_;
     $self->CLEAR();
-    rmdir $self->[1] or carp "Unable to remove cache dir $self->[1]: $@";
+    rmdir $self->[1] ; #or carp "Unable to remove cache dir $self->[1]: $@";
 }
 
 sub DESTROY
@@ -234,7 +234,7 @@ sub STORE
 
 sub UNTIE
 {
-    unlink ${$_[0]} or carp "Unable to remove cache file ${$_[0]}: $@";
+    unlink ${$_[0]} ;#or carp "Unable to remove cache file ${$_[0]}: $@";
 }
 
 sub DESTROY

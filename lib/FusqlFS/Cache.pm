@@ -42,7 +42,7 @@ sub init
         when ('file')    { $subclass = '::File' }
         default
         {
-            carp "Unknown cache strategy `$strategy', using default `memory' strategy";
+            #carp "Unknown cache strategy `$strategy', using default `memory' strategy";
         }
     }
 
@@ -51,7 +51,7 @@ sub init
     $class .= $subclass;
     unless ($class->is_needed(@_))
     {
-        carp "Given parameters don't match `$strategy' cache strategy, falling back to `memory' strategy";
+        #carp "Given parameters don't match `$strategy' cache strategy, falling back to `memory' strategy";
         return;
     }
 
