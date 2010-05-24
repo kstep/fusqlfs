@@ -91,6 +91,7 @@ my $build = $class->new(
     build_requires => {
         'Test::More'   => 0,
         'Test::Inline' => 0,
+        'B::Lint'      => 0,
     },
     recommends => {
         'DBD::mysql'   => 0,
