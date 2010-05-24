@@ -5,3 +5,8 @@
 /doc
 /tags
 /mnt
+/t/fusqlfs*.t
+/t/manifest
+/Build
+/_build
+/blib
