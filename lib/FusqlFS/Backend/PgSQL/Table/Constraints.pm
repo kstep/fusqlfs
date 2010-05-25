@@ -2,7 +2,7 @@ use strict;
 use v5.10.0;
 
 package FusqlFS::Backend::PgSQL::Table::Constraints;
-use parent 'FusqlFS::Artifact';
+use parent 'FusqlFS::Artifact::Table::Lazy';
 
 sub new
 {
@@ -51,6 +51,7 @@ sub rename
 {
     my $self = shift;
     my ($table, $name, $newname) = @_;
+    $self->SUPER::rename($table, $name, $newname) or return;
 }
 
 =begin testing create after get list
@@ -65,11 +66,6 @@ is_deeply [ sort(@{$_tobj->list('fusqlfs_table')}) ], [ sort('fusqlfs_table_pkey
 
 =end testing
 =cut
-sub create
-{
-    my $self = shift;
-    my ($table, $name) = @_;
-}
 
 =begin testing drop after rename
 
@@ -87,6 +83,7 @@ sub drop
 {
     my $self = shift;
     my ($table, $name) = @_;
+    $self->SUPER::drop($table, $name) or return;
 }
 
 =begin testing get
@@ -100,19 +97,22 @@ sub get
 {
     my $self = shift;
     my ($table, $name) = @_;
-    my $data = $self->one_row($self->{get_expr}, $table, $name);
-    return unless $data;
-    if ($data->{".type"} eq 'f')
+    unless ($self->SUPER::get($table, $name))
     {
-        my ($myfields, $table, $herfields) = ($data->{struct} =~ /KEY \((.+?)\) REFERENCES (.+?)\((.+?)\)/);
-        my @myfields = split /,/, $myfields;
-        my @herfields = split /,/, $herfields;
-        foreach (0..$#myfields)
+        my $data = $self->one_row($self->{get_expr}, $table, $name);
+        return unless $data;
+        if ($data->{".type"} eq 'f')
         {
-            $data->{$myfields[$_]} = \"../../../$table/struct/$herfields[$_]";
+            my ($myfields, $table, $herfields) = ($data->{struct} =~ /KEY \((.+?)\) REFERENCES (.+?)\((.+?)\)/);
+            my @myfields = split /,/, $myfields;
+            my @herfields = split /,/, $herfields;
+            foreach (0..$#myfields)
+            {
+                $data->{$myfields[$_]} = \"../../../$table/struct/$herfields[$_]";
+            }
         }
+        return $data;
     }
-    return $data;
 }
 
 =begin testing list
@@ -126,7 +126,8 @@ sub list
 {
     my $self = shift;
     my ($table) = @_;
-    return $self->all_col($self->{list_expr}, $table);
+    my @list = @{$self->SUPER::list($table)};
+    return [ @{$self->all_col($self->{list_expr}, $table)}, @list ];
 }
 
 1;
