@@ -17,6 +17,78 @@ sub new
     bless $self, $class;
 }
 
+=begin testing store after create
+
+TODO: {
+local $TODO = 'PgSQL::Constraints mutation unimlemented';
+
+isnt $_tobj->store('fusqlfs_table', 'fusqlfs_constraint', $new_constraint), undef;
+is_deeply $_tobj->get('fusqlfs_table', 'fusqlfs_constraint'), $new_constraint;
+}
+
+=end testing
+=cut
+sub store
+{
+    my $self = shift;
+    my ($table, $name, $data) = @_;
+}
+
+=begin testing rename after store
+
+TODO: {
+local $TODO = 'PgSQL::Constraints mutation unimlemented';
+
+isnt $_tobj->rename('fusqlfs_table', 'fusqlfs_constraint', 'new_fusqlfs_constraint'), undef;
+is $_tobj->get('fusqlfs_table', 'fusqlfs_constraint'), undef;
+is_deeply $_tobj->get('fusqlfs_table', 'new_fusqlfs_constraint'), $new_constraint;
+is_deeply [ sort(@{$_tobj->list('fusqlfs_table')}) ], [ sort('fusqlfs_table_pkey', 'new_fusqlfs_constraint') ];
+}
+
+=end testing
+=cut
+sub rename
+{
+    my $self = shift;
+    my ($table, $name, $newname) = @_;
+}
+
+=begin testing create after get list
+
+TODO: {
+local $TODO = 'PgSQL::Constraints mutation unimlemented';
+
+isnt $_tobj->create('fusqlfs_table', 'fusqlfs_constraint'), undef;
+is_deeply $_tobj->get('fusqlfs_table', 'fusqlfs_constraint'), {};
+is_deeply [ sort(@{$_tobj->list('fusqlfs_table')}) ], [ sort('fusqlfs_table_pkey', 'fusqlfs_constraint') ];
+}
+
+=end testing
+=cut
+sub create
+{
+    my $self = shift;
+    my ($table, $name) = @_;
+}
+
+=begin testing drop after rename
+
+TODO: {
+local $TODO = 'PgSQL::Constraints mutation unimlemented';
+
+isnt $_tobj->drop('fusqlfs_table', 'new_fusqlfs_constraint'), undef;
+is $_tobj->get('fusqlfs_table', 'new_fusqlfs_constraint'), undef;
+is_deeply $_tobj->list('fusqlfs_table'), [ 'fusqlfs_table_pkey' ];
+}
+
+=end testing
+=cut
+sub drop
+{
+    my $self = shift;
+    my ($table, $name) = @_;
+}
+
 =begin testing get
 
 is $_tobj->get('fusqlfs_table', 'unknown'), undef;
@@ -64,6 +136,9 @@ __END__
 =begin testing SETUP
 
 #!class FusqlFS::Backend::PgSQL::Table::Test
+
+my $new_constraint = {
+};
 
 =end testing
 =cut
