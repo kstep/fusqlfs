@@ -2,15 +2,14 @@ use strict;
 use v5.10.0;
 
 package FusqlFS::Backend::PgSQL::Table::Indices;
-use parent 'FusqlFS::Artifact';
+use parent 'FusqlFS::Artifact::Table::Lazy';
 
 use FusqlFS::Backend::PgSQL::Table::Struct;
-
 
 sub new
 {
     my $class = shift;
-    my $self = {};
+    my $self = $class->SUPER::new(@_);
     $self->{rename_expr} = 'ALTER INDEX "%s" RENAME TO "%s"';
     $self->{drop_expr} = 'DROP INDEX "%s"';
     $self->{create_expr} = 'CREATE %s INDEX "%s" ON "%s" (%s)';
@@ -23,7 +22,7 @@ sub new
         FROM pg_catalog.pg_index
             WHERE indexrelid = (SELECT oid FROM pg_catalog.pg_class as c WHERE c.relname = ? AND relkind = 'i')");
 
-    $self->{create_cache} = {};
+    $self->{template} = { '.order' => [] };
 
     bless $self, $class;
 }
@@ -45,19 +44,21 @@ sub get
 {
     my $self = shift;
     my ($table, $name) = @_;
-    return $self->{create_cache}->{$table}->{$name} if exists $self->{create_cache}->{$table}->{$name};
 
-    my $result = $self->one_row($self->{get_expr}, $name);
-    return unless $result;
-    if ($result->{'.order'})
+    unless ($self->SUPER::get($table, $name))
     {
-        my @fields = @{FusqlFS::Backend::PgSQL::Table::Struct->new()->list($table)};
-        $result->{'.order'} = [ map { $fields[$_-1] } split / /, $result->{'.order'} ];
-        $result->{$_} = \"../../struct/$_" foreach @{$result->{'.order'}};
+        my $result = $self->one_row($self->{get_expr}, $name);
+        return unless $result;
+        if ($result->{'.order'})
+        {
+            my @fields = @{FusqlFS::Backend::PgSQL::Table::Struct->new()->list($table)};
+            $result->{'.order'} = [ map { $fields[$_-1] } split / /, $result->{'.order'} ];
+            $result->{$_} = \"../../struct/$_" foreach @{$result->{'.order'}};
+        }
+        delete $result->{'.unique'} unless $result->{'.unique'};
+        delete $result->{'.primary'} unless $result->{'.primary'};
+        return $result;
     }
-    delete $result->{'.unique'} unless $result->{'.unique'};
-    delete $result->{'.primary'} unless $result->{'.primary'};
-    return $result;
 }
 
 =begin testing list
@@ -70,14 +71,14 @@ sub list
 {
     my $self = shift;
     my ($table) = @_;
-    my @list = keys %{$self->{create_cache}->{$table}||{}};
+    my @list = @{$self->SUPER::list($table)};
     return [ (@{$self->all_col($self->{list_expr}, $table)}, @list) ] || \@list;
 }
 
-=begin testing drop after store
+=begin testing drop after rename
 
-isnt $_tobj->drop('fusqlfs_table', 'fusqlfs_index'), undef;
-is $_tobj->get('fusqlfs_table', 'fusqlfs_index'), undef;
+isnt $_tobj->drop('fusqlfs_table', 'new_fusqlfs_index'), undef;
+is $_tobj->get('fusqlfs_table', 'new_fusqlfs_index'), undef;
 is_deeply $_tobj->list('fusqlfs_table'), [ 'fusqlfs_table_pkey' ];
 
 =end testing
@@ -86,18 +87,13 @@ sub drop
 {
     my $self = shift;
     my ($table, $name) = @_;
-    $self->do($self->{drop_expr}, [$name]);
+    $self->SUPER::drop($table, $name) or $self->do($self->{drop_expr}, [$name]);
 }
 
 =begin testing store after create
 
-ok $_tobj->store('fusqlfs_table', 'fusqlfs_index', { 'id' => '../../struct/id', '.order' => [ 'id' ], '.unique' => 1 });
-is_deeply $_tobj->get('fusqlfs_table', 'fusqlfs_index'), {
-    '.unique' => 1,
-    '.order'  => [ 'id' ],
-    'id'      => \'../../struct/id',
-    'create.sql' => 'CREATE UNIQUE INDEX fusqlfs_index ON fusqlfs_table USING btree (id)',
-};
+ok $_tobj->store('fusqlfs_table', 'fusqlfs_index', $new_index);
+is_deeply $_tobj->get('fusqlfs_table', 'fusqlfs_index'), $new_index;
 is_deeply [ sort(@{$_tobj->list('fusqlfs_table')}) ], [ sort('fusqlfs_table_pkey', 'fusqlfs_index') ];
 
 =end testing
@@ -106,14 +102,8 @@ sub store
 {
     my $self = shift;
     my ($table, $name, $data) = @_;
-    if (exists $self->{create_cache}->{$table}->{$name})
-    {
-        delete $self->{create_cache}->{$table}->{$name};
-    }
-    else
-    {
-        $self->drop($table, $name);
-    }
+
+    $self->drop($table, $name);
     my $fields = $self->parse_fields($data);
     my $unique = defined $data->{'.unique'}? 'UNIQUE': '';
     $self->do($self->{create_expr}, [$unique, $name, $table, $fields]);
@@ -146,19 +136,23 @@ is_deeply $_tobj->list('fusqlfs_table'), [ 'fusqlfs_table_pkey', 'fusqlfs_index'
 
 =end testing
 =cut
-sub create
-{
-    my $self = shift;
-    my ($table, $name) = @_;
-    $self->{create_cache}->{$table} ||= {};
-    $self->{create_cache}->{$table}->{$name} = { '.order' => [] };
-}
 
+=begin testing rename after store
+
+isnt $_tobj->rename('fusqlfs_table', 'fusqlfs_index', 'new_fusqlfs_index'), undef;
+is_deeply $_tobj->list('fusqlfs_table'), [ 'fusqlfs_table_pkey', 'new_fusqlfs_index' ];
+is $_tobj->get('fusqlfs_table', 'fusqlfs_index'), undef;
+
+$new_index->{'create.sql'} =~ s/INDEX fusqlfs_index ON/INDEX new_fusqlfs_index ON/;
+is_deeply $_tobj->get('fusqlfs_table', 'new_fusqlfs_index'), $new_index;
+
+=end testing
+=cut
 sub rename
 {
     my $self = shift;
     my ($table, $name, $newname) = @_;
-    $self->do($self->{rename_expr}, [$name, $newname]);
+    $self->SUPER::rename($table, $name, $newname) or $self->do($self->{rename_expr}, [$name, $newname]);
 }
 
 1;
@@ -168,5 +162,8 @@ __END__
 =begin testing SETUP
 
 #!class FusqlFS::Backend::PgSQL::Table::Test
+
+my $new_index = { 'id' => \'../../struct/id', '.order' => [ 'id' ], '.unique' => 1,
+    'create.sql' => 'CREATE UNIQUE INDEX fusqlfs_index ON fusqlfs_table USING btree (id)' };
 
 =end testing
