@@ -15,7 +15,7 @@ our $def_time;
 our %cache;
 our %inbuffer;
 
-our $VERSION = '0.001';
+our $VERSION = '0.002';
 
 sub init
 {
