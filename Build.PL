@@ -24,11 +24,26 @@ my $class = Module::Build->subclass(
                     my ($inline, $script) = @_;
                     my $testno = $script->tests;
                     my $plan = $testno? "plan tests => $testno;": "plan 'no_plan';";
-                    my $content = $script->merged_content;
                     my $class = $script->class;
                     my $testclass = '';
                     my $require = $class;
                     my $instantiate = 1;
+
+                    #my $content = $script->merged_content;
+                    my $content = join "\n", map { $_->content; } $script->setup;
+                    my $sorted = $script->sorted;
+                    if ($sorted)
+                    {
+                        $content .= join "\n", map { $_->setup? '': '
+#'.$_->begin.'
+{
+my $_tname = \''.$_->name.'\';
+my $_tcount = '.($_->tests? $_->tests: 'undef').';
+
+'.$_->content.'}
+'
+                        } @$sorted;
+                    }
 
                     $testclass = $1 if ($content =~ /^#!class (\S+)/m);
                     $require = $1 if ($content =~ /^#!req (\S+)/m);
@@ -53,6 +68,7 @@ my $class = Module::Build->subclass(
                         $result .= "isa_ok \$_tobj, '$class', 'Class $class instantiated';\n\n";
                     }
                     $content =~ s/{_tpkg}/$class/g;
+                    $result .= "our \$_tcls = '$class';\n";
                     $result .= $content;
                     if ($testclass)
                     {
