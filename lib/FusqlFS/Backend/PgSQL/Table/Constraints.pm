@@ -59,7 +59,8 @@ sub rename
 =begin testing create after get list
 
 isnt $_tobj->create('fusqlfs_table', 'fusqlfs_constraint'), undef;
-is $_tobj->get('fusqlfs_table', 'fusqlfs_constraint'), $_tobj->{template};
+isnt $_tobj->get('fusqlfs_table', 'fusqlfs_constraint'), $_tobj->{template};
+is_deeply $_tobj->get('fusqlfs_table', 'fusqlfs_constraint'), $_tobj->{template};
 is_deeply [ sort(@{$_tobj->list('fusqlfs_table')}) ], [ sort('fusqlfs_table_pkey', 'fusqlfs_constraint') ];
 
 =end testing
