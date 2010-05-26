@@ -26,6 +26,7 @@ sub create
     my ($table, $name) = @_;
     $self->{create_cache}->{$table} ||= {};
     $self->{create_cache}->{$table}->{$name} = $self->{template};
+    return 1;
 }
 
 =begin testing drop after rename
