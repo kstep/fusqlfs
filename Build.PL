@@ -95,6 +95,7 @@ my $build = $class->new(
         'Getopt::Long' => 0,
         'Pod::Usage'   => 0,
         'Carp'         => 0,
+        'Cwd'          => 0,
 
         'DBI'          => '1.600',
         'DBD::Pg'      => 0,

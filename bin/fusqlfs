@@ -5,6 +5,7 @@ use strict;
 use Getopt::Long;
 use Pod::Usage;
 use Carp;
+use Cwd;
 
 use POSIX qw(locale_h setsid);
 use FusqlFS;
@@ -69,6 +70,8 @@ pod2usage(1) unless !$options{'help'} && $options{'database'} && $options{'mount
 #	use threads;
 #	use threads::shared;
 #}
+
+$options{'mountpoint'} = getcwd().'/'.$options{'mountpoint'} unless $options{'mountpoint'} =~ m{^/};
 
 daemonize($options{'logfile'}) if $options{'daemon'};
 
