@@ -15,7 +15,7 @@ buildtests: build
 	./Build $@
 
 test testcover: buildtests testlint
-	./Build $@
+	./Build $@ $(if $T,--test_files $T,)
 
 testlint:
 	find ./lib -name "*.pm" -exec perl -M'lib "./lib"' -MO=Lint,no-context {} \;
