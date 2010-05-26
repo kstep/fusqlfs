@@ -82,12 +82,10 @@ sub init
     return;
 }
 
-
 sub destroy
 {
     if ($FusqlFS::Abstract::instance)
     {
-        $FusqlFS::Abstract::instance->disconnect;
         undef $FusqlFS::Abstract::instance;
     }
 }
