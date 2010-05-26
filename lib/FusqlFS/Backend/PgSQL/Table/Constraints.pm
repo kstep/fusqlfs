@@ -14,17 +14,16 @@ sub new
     $self->{list_expr} = $class->expr('SELECT co.conname FROM pg_catalog.pg_constraint AS co
             JOIN pg_catalog.pg_class AS cl ON (cl.oid = co.conrelid) WHERE cl.relname = ?');
 
+    $self->{drop_expr} = 'ALTER TABLE "%s" DROP CONSTRAINT "%s"';
+    $self->{store_expr} = 'ALTER TABLE "%s" ADD CONSTRAINT "%s" %s';
+
     bless $self, $class;
 }
 
 =begin testing store after create
 
-TODO: {
-local $TODO = 'PgSQL::Constraints mutation unimlemented';
-
 isnt $_tobj->store('fusqlfs_table', 'fusqlfs_constraint', $new_constraint), undef;
 is_deeply $_tobj->get('fusqlfs_table', 'fusqlfs_constraint'), $new_constraint;
-}
 
 =end testing
 =cut
@@ -32,18 +31,16 @@ sub store
 {
     my $self = shift;
     my ($table, $name, $data) = @_;
+    $self->drop($table, $name);
+    $self->do($self->{store_expr}, [$table, $name, $data->{struct}]);
 }
 
 =begin testing rename after store
-
-TODO: {
-local $TODO = 'PgSQL::Constraints mutation unimlemented';
 
 isnt $_tobj->rename('fusqlfs_table', 'fusqlfs_constraint', 'new_fusqlfs_constraint'), undef;
 is $_tobj->get('fusqlfs_table', 'fusqlfs_constraint'), undef;
 is_deeply $_tobj->get('fusqlfs_table', 'new_fusqlfs_constraint'), $new_constraint;
 is_deeply [ sort(@{$_tobj->list('fusqlfs_table')}) ], [ sort('fusqlfs_table_pkey', 'new_fusqlfs_constraint') ];
-}
 
 =end testing
 =cut
@@ -51,31 +48,28 @@ sub rename
 {
     my $self = shift;
     my ($table, $name, $newname) = @_;
-    $self->SUPER::rename($table, $name, $newname) or return;
+    unless ($self->SUPER::rename($table, $name, $newname))
+    {
+        my $data = $self->get($table, $name);
+        $self->drop($table, $name);
+        $self->store($table, $newname, $data);
+    }
 }
 
 =begin testing create after get list
 
-TODO: {
-local $TODO = 'PgSQL::Constraints mutation unimlemented';
-
 isnt $_tobj->create('fusqlfs_table', 'fusqlfs_constraint'), undef;
-is_deeply $_tobj->get('fusqlfs_table', 'fusqlfs_constraint'), {};
+is $_tobj->get('fusqlfs_table', 'fusqlfs_constraint'), $_tobj->{template};
 is_deeply [ sort(@{$_tobj->list('fusqlfs_table')}) ], [ sort('fusqlfs_table_pkey', 'fusqlfs_constraint') ];
-}
 
 =end testing
 =cut
 
 =begin testing drop after rename
 
-TODO: {
-local $TODO = 'PgSQL::Constraints mutation unimlemented';
-
 isnt $_tobj->drop('fusqlfs_table', 'new_fusqlfs_constraint'), undef;
 is $_tobj->get('fusqlfs_table', 'new_fusqlfs_constraint'), undef;
 is_deeply $_tobj->list('fusqlfs_table'), [ 'fusqlfs_table_pkey' ];
-}
 
 =end testing
 =cut
@@ -83,7 +77,7 @@ sub drop
 {
     my $self = shift;
     my ($table, $name) = @_;
-    $self->SUPER::drop($table, $name) or return;
+    $self->SUPER::drop($table, $name) or $self->do($self->{drop_expr}, [$table, $name]);
 }
 
 =begin testing get
@@ -139,6 +133,8 @@ __END__
 #!class FusqlFS::Backend::PgSQL::Table::Test
 
 my $new_constraint = {
+    struct => 'CHECK (id > 5)',
+    '.type' => 'c',
 };
 
 =end testing
