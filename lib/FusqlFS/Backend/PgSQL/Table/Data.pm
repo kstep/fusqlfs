@@ -29,7 +29,10 @@ sub list
 {
     my $self = shift;
     my ($table) = @_;
-    my $primary_key = join " || '.' || ", $self->get_primary_key($table);
+    my @primary_key = $self->get_primary_key($table);
+    return undef unless @primary_key;
+
+    my $primary_key = join " || '.' || ", @primary_key;
     my $sth = $self->cexpr('SELECT %s FROM "%s" %s', $primary_key, $table, $self->limit());
     return $self->all_col($sth)||[];
 }
@@ -40,7 +43,8 @@ sub where_clause
     my ($table, $name) = @_;
     my @binds = split /[.]/, $name;
     my @primary_key = $self->get_primary_key($table);
-    return unless $#primary_key == $#binds;
+    return unless @primary_key && $#primary_key == $#binds;
+
     return join(' AND ', map { "\"$_\" = ?" } @primary_key), @binds;
 }
 
@@ -55,13 +59,18 @@ sub get
     my $self = shift;
     my ($table, $name) = @_;
     my ($where_clause, @binds) = $self->where_clause($table, $name);
-    return unless $where_clause;
 
     $self->{query_cache}->{$table} ||= {};
-    $self->{query_cache}->{$table}->{$where_clause} ||= $self->expr('SELECT * FROM "%s" WHERE %s LIMIT 1', $table, $where_clause);
+    $self->{query_cache}->{$table}->{$where_clause} ||= $where_clause?
+                $self->expr('SELECT * FROM "%s" WHERE %s LIMIT 1', $table, $where_clause):
+                $self->expr('SELECT * FROM "%s" %s', $table, $self->limit);
 
     my $sth = $self->{query_cache}->{$table}->{$where_clause};
-    return $self->dump($sth->fetchrow_hashref) if $sth->execute(@binds);
+    my $result = $self->all_row($sth, @binds);
+    return unless @$result;
+
+    $result = $result->[0] if scalar(@$result) == 1;
+    return $self->dump($result);
 }
 
 =begin testing drop after rename
@@ -109,6 +118,8 @@ sub create
     my $self = shift;
     my ($table, $name) = @_;
     my @primary_key = $self->get_primary_key($table);
+    return unless @primary_key;
+
     my $pholders = '?,' x scalar(@primary_key);
     chop $pholders;
     $self->cdo('INSERT INTO "%s" (%s) VALUES (%s)', [$table, join(', ', @primary_key), $pholders], split(/[.]/, $name));
@@ -130,6 +141,8 @@ sub rename
     my $self = shift;
     my ($table, $name, $newname) = @_;
     my @primary_key = $self->get_primary_key($table);
+    return unless @primary_key;
+
     my %data = map { shift(@primary_key) => $_ } split /[.]/, $newname;
     $self->store($table, $name, \%data);
 }
