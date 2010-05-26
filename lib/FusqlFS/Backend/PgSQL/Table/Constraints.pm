@@ -7,7 +7,7 @@ use parent 'FusqlFS::Artifact::Table::Lazy';
 sub new
 {
     my $class = shift;
-    my $self = {};
+    my $self = $class->SUPER::new(@_);
 
     $self->{get_expr} = $class->expr('SELECT pg_catalog.pg_get_constraintdef(co.oid, true) AS struct, co.contype AS ".type" FROM pg_catalog.pg_constraint co
             JOIN pg_catalog.pg_class AS cl ON (cl.oid = co.conrelid) WHERE cl.relname = ? AND co.conname = ?');
