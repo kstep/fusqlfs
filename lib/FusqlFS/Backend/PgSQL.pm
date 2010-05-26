@@ -9,6 +9,7 @@ use FusqlFS::Backend::PgSQL::Views;
 use FusqlFS::Backend::PgSQL::Sequences;
 use FusqlFS::Backend::PgSQL::Roles;
 use FusqlFS::Backend::PgSQL::Queries;
+use FusqlFS::Backend::PgSQL::Functions;
 
 =begin testing
 
@@ -38,6 +39,7 @@ sub init
         sequences => new FusqlFS::Backend::PgSQL::Sequences(),
         roles     => new FusqlFS::Backend::PgSQL::Roles(),
         queries   => new FusqlFS::Backend::PgSQL::Queries(),
+        functions => new FusqlFS::Backend::PgSQL::Functions(),
     };
 }
 
