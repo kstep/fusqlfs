@@ -29,6 +29,7 @@ sub set_up
 
 sub tear_down
 {
+    $fusqlh->{dbh}->disconnect();
     $fusqlh->destroy();
 
     my $dbh = dbi_connect();
