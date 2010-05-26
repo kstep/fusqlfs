@@ -52,7 +52,8 @@ my $class = Module::Build->subclass(
                         $result .= "our \$_tobj = $class->new();\n";
                         $result .= "isa_ok \$_tobj, '$class', 'Class $class instantiated';\n\n";
                     }
-                    $result .= $script->merged_content;
+                    $content =~ s/{_tpkg}/$class/g;
+                    $result .= $content;
                     if ($testclass)
                     {
                         $result .= "\n$testclass->tear_down() if $testclass->can('tear_down');\n";
