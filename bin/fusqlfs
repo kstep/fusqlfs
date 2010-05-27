@@ -63,8 +63,8 @@ GetOptions(
     'format|f:s'      => \$options{'format'},
 ) or pod2usage(2);
 
-$options{'database'} ||= $ARGV[0];
-$options{'mountpoint'} ||= $ARGV[1];
+$options{'database'} ||= shift @ARGV;
+$options{'mountpoint'} ||= shift @ARGV;
 
 pod2usage(1) unless !$options{'help'} && $options{'database'} && $options{'mountpoint'};
 
