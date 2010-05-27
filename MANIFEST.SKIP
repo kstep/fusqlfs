@@ -55,3 +55,4 @@
 \.sw.$
 ^doc.*
 ^debian
+\.log$
