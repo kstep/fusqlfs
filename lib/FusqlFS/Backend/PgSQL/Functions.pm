@@ -21,6 +21,13 @@ sub new
     bless $self, $class;
 }
 
+=begin testing get
+
+my $row = $_tobj->get('sort');
+isnt $row, undef, '->get() result is sane';
+
+=end testing
+=cut
 sub get
 {
     my $self = shift;
@@ -28,6 +35,14 @@ sub get
     return $self->one_row($self->{get_expr}, $name);
 }
 
+=begin testing list
+
+my $list = $_tobj->list();
+isa_ok $list, 'ARRAY', '->list() result is an array';
+cmp_ok scalar(@$list), '>', 0, '->list() result is not empty';
+
+=end testing
+=cut
 sub list
 {
     my $self = shift;
@@ -36,3 +51,11 @@ sub list
 
 1;
 
+__END__
+
+=begin testing SETUP
+
+#!class FusqlFS::Backend::PgSQL::Test
+
+=end testing
+=cut
