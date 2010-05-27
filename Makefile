@@ -15,6 +15,9 @@ remount:
 
 all: build
 
+changelog:
+	git tag | perl -ne 'chomp; if ($$x) { print "\nChanged in $$_:\n\n"; print `git shortlog $$x..$$_`; }; $$x = $$_;' > Changelog
+
 Build: Build.PL
 	$(PERL) $<
 
@@ -38,7 +41,7 @@ install: Build
 debian: dist
 	./Build $@
 
-dist: manifest
+dist: changelog manifest
 	./Build $@
 
 clean:
@@ -57,5 +60,6 @@ testsclean:
 cleanall: realclean debianclean testsclean
 
 .PHONY: all manifest build test install debian dist \
-	clean distclean realclean debianclean cleanall
+	clean distclean realclean debianclean cleanall \
+	mount umount remount changelog
 
