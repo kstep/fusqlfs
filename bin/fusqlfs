@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 
 use strict;
+use v5.10.0;
 
 use Getopt::Long;
 use Pod::Usage;
@@ -40,6 +41,7 @@ my %options = (
     'cache_threshold' => 0,
 );
 
+Getopt::Long::Configure('no_ignore_case');
 GetOptions(
     'host|h:s'        => \$options{'host'},
     'port|P:i'        => \$options{'port'},
