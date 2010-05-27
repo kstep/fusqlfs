@@ -16,7 +16,7 @@ sub new
     $self->{get_expr} = $class->expr('SELECT pg_catalog.pg_get_function_result(p.oid) AS result,
                 pg_catalog.pg_get_function_arguments(p.oid) AS arguments,
                 CASE WHEN p.proisagg THEN NULL ELSE pg_catalog.pg_get_functiondef(p.oid) END AS struct
-            FROM pg_catalog.pg_proc AS p WHERE p.proname = ?');
+            FROM pg_catalog.pg_proc AS p WHERE p.proname = ? ORDER BY arguments, result');
 
     bless $self, $class;
 }
@@ -32,7 +32,7 @@ sub get
 {
     my $self = shift;
     my ($name) = @_;
-    return $self->one_row($self->{get_expr}, $name);
+    return $self->all_row($self->{get_expr}, $name);
 }
 
 =begin testing list
