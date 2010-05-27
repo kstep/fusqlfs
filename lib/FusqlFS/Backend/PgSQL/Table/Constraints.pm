@@ -17,6 +17,8 @@ sub new
     $self->{drop_expr} = 'ALTER TABLE "%s" DROP CONSTRAINT "%s"';
     $self->{store_expr} = 'ALTER TABLE "%s" ADD CONSTRAINT "%s" %s';
 
+    $self->{template} = { struct => "" };
+
     bless $self, $class;
 }
 
