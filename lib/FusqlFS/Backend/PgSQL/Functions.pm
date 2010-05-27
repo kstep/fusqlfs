@@ -9,7 +9,7 @@ sub new
     my $class = shift;
     my $self = {};
 
-    $self->{list_expr} = $class->expr('SELECT p.proname FROM pg_catalog.pg_proc AS p
+    $self->{list_expr} = $class->expr('SELECT DISTINCT p.proname FROM pg_catalog.pg_proc AS p
                 LEFT JOIN pg_catalog.pg_namespace AS ns ON ns.oid = p.pronamespace
             WHERE ns.nspname = \'public\'');
 
