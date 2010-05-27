@@ -84,9 +84,9 @@ sub init
 
 sub destroy
 {
-    if ($FusqlFS::Abstract::instance)
+    if ($FusqlFS::Artifact::instance)
     {
-        undef $FusqlFS::Abstract::instance;
+        undef $FusqlFS::Artifact::instance;
     }
 }
 
