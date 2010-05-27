@@ -41,7 +41,7 @@ install: Build
 debian: dist
 	./Build $@
 
-dist: changelog manifest
+dist: cleanall changelog manifest
 	./Build $@
 
 clean:
@@ -49,7 +49,7 @@ clean:
 
 realclean distclean:
 	test ! -e Build || ./Build $@
-	rm -f META.yml MANIFEST
+	rm -f META.yml MANIFEST Changelog
 
 debianclean:
 	rm -rf debian
