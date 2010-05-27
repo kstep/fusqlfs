@@ -18,6 +18,8 @@ sub new
                 CASE WHEN p.proisagg THEN NULL ELSE pg_catalog.pg_get_functiondef(p.oid) END AS struct
             FROM pg_catalog.pg_proc AS p WHERE p.proname = ? ORDER BY arguments, result');
 
+    $self->{create_expr} = 'CREATE OR REPLACE FUNCTION %s(integer) RETURNS integer LANGUAGE sql AS $function$ SELECT $1; $function$';
+
     bless $self, $class;
 }
 
@@ -47,6 +49,16 @@ sub list
 {
     my $self = shift;
     return $self->all_col($self->{list_expr});
+}
+
+sub store
+{
+    my $self = shift;
+    my ($name, $data) = @_;
+    my $sql = $data->{struct}||"";
+    return unless $sql;
+
+    $self->do($sql);
 }
 
 1;
