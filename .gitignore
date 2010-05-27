@@ -11,3 +11,6 @@
 /_build
 /blib
 /cover_db
+/FusqlFS-*.tar.gz
+/MANIFEST
+/META.yml
