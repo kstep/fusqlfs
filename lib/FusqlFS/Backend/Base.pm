@@ -14,10 +14,15 @@ sub new
     my $class = shift;
     my %options = @_;
     my $dsn = 'DBI:'.$class->dsn(@options{qw(host port database)});
+    my $debug = $options{debug}||0;
     my $self = {
         subpackages => {},
         limit  => 0 + ($options{limit}||0),
-        dbh => DBI->connect($dsn, @options{qw(user password)}, { PrintError => $options{debug}||0, PrintWarn => $options{debug}||0 }),
+        dbh => DBI->connect($dsn, @options{qw(user password)},
+            {
+                PrintError => $debug > 0,
+                PrintWarn  => $debug > 1
+            }),
     };
 
     given ($options{format})

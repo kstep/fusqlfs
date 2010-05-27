@@ -38,7 +38,7 @@ sub mount
     Fuse::main(
         mountpoint => $mountpoint,
         mountopts  => $options{'allow_other'}? 'allow_other': '',
-        debug      => $options{'debug'} || 0,
+        debug      => ($options{'debug'}||0) > 2,
 
         getdir     => \&getdir,
         getattr    => \&getattr,

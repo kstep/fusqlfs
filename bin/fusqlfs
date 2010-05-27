@@ -49,7 +49,7 @@ GetOptions(
     'user|u:s'        => \$options{'user'},
     'password|p:s'    => \$options{'password'},
     'mountpoint|m:s'  => \$options{'mountpoint'},
-    'debug|D'         => \$options{'debug'},
+    'debug|D+'        => \$options{'debug'},
     'help'            => \$options{'help'},
     'charset|C:s'     => \$options{'charset'},
     'daemon!'         => \$options{'daemon'},
