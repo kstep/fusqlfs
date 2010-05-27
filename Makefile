@@ -18,6 +18,9 @@ all: build
 changelog:
 	git tag | perl -ne 'chomp; if ($$x) { print "\nChanged in $$_:\n\n"; print `git shortlog $$x..$$_`; }; $$x = $$_;' > Changelog
 
+README.pod: bin/fusqlfs
+	podselect ./bin/fusqlfs > README.pod
+
 Build: Build.PL
 	$(PERL) $<
 
@@ -41,7 +44,7 @@ install: Build
 debian: dist
 	./Build $@
 
-dist: cleanall changelog manifest
+dist: cleanall README.pod changelog manifest
 	./Build $@
 
 clean:
