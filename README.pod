@@ -136,7 +136,7 @@ with this program), which is about 60% cache hits (~45% for 1/2 and ~56% for
 tests with "entry" names generated with normally distributed random generator.
 Experiment is your best advisor in this case.
 
-For "file" strategy it means max entry size in bytes to store on disk (caches
+For "file" strategy it means min entry size in bytes to store on disk (caches
 simple files only for now, dirs/symlinks and the like are not cached, which is
 ok in most cases). If file size is smaller then given size, then it is stored
 in memory. Useful if you are going to review big chucks of data in your
