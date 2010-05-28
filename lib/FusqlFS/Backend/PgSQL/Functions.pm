@@ -4,6 +4,8 @@ use v5.10.0;
 package FusqlFS::Backend::PgSQL::Functions;
 use parent 'FusqlFS::Artifact';
 
+use FusqlFS::Backend::PgSQL::Roles;
+
 sub new
 {
     my $class = shift;
@@ -61,6 +63,8 @@ sub new
 
     $self->{create_expr} = 'CREATE OR REPLACE FUNCTION %s(integer) RETURNS integer LANGUAGE sql AS $function$ SELECT $1; $function$';
 
+    $self->{owner} = new FusqlFS::Backend::PgSQL::Role::Owner('_F', 2);
+
     bless $self, $class;
 }
 
@@ -82,6 +86,8 @@ sub get
     $result->{'content.'.$result->{lang}} = $result->{content};
     delete $result->{content};
     delete $result->{lang};
+
+    $result->{owner} = $self->{owner};
 
     return $result;
 }
