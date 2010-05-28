@@ -188,8 +188,9 @@ Integer, number of data rows to show in table's data subdir, defaults to 0
 (means all rows). Useful if you are going to browse really big databases, as
 listing all data records as files can be very slow and memory consuming.
 
-You can also try to change and tune your cache strategy with C<--cache> and
-C<--cache-limit> options (see below).
+You can also try to change and tune your cache strategy with
+L<--cache|/--cache, -c> and L<--cache-limit|/--cache-limit, -M> options (see
+below).
 
 If this is an issue for you, use this option to limit number of listed table
 rows. You can still get record by requesting filename equal to primary key
@@ -221,13 +222,13 @@ big databases, e.g. with large blobs.
 
 =back
 
-For details see C<--cache-limit> option description below.
+For details see L<--cache-limit|/--cache-limit, -M> option description below.
 
 =item B<--cache-limit, -M>
 
-Integer, threshold for cache strategy (see C<--cache> option for details),
-defaults to 0, which means back up to "memory" strategy.
-Meaning depends on chosen cache strategy.
+Integer, threshold for cache strategy (see L<--cache|/--cache, -c> option
+for details), defaults to 0, which means back up to "memory" strategy. Meaning
+depends on chosen cache strategy.
 
 For "limited" cache strategy it means number of max cache items to store. If
 number of cached items exceeds this value, cache cleanup is forced, least used
@@ -246,13 +247,14 @@ ok in most cases). If file size is smaller then given size, then it is stored
 in memory. Useful if you are going to review big chucks of data in your
 database, e.g. large blobs etc.
 
-Common advise: set C<--cache-limit> above zero and C<--cache> to anything but
-"memory" only if you really have low memory issues with the program, as all
-other cache strategies are slower than simple memory access. "Limited" cache
-method has to support additional structures to analyze data usage, and so it's
-slower than simple "memory" cache strategy, while "file" cache method has to
-check and update real files on your disk, so both of them are slower than
-simple "memory" caching (they're still faster than database requests, however).
+Common advice: set C<--cache-limit> above zero and L<--cache|/--cache, -c> to
+anything but "memory" only if you really have low memory issues with the
+program, as all other cache strategies are slower than simple memory access.
+"Limited" cache method has to support additional structures to analyze data
+usage, and so it's slower than simple "memory" cache strategy, while "file"
+cache method has to check and update real files on your disk, so both of them
+are slower than simple "memory" caching (they're still faster than database
+requests, however).
 
 =item B<--format, -f>
 
@@ -272,7 +274,12 @@ backend, MyISAM is used otherwise. Defaults to false (MyISAM).
 
 =item B<--debug, -D>
 
-Boolean, if set you will see more debug info.
+Incremental, output debug info. You can repeat this option up to three times.
+If it is mentioned once you will see critical DB errors, two C<-D>s in a line
+enable DB warnings, three times means show FUSE-subsystem debug output (really
+noisy). Default is no debug messages.
+See also L<--logfile|/--logfile, -l> to enable debug output logging in daemon
+mode. If you don't set logfile in daemon mode you won't see any debug output.
 
 =item B<--daemon>
 
