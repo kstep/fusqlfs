@@ -154,7 +154,8 @@ sub store
 
     my $opts = ' ';
     $opts .= 'WINDOW ' if defined($struct->{type}) && $struct->{type} eq 'window';
-    $opts .= uc $struct->{volatility} if defined($struct->{volatility}); # && $struct->{volatility} ~~ qw(volatile immutable stable);
+    $opts .= uc $struct->{volatility} if defined($struct->{volatility})
+        and grep $struct->{volatility} eq $_, qw(volatile immutable stable);
 
     $self->do($self->{store_expr}, [$name, $struct->{result}, $lang, $content, $opts]);
 }
