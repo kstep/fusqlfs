@@ -167,6 +167,14 @@ implemented, MySQL is in my todo list. Defaults to PgSQL.
 
 =over
 
+=item B<--logfile, -l>
+
+Filename to store debug output to in daemon mode. Doesn't have any meaning in
+foreground mode, as all debug output are sent to STDERR in this case.
+Default is don't store debug data anywhere.
+This option has sense only with L</--daemon> option set and at least one
+L<--debug|/--debug, -D> option in command line.
+
 =item B<--charset, -C>
 
 Default charset, used for tables creation, results display etc.
@@ -276,10 +284,11 @@ backend, MyISAM is used otherwise. Defaults to false (MyISAM).
 
 Incremental, output debug info. You can repeat this option up to three times.
 If it is mentioned once you will see critical DB errors, two C<-D>s in a line
-enable DB warnings, three times means show FUSE-subsystem debug output (really
+enable DB warnings, three times means show FUSE debug tracing output (really
 noisy). Default is no debug messages.
 See also L<--logfile|/--logfile, -l> to enable debug output logging in daemon
-mode. If you don't set logfile in daemon mode you won't see any debug output.
+mode. If you don't set logfile in daemon mode you won't see any debug output,
+no matter how many C<-D>s you put in command line.
 
 =item B<--daemon>
 
