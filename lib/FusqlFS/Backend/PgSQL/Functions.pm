@@ -138,6 +138,21 @@ sub store
     $self->do($sql);
 }
 
+=begin testing create after get list
+
+isnt $_tobj->create('fusqlfs_func(integer)'), undef;
+is_deeply $_tobj->list(), [ 'fusqlfs_func(integer)' ];
+is_deeply $_tobj->get('fusqlfs_func(integer)'), $created_func;
+
+=end testing
+=cut
+sub create
+{
+    my $self = shift;
+    my ($name) = @_;
+    $self->do($self->{create_expr}, [$name]);
+}
+
 1;
 
 __END__
@@ -145,6 +160,17 @@ __END__
 =begin testing SETUP
 
 #!class FusqlFS::Backend::PgSQL::Test
+
+my $created_func = {
+    'content.sql' => 'SELECT 1;',
+    'struct' => '---
+arguments: integer
+result: integer
+type: ~
+volatility: volatile
+',
+    'owner' => $_tobj->{owner},
+};
 
 =end testing
 =cut
