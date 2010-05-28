@@ -27,6 +27,11 @@ sub drop { return 1 }
 sub create { return 1 }
 sub store { return 1 }
 
+sub dbh
+{
+    $instance->{dbh};
+}
+
 sub expr
 {
     my ($self, $sql, @sprintf) = @_;
