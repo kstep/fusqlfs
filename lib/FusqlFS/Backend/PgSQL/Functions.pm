@@ -63,7 +63,7 @@ sub new
                 LEFT JOIN pg_catalog.pg_language AS l ON l.oid = p.prolang
             WHERE p.proname = ? AND $get_func_args = ?");
 
-    $self->{create_expr} = 'CREATE OR REPLACE FUNCTION %s(integer) RETURNS integer LANGUAGE sql AS $function$ SELECT $1; $function$';
+    $self->{create_expr} = 'CREATE OR REPLACE FUNCTION %s RETURNS integer LANGUAGE sql AS $function$ SELECT 1; $function$';
     $self->{drop_expr} = 'DROP FUNCTION %s';
 
     $self->{owner} = new FusqlFS::Backend::PgSQL::Role::Owner('_F', 2);
