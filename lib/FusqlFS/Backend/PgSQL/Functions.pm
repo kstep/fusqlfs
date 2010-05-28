@@ -56,10 +56,12 @@ sub new
     #CASE WHEN p.proisagg THEN NULL ELSE pg_catalog.pg_get_functiondef(p.oid) END AS struct
     $self->{get_expr} = $class->expr("SELECT $get_func_res AS result,
                 $get_func_args AS arguments,
-                p.prosrc AS content, l.lanname AS lang
+                trim(both from p.prosrc) AS content, l.lanname AS lang,
+                CASE p.provolatile WHEN 'i' THEN 'immutable' WHEN 's' THEN 'stable' WHEN 'v' THEN 'volatile' END AS volatility,
+                CASE WHEN p.proisagg THEN 'aggregate' WHEN p.proiswindow THEN 'window' WHEN p.prorettype = 'pg_catalog.trigger'::pg_catalog.regtype THEN 'trigger' ELSE NULL END AS type
             FROM pg_catalog.pg_proc AS p
                 LEFT JOIN pg_catalog.pg_language AS l ON l.oid = p.prolang
-            WHERE p.proname = ? AND $get_func_args = ? ORDER BY arguments, result");
+            WHERE p.proname = ? AND $get_func_args = ?");
 
     $self->{create_expr} = 'CREATE OR REPLACE FUNCTION %s(integer) RETURNS integer LANGUAGE sql AS $function$ SELECT $1; $function$';
 
@@ -81,11 +83,15 @@ sub get
     my ($name, $args) = split(/\(/, $_[0], 2);
     return unless $args;
     $args =~ s/\)$//;
-    my $result = $self->one_row($self->{get_expr}, $name, $args);
+    my $data = $self->one_row($self->{get_expr}, $name, $args);
+    return unless $data;
 
-    $result->{'content.'.$result->{lang}} = $result->{content};
-    delete $result->{content};
-    delete $result->{lang};
+    my $result = {};
+    $result->{'content.'.$data->{lang}} = $data->{content};
+
+    delete $data->{content};
+    delete $data->{lang};
+    $result->{struct} = $self->dump($data);
 
     $result->{owner} = $self->{owner};
 
