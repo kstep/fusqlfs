@@ -9,14 +9,55 @@ sub new
     my $class = shift;
     my $self = {};
 
-    $self->{list_expr} = $class->expr('SELECT DISTINCT p.proname||\'(\'||pg_catalog.pg_get_function_arguments(p.oid)||\')\' FROM pg_catalog.pg_proc AS p
-                LEFT JOIN pg_catalog.pg_namespace AS ns ON ns.oid = p.pronamespace
-            WHERE ns.nspname = \'public\'');
+    my $pgver = $class->dbh->{pg_server_version};
+    my $get_func_args = 'pg_catalog.pg_get_function_arguments(p.oid)';
+    my $get_func_res  = 'pg_catalog.pg_get_function_result(p.oid)';
 
-    $self->{get_expr} = $class->expr('SELECT pg_catalog.pg_get_function_result(p.oid) AS result,
-                pg_catalog.pg_get_function_arguments(p.oid) AS arguments,
-                CASE WHEN p.proisagg THEN NULL ELSE pg_catalog.pg_get_functiondef(p.oid) END AS struct
-            FROM pg_catalog.pg_proc AS p WHERE p.proname = ? AND pg_catalog.pg_get_function_arguments(p.oid) = ? ORDER BY arguments, result');
+    if ($pgver < 80400)
+    {
+        $get_func_args = 'CASE WHEN p.proallargtypes IS NOT NULL THEN
+    pg_catalog.array_to_string(ARRAY(
+      SELECT
+        CASE
+          WHEN p.proargmodes[s.i] = \'i\' THEN \'\'
+          WHEN p.proargmodes[s.i] = \'o\' THEN \'OUT \'
+          WHEN p.proargmodes[s.i] = \'b\' THEN \'INOUT \'
+          WHEN p.proargmodes[s.i] = \'v\' THEN \'VARIADIC \'
+        END ||
+        CASE
+          WHEN COALESCE(p.proargnames[s.i], \'\') = \'\' THEN \'\'
+          ELSE p.proargnames[s.i] || \' \' 
+        END ||
+        pg_catalog.format_type(p.proallargtypes[s.i], NULL)
+      FROM
+        pg_catalog.generate_series(1, pg_catalog.array_upper(p.proallargtypes, 1)) AS s(i)
+    ), \', \')
+  ELSE
+    pg_catalog.array_to_string(ARRAY(
+      SELECT
+        CASE
+          WHEN COALESCE(p.proargnames[s.i+1], \'\') = \'\' THEN \'\'
+          ELSE p.proargnames[s.i+1] || \' \'
+          END ||
+        pg_catalog.format_type(p.proargtypes[s.i], NULL)
+      FROM
+        pg_catalog.generate_series(0, pg_catalog.array_upper(p.proargtypes, 1)) AS s(i)
+    ), \', \')
+  END';
+        $get_func_res = 'pg_catalog.format_type(p.prorettype, NULL)';
+    }
+
+    $self->{list_expr} = $class->expr("SELECT DISTINCT p.proname||'('||$get_func_args||')' FROM pg_catalog.pg_proc AS p
+                LEFT JOIN pg_catalog.pg_namespace AS ns ON ns.oid = p.pronamespace
+            WHERE ns.nspname = 'public'");
+
+    #CASE WHEN p.proisagg THEN NULL ELSE pg_catalog.pg_get_functiondef(p.oid) END AS struct
+    $self->{get_expr} = $class->expr("SELECT $get_func_res AS result,
+                $get_func_args AS arguments,
+                p.prosrc AS content, l.lanname AS lang
+            FROM pg_catalog.pg_proc AS p
+                LEFT JOIN pg_catalog.pg_language AS l ON l.oid = p.prolang
+            WHERE p.proname = ? AND $get_func_args = ? ORDER BY arguments, result");
 
     $self->{create_expr} = 'CREATE OR REPLACE FUNCTION %s(integer) RETURNS integer LANGUAGE sql AS $function$ SELECT $1; $function$';
 
@@ -36,7 +77,13 @@ sub get
     my ($name, $args) = split(/\(/, $_[0], 2);
     return unless $args;
     $args =~ s/\)$//;
-    return $self->one_row($self->{get_expr}, $name, $args);
+    my $result = $self->one_row($self->{get_expr}, $name, $args);
+
+    $result->{'content.'.$result->{lang}} = $result->{content};
+    delete $result->{content};
+    delete $result->{lang};
+
+    return $result;
 }
 
 =begin testing list
