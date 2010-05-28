@@ -64,7 +64,9 @@ sub new
             WHERE p.proname = ? AND $get_func_args = ?");
 
     $self->{create_expr} = 'CREATE OR REPLACE FUNCTION %s RETURNS integer LANGUAGE sql AS $function$ SELECT 1; $function$';
+    $self->{rename_expr} = 'ALTER FUNCTION %s RENAME TO %s';
     $self->{drop_expr} = 'DROP FUNCTION %s';
+    $self->{store_expr} = 'CREATE OR REPLACE FUNCTION %s RETURNS %s LANGUAGE %s AS $function$ %s $function$ %s';
 
     $self->{owner} = new FusqlFS::Backend::PgSQL::Role::Owner('_F', 2);
 
@@ -113,11 +115,12 @@ sub list
     return $self->all_col($self->{list_expr});
 }
 
-=begin testing drop after create
+=begin testing drop after store
 
-isnt $_tobj->drop('fusqlfs_func(integer)'), undef;
+is $_tobj->drop('fusqlfs_func(integer)'), undef;
+isnt $_tobj->drop('fusqlfs_func(integer, integer)'), undef;
 is_deeply $_tobj->list(), [];
-is $_tobj->get('fusqlfs_func(integer)'), undef;
+is $_tobj->get('fusqlfs_func(integer, integer)'), undef;
 
 =end testing
 =cut
@@ -128,14 +131,62 @@ sub drop
     $self->do($self->{drop_expr}, [$name]);
 }
 
+=begin testing store after rename
+
+isnt $_tobj->store('fusqlfs_func(integer, integer)', $new_func), undef;
+is_deeply $_tobj->get('fusqlfs_func(integer, integer)'), $new_func;
+
+=end testing
+=cut
 sub store
 {
     my $self = shift;
     my ($name, $data) = @_;
-    my $sql = $data->{struct}||"";
-    return unless $sql;
+    my $struct = $self->load($data->{struct}||{});
+    return unless ref($struct) eq 'HASH';
 
-    $self->do($sql);
+    my ($contkey) = grep(/^content\./, keys %$data);
+    return unless $contkey;
+
+    my $content = $data->{$contkey};
+    my (undef, $lang) = split /\./, $contkey, 2;
+    return unless $content && $lang;
+
+    my $opts = ' ';
+    $opts .= 'WINDOW ' if defined($struct->{type}) && $struct->{type} eq 'window';
+    $opts .= uc $struct->{volatility} if defined($struct->{volatility}); # && $struct->{volatility} ~~ qw(volatile immutable stable);
+
+    $self->do($self->{store_expr}, [$name, $struct->{result}, $lang, $content, $opts]);
+}
+
+=begin testing rename after create
+
+isnt $_tobj->rename('fusqlfs_func(integer)', 'fusqlfs_func(integer, integer)'), undef;
+$created_func->{struct} =~ s/^arguments: integer$/arguments: 'integer, integer'/m;
+is_deeply $_tobj->get('fusqlfs_func(integer, integer)', $created_func), $created_func;
+is $_tobj->get('fusqlfs_func(integer)'), undef;
+is_deeply $_tobj->list(), [ 'fusqlfs_func(integer, integer)' ];
+
+=end testing
+=cut
+sub rename
+{
+    my $self = shift;
+    my ($name, $newname) = @_;
+    return if $name eq $newname;
+
+    my ($fname, $fargs) = split /\(/, $newname, 2;
+    my ($aname, $aargs) = split /\(/, $name, 2;
+    if ($fargs eq $aargs)
+    {
+        $self->do($self->{rename_expr}, [$name, $fname]);
+    }
+    else
+    {
+        my $data = $self->get($name);
+        $self->drop($name);
+        $self->store($newname, $data);
+    }
 }
 
 =begin testing create after get list
@@ -168,6 +219,17 @@ arguments: integer
 result: integer
 type: ~
 volatility: volatile
+',
+    'owner' => $_tobj->{owner},
+};
+
+my $new_func = {
+    'content.sql' => 'SELECT $1 | $2;',
+    'struct' => '---
+arguments: \'integer, integer\'
+result: integer
+type: ~
+volatility: immutable
 ',
     'owner' => $_tobj->{owner},
 };
