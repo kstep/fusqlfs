@@ -64,6 +64,7 @@ sub new
             WHERE p.proname = ? AND $get_func_args = ?");
 
     $self->{create_expr} = 'CREATE OR REPLACE FUNCTION %s(integer) RETURNS integer LANGUAGE sql AS $function$ SELECT $1; $function$';
+    $self->{drop_expr} = 'DROP FUNCTION %s';
 
     $self->{owner} = new FusqlFS::Backend::PgSQL::Role::Owner('_F', 2);
 
@@ -110,6 +111,21 @@ sub list
 {
     my $self = shift;
     return $self->all_col($self->{list_expr});
+}
+
+=begin testing drop after create
+
+isnt $_tobj->drop('fusqlfs_func(integer)'), undef;
+is_deeply $_tobj->list(), [];
+is $_tobj->get('fusqlfs_func(integer)'), undef;
+
+=end testing
+=cut
+sub drop
+{
+    my $self = shift;
+    my ($name) = @_;
+    $self->do($self->{drop_expr}, [$name]);
 }
 
 sub store
