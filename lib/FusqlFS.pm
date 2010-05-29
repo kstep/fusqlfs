@@ -2,6 +2,43 @@ use strict;
 use v5.10.0;
 
 package FusqlFS;
+
+=head1 NAME
+
+FusqlFS - FUSE filesystem to work with database via DBI interface
+
+=head1 SYNOPSIS
+
+    use FusqlFS;
+
+    FusqlFS::init(
+        engine   => 'PgSQL',
+        host     => 'localhost',
+        database => 'postgres',
+        user     => 'postgres',
+        password => 'pas$w0rd',
+        limit    => 100,
+        debug    => 2,
+    );
+
+    FusqlFS::mount(
+        '/path/to/mount/point',
+        mountopts => 'allow_other',
+        debug     => 2,
+        threaded  => 0,
+    );
+
+=head1 DESCRIPTION
+
+This package provides basic interface to FusqlFS to initialize L<DBI> backend
+and mount it with L<Fuse>.
+
+=head1 SUBROUTINES
+
+=over
+
+=cut
+
 use POSIX qw(:fcntl_h :errno_h mktime);
 use Fcntl qw(:mode);
 use Carp;
@@ -17,6 +54,14 @@ our %inbuffer;
 
 our $VERSION = '0.0021';
 
+=item init
+
+Initializes L<FusqlFS::Backend> and L<FusqlFS::Cache> subsystems, preparing
+all resources to be actually used by L<Fuse> interface.
+
+Input: %options.
+
+=cut
 sub init
 {
     my %options = @_;
@@ -30,6 +75,14 @@ sub init
     $SIG{USR1} = sub () { %cache = (); };
 }
 
+=item mount
+
+Runs fuse main loop, configured with all required hooks and options to
+interface with L<FusqlFS::Backend>.
+
+Input: $mountpoint, %options.
+
+=cut
 sub mount
 {
     my $mountpoint = shift;
@@ -63,6 +116,16 @@ sub mount
     );
 }
 
+=item Fuse hooks
+
+L<Fuse/getdir>, L<Fuse/getattr>, L<Fuse/readlink>, L<Fuse/read>, L<Fuse/write>,
+L<Fuse/flush>, L<Fuse/open>, L<Fuse/truncate>, L<Fuse/symlink>, L<Fuse/unlink>,
+L<Fuse/mkdir>, L<Fuse/rmdir>, L<Fuse/mknod>, L<Fuse/rename>, L<Fuse/fsync>,
+L<Fuse/utime>.
+
+See L<Fuse> for details.
+
+=cut
 sub getdir
 {
     
@@ -255,6 +318,14 @@ sub utime
     return 0;
 }
 
+=item fold_path
+
+Folds path by removing "..", "." and other special sequences from it.
+
+Input: $path.
+Output $folded_path.
+
+=cut
 sub fold_path
 {
     local $/ = '/';
@@ -267,6 +338,14 @@ sub fold_path
     return $path;
 }
 
+=item file_struct
+
+Creates FUSE-exportable file structure for given entry.
+
+Input: $entry.
+Output: @file_struct.
+
+=cut
 sub file_struct
 {
     my ($entry) = @_;
@@ -310,6 +389,13 @@ sub file_struct
     return @fileinfo;
 }
 
+=item by_path
+
+Gets entry by path, uses cache.
+
+Input: $path.
+
+=cut
 sub by_path
 {
     my ($path) = @_;
@@ -319,6 +405,14 @@ sub by_path
     return $entry;
 }
 
+=item clear_cache
+
+Invalidates entries cache for given path, optionally recursively invalidating
+all paths up to given depth.
+
+Input: $path, $depth=undef.
+
+=cut
 sub clear_cache
 {
     delete $cache{$_[0]};
@@ -335,6 +429,13 @@ sub clear_cache
     }
 }
 
+=item flush_inbuffer
+
+Flushes input buffer for given $entry by given $path.
+
+Input: $path, $entry.
+
+=cut
 sub flush_inbuffer
 {
     my ($path, $entry) = @_;
@@ -346,3 +447,7 @@ sub flush_inbuffer
 }
 
 1;
+
+__END__
+
+=back
