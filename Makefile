@@ -3,6 +3,8 @@ PERL ?= /usr/bin/perl
 
 INSTALL_OPTS = --installdirs vendor $(if $(DESTDIR),--destdir $(DESTDIR),)
 
+all: build
+
 mount:
 	fusqlfs -e PgSQL -u postgres -l ./fusqlfs.log -L 100 -d unite_dev $(if $(MOP),$(MOP),-D) ./mnt
 
@@ -12,8 +14,6 @@ umount:
 remount:
 	-$(MAKE) umount
 	$(MAKE) mount
-
-all: build
 
 changelog:
 	git tag | perl -ne 'chomp; if ($$x) { print "\nChanged in $$_:\n\n"; print `git shortlog $$x..$$_`; }; $$x = $$_;' > Changelog
@@ -30,8 +30,12 @@ manifest build: Build
 buildtests: build
 	./Build $@
 
-test testcover: buildtests testlint
+test testcover:
 	./Build $@ $(if $T,--test_files $T,)
+
+fulltest: buildtests testlint test
+
+fullcover: buildtests testlint testcover
 
 testlint:
 	find ./lib -name "*.pm" -exec perl -M'lib "./lib"' -MO=Lint,no-context {} \;
@@ -44,7 +48,7 @@ install: Build
 debian: dist
 	./Build $@
 
-dist: cleanall README.pod changelog manifest
+dist: cleanall README.pod changelog buildtests manifest
 	./Build $@
 
 clean:
@@ -64,5 +68,6 @@ cleanall: realclean debianclean testsclean
 
 .PHONY: all manifest build test install debian dist \
 	clean distclean realclean debianclean cleanall \
-	mount umount remount changelog
+	mount umount remount changelog fulltest fullcover \
+	testcover
 
