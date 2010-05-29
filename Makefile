@@ -48,8 +48,11 @@ install: Build
 debian: dist
 	./Build $@
 
-dist: cleanall README.pod changelog buildtests manifest
+dist: cleanall README.pod changelog buildtests test manifest
 	./Build $@
+
+cpan: dist
+	cpan-upload FusqlFS-*.tar.gz
 
 clean:
 	test ! -e Build || ./Build $@
@@ -69,5 +72,5 @@ cleanall: realclean debianclean testsclean
 .PHONY: all manifest build test install debian dist \
 	clean distclean realclean debianclean cleanall \
 	mount umount remount changelog fulltest fullcover \
-	testcover
+	testcover buildtests cpan
 
