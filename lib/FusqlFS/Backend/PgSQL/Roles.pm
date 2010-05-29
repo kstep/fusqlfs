@@ -159,9 +159,8 @@ sub get
     my $data = $self->one_row($self->{get_expr}, $name);
     return unless $data;
 
-    my $result = { map { $_ => \"../$_" } @{$data->{contains}} };
+    my $result = { map { $_ => \"../$_" } @{delete($data->{contains})} };
 
-    delete $data->{contains};
     $result->{struct} = $self->dump($data);
     return $result;
 }

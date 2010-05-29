@@ -90,10 +90,7 @@ sub get
     return unless $data;
 
     my $result = {};
-    $result->{'content.'.$data->{lang}} = $data->{content};
-
-    delete $data->{content};
-    delete $data->{lang};
+    $result->{'content.'.delete($data->{lang})} = delete($data->{content});
     $result->{struct} = $self->dump($data);
 
     $result->{owner} = $self->{owner};
