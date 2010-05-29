@@ -32,8 +32,7 @@ sub list
     my @primary_key = $self->get_primary_key($table);
     return undef unless @primary_key;
 
-    my $primary_key = join " || '.' || ", @primary_key;
-    my $sth = $self->cexpr('SELECT %s FROM "%s" %s', $primary_key, $table, $self->limit());
+    my $sth = $self->cexpr('SELECT %s FROM "%s" %s', $self->concat(@primary_key), $table, $self->limit);
     return $self->all_col($sth)||[];
 }
 
@@ -41,7 +40,7 @@ sub where_clause
 {
     my $self = shift;
     my ($table, $name) = @_;
-    my @binds = split /[.]/, $name;
+    my @binds = $self->asplit($name);
     my @primary_key = $self->get_primary_key($table);
     return unless @primary_key && $#primary_key == $#binds;
 
@@ -122,7 +121,7 @@ sub create
 
     my $pholders = '?,' x scalar(@primary_key);
     chop $pholders;
-    $self->cdo('INSERT INTO "%s" (%s) VALUES (%s)', [$table, join(', ', @primary_key), $pholders], split(/[.]/, $name));
+    $self->cdo('INSERT INTO "%s" (%s) VALUES (%s)', [$table, join(', ', @primary_key), $pholders], $self->asplit($name));
 }
 
 =begin testing rename after create
@@ -143,7 +142,7 @@ sub rename
     my @primary_key = $self->get_primary_key($table);
     return unless @primary_key;
 
-    my %data = map { shift(@primary_key) => $_ } split /[.]/, $newname;
+    my %data = map { shift(@primary_key) => $_ } $self->asplit($newname);
     $self->store($table, $name, \%data);
 }
 

@@ -252,6 +252,28 @@ sub limit
     return $limit? "LIMIT $limit": '';
 }
 
+sub fnsep
+{
+    return $instance->{fnsep};
+}
+
+sub asplit
+{
+    return split $instance->{fnsplit}, $_[1];
+}
+
+sub ajoin
+{
+    shift @_;
+    return join $instance->{fnsep}, @_;
+}
+
+sub concat
+{
+    shift @_;
+    return '"' . join("\" || '$instance->{fnsep}' || \"", @_) . '"';
+}
+
 sub build
 {
     my ($self, $sql, $filter, @iter) = @_;
