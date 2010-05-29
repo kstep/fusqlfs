@@ -4,7 +4,7 @@ PERL ?= /usr/bin/perl
 INSTALL_OPTS = --installdirs vendor $(if $(DESTDIR),--destdir $(DESTDIR),)
 
 mount:
-	fusqlfs -e PgSQL -u postgres -l ./fusqlfs.log -L 100 -d unite_dev -D ./mnt
+	fusqlfs -e PgSQL -u postgres -l ./fusqlfs.log -L 100 -d unite_dev $(if $(MOP),$(MOP),-D) ./mnt
 
 umount:
 	fusermount -u -z ./mnt
