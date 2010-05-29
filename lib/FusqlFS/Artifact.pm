@@ -14,26 +14,26 @@ FusqlFS::Artifact - basic abstract class to represent database artifact in Fusql
 
     sub new
     {
-	my $class = shift;
-	my $self = {};
+        my $class = shift;
+        my $self = {};
 
-	// initialize Tables specific resources
+        // initialize Tables specific resources
 
-	bless $self, $class;
+        bless $self, $class;
     }
 
     sub get
     {
-	my $self = shift;
-	my ($table, $name) = @_;
-	return $self->one_row("SELECT * FROM %s WHERE id = ?", [$table], $name);
+        my $self = shift;
+        my ($table, $name) = @_;
+        return $self->one_row("SELECT * FROM %s WHERE id = ?", [$table], $name);
     }
 
     sub list
     {
-	my $self = shift;
-	my ($table) = @_;
-	return $self->all_col("SELECT id FROM %s %s", [$table, $self->limit]);
+        my $self = shift;
+        my ($table) = @_;
+        return $self->all_col("SELECT id FROM %s %s", [$table, $self->limit]);
     }
 
 =head1 DESCRIPTION
