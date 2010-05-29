@@ -66,7 +66,7 @@ sub get
 
     my $sth = $self->{query_cache}->{$table}->{$where_clause};
     my $result = $self->all_row($sth, @binds);
-    return unless @$result;
+    return unless $result && @$result;
 
     $result = $result->[0] if scalar(@$result) == 1;
     return $self->dump($result);
