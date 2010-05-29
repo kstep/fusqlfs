@@ -52,7 +52,7 @@ our $def_time;
 our %cache;
 our %inbuffer;
 
-our $VERSION = '0.0021';
+our $VERSION = '0.003';
 
 =item init
 
