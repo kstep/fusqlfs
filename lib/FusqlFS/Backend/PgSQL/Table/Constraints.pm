@@ -9,7 +9,7 @@ sub new
     my $class = shift;
     my $self = $class->SUPER::new(@_);
 
-    $self->{get_expr} = $class->expr('SELECT pg_catalog.pg_get_constraintdef(co.oid, true) AS struct, co.contype AS ".type" FROM pg_catalog.pg_constraint co
+    $self->{get_expr} = $class->expr('SELECT pg_catalog.pg_get_constraintdef(co.oid, true) AS "content.sql", co.contype AS ".type" FROM pg_catalog.pg_constraint co
             JOIN pg_catalog.pg_class AS cl ON (cl.oid = co.conrelid) WHERE cl.relname = ? AND co.conname = ?');
     $self->{list_expr} = $class->expr('SELECT co.conname FROM pg_catalog.pg_constraint AS co
             JOIN pg_catalog.pg_class AS cl ON (cl.oid = co.conrelid) WHERE cl.relname = ?');
@@ -17,7 +17,7 @@ sub new
     $self->{drop_expr} = 'ALTER TABLE "%s" DROP CONSTRAINT "%s"';
     $self->{store_expr} = 'ALTER TABLE "%s" ADD CONSTRAINT "%s" %s';
 
-    $self->{template} = { struct => "" };
+    $self->{template} = { 'content.sql' => "" };
 
     bless $self, $class;
 }
@@ -34,7 +34,7 @@ sub store
     my $self = shift;
     my ($table, $name, $data) = @_;
     $self->drop($table, $name);
-    $self->do($self->{store_expr}, [$table, $name, $data->{struct}]);
+    $self->do($self->{store_expr}, [$table, $name, $data->{'content.sql'}]);
 }
 
 =begin testing rename after store
@@ -86,7 +86,7 @@ sub drop
 =begin testing get
 
 is $_tobj->get('fusqlfs_table', 'unknown'), undef;
-is_deeply $_tobj->get('fusqlfs_table', 'fusqlfs_table_pkey'), { struct => 'PRIMARY KEY (id)', '.type' => 'p' };
+is_deeply $_tobj->get('fusqlfs_table', 'fusqlfs_table_pkey'), { 'content.sql' => 'PRIMARY KEY (id)', '.type' => 'p' };
 
 =end testing
 =cut
@@ -100,7 +100,7 @@ sub get
         return unless $data;
         if ($data->{".type"} eq 'f')
         {
-            my ($myfields, $table, $herfields) = ($data->{struct} =~ /KEY \((.+?)\) REFERENCES (.+?)\((.+?)\)/);
+            my ($myfields, $table, $herfields) = ($data->{'content.sql'} =~ /KEY \((.+?)\) REFERENCES (.+?)\((.+?)\)/);
             my @myfields = split /,/, $myfields;
             my @herfields = split /,/, $herfields;
             foreach (0..$#myfields)
@@ -136,7 +136,7 @@ __END__
 #!class FusqlFS::Backend::PgSQL::Table::Test
 
 my $new_constraint = {
-    struct => 'CHECK (id > 5)',
+    'content.sql' => 'CHECK (id > 5)',
     '.type' => 'c',
 };
 

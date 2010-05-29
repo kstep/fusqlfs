@@ -48,7 +48,7 @@ sub get
     my $result = $self->all_col($self->{get_expr}, $name);
     return unless @$result;
     return {
-        'query.sql' => $result->[0],
+        'content.sql' => $result->[0],
         owner => $self->{owner},
     };
 }
@@ -57,7 +57,7 @@ sub get
 
 isnt $_tobj->rename('fusqlfs_view', 'new_fusqlfs_view'), undef;
 is $_tobj->get('fusqlfs_view'), undef;
-is_deeply $_tobj->get('new_fusqlfs_view'), { 'query.sql' => 'SELECT 2;', owner => $_tobj->{owner} };
+is_deeply $_tobj->get('new_fusqlfs_view'), { 'content.sql' => 'SELECT 2;', owner => $_tobj->{owner} };
 is_deeply $_tobj->list(), [ 'new_fusqlfs_view' ];
 
 =end testing
@@ -88,7 +88,7 @@ sub drop
 
 isnt $_tobj->create('fusqlfs_view'), undef;
 is_deeply $_tobj->list(), [ 'fusqlfs_view' ];
-is_deeply $_tobj->get('fusqlfs_view'), { 'query.sql' => 'SELECT 1;', owner => $_tobj->{owner} };
+is_deeply $_tobj->get('fusqlfs_view'), { 'content.sql' => 'SELECT 1;', owner => $_tobj->{owner} };
 
 =end testing
 =cut
@@ -101,8 +101,8 @@ sub create
 
 =begin testing store after create
 
-isnt $_tobj->store('fusqlfs_view', { 'query.sql' => 'SELECT 2' }), undef;
-is_deeply $_tobj->get('fusqlfs_view'), { 'query.sql' => 'SELECT 2;', owner => $_tobj->{owner} };
+isnt $_tobj->store('fusqlfs_view', { 'content.sql' => 'SELECT 2' }), undef;
+is_deeply $_tobj->get('fusqlfs_view'), { 'content.sql' => 'SELECT 2;', owner => $_tobj->{owner} };
 
 =end testing
 =cut
@@ -110,7 +110,7 @@ sub store
 {
     my $self = shift;
     my ($name, $data) = @_;
-    $self->do($self->{'store_expr'}, [$name, $data->{'query.sql'}]);
+    $self->do($self->{'store_expr'}, [$name, $data->{'content.sql'}]);
 }
 
 1;
