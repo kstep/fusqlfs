@@ -15,7 +15,7 @@ umount:
 	-fusermount -u -z ./mnt
 
 changelog:
-	git tag | perl -ne 'chomp; if ($$x) { print "\nChanged in $$_:\n\n"; print `git shortlog $$x..$$_`; }; $$x = $$_;' > Changelog
+	git tag -l | head -n $$(( `git tag -l | wc -l` - `git tag -l --contains HEAD | wc -l` + 1 )) | perl -ne 'next unless $$. == 1 or /^v[0-9.]+$$/; chomp; if ($$x) { print "\nChanged in $$_:\n\n"; print `git shortlog $$x..$$_`; }; $$x = $$_;' > Changelog
 
 README.pod: bin/fusqlfs
 	podselect ./bin/fusqlfs > README.pod
