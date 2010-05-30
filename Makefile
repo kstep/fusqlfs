@@ -5,15 +5,11 @@ INSTALL_OPTS = --installdirs vendor $(if $(DESTDIR),--destdir $(DESTDIR),)
 
 all: build
 
-mount:
+mount: umount
 	fusqlfs -e PgSQL -u postgres -l ./fusqlfs.log -L 100 -d unite_dev $(if $(MOP),$(MOP),-D) ./mnt
 
 umount:
-	fusermount -u -z ./mnt
-
-remount:
-	-$(MAKE) umount
-	$(MAKE) mount
+	-fusermount -u -z ./mnt
 
 changelog:
 	git tag | perl -ne 'chomp; if ($$x) { print "\nChanged in $$_:\n\n"; print `git shortlog $$x..$$_`; }; $$x = $$_;' > Changelog
