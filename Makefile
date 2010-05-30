@@ -5,6 +5,9 @@ INSTALL_OPTS = --installdirs vendor $(if $(DESTDIR),--destdir $(DESTDIR),)
 
 all: build
 
+tags: lib
+	ctags --language-force=Perl -R lib
+
 mount: umount
 	fusqlfs -e PgSQL -u postgres -l ./fusqlfs.log -L 100 -d unite_dev $(if $(MOP),$(MOP),-D) ./mnt
 
