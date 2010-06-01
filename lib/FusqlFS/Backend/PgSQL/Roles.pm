@@ -32,11 +32,13 @@ our %relkinds = (
     v  => [ qw(VIEW rel) ],
 
     _F => [ qw(FUNCTION pro) ],
+    _L => [ qw(LANGUAGE lan) ],
 );
 
 our %reltables = qw(
     rel pg_class
     pro pg_proc
+    lan pg_language
 );
 
 sub new
