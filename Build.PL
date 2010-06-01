@@ -51,7 +51,7 @@ my $_tcount = '.($_->tests? $_->tests: 'undef').';
                     $instantiate = 0 if ($content =~ /^#!noinst/m);
 
                     my $result = "use strict;\nuse v5.10.0;\n";
-                    $result .= "use Test::More;\n";
+                    $result .= "use Test::More;\nuse Test::Deep;\n";
                     if ($testclass)
                     {
                         $result .= "use $testclass;\n";
@@ -108,6 +108,7 @@ my $build = $class->new(
     },
     build_requires => {
         'Test::More'   => 0,
+        'Test::Deep'   => 0,
         'Test::Inline' => 0,
         'B::Lint'      => 0,
     },
