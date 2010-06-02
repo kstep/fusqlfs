@@ -12,7 +12,9 @@ my $class = Module::Build->subclass(
 
         sub ACTION_buildtests
         {
-            use Test::Inline;
+            eval 'use Test::Inline';
+            return if $@;
+
             my $tests = Test::Inline->new(
                 verbose     => 1,
                 readonly    => 0,
