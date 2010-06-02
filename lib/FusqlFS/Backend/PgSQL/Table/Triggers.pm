@@ -17,6 +17,34 @@ FusqlFS::Backend::PgSQL::Table::Triggers
 
 =over
 
+=item F<./handler>
+
+Symlink to function in F<../../../../functions>, which executes on trigger event(s).
+
+=item F<./create.sql>
+
+C<CREATE TRIGGER> clause to create this trigger.
+
+=item F<./struct>
+
+Additional trigger info with following fields:
+
+=over
+
+=item C<for_each>
+
+I<one of row or statement> defines if trigger will be triggered for each touched row or once for whole statement.
+
+=item C<when>
+
+I<one of before or after> defines if trigger is triggered before or after event(s).
+
+=item C<events>
+
+I<set of insert, update, delete, truncate> list of events trigger will be triggered on.
+
+=back
+
 =back
 
 =head1 METHODS
@@ -28,6 +56,19 @@ FusqlFS::Backend::PgSQL::Table::Triggers
 package FusqlFS::Backend::PgSQL::Table::Triggers;
 use parent 'FusqlFS::Artifact::Table::Lazy';
 
+=item new
+
+Class constructor.
+
+Output: $triggers_instance.
+
+=begin testing new
+
+my $triggers = {_tpkg}->new();
+isa_ok $triggers, $_tcls;
+
+=end testing
+=cut
 sub new
 {
     my $class = shift;
@@ -47,7 +88,7 @@ sub new
             ARRAY[
                 CASE WHEN (t.tgtype &  4) != 0 THEN \'insert\' END,
                 CASE WHEN (t.tgtype &  8) != 0 THEN \'delete\' END,
-                CASE WHEN (t.tgtype & 16) != 0 THEN \'update\' END
+                CASE WHEN (t.tgtype & 16) != 0 THEN \'update\' END,
                 CASE WHEN (t.tgtype & 32) != 0 THEN \'truncate\' END
                 ] AS events
         FROM pg_catalog.pg_trigger AS t
@@ -59,6 +100,7 @@ sub new
 
     $self->{rename_expr} = 'ALTER TRIGGER %s ON %s RENAME TO %s';
     $self->{drop_expr} = 'DROP TRIGGER %s ON %s';
+    $self->{store_expr} = 'CREATE TRIGGER %s %s %s ON %s FOR EACH %s EXECUTE PROCEDURE %s';
 
     $self->{template} = {
         'create.sql' => '---
@@ -74,6 +116,15 @@ when: before
     bless $self, $class;
 }
 
+=item get
+
+=begin testing get
+
+is $_tobj->get('fusqlfs_table', 'xxxxx'), undef;
+is $_tobj->get('xxxxx', 'xxxxx'), undef;
+
+=end testing
+=cut
 sub get
 {
     my $self = shift;
@@ -98,6 +149,14 @@ sub get
     }
 }
 
+=item list
+
+=begin testing list
+
+cmp_set $_tobj->list('fusqlfs_table'), [];
+
+=end testing
+=cut
 sub list
 {
     my $self = shift;
@@ -105,6 +164,17 @@ sub list
     return [ @{$self->all_col($self->{list_expr}, $table)}, @{$self->SUPER::list($table)} ];
 }
 
+=item drop
+
+=begin testing drop after rename
+
+is $_tobj->drop('fusqlfs_table', 'fusqlfs_trigger'), undef;
+isnt $_tobj->drop('fusqlfs_table', 'new_fusqlfs_trigger'), undef;
+cmp_set $_tobj->list('fusqlfs_table'), [];
+is $_tobj->get('fusqlfs_table', 'fusqlfs_trigger'), undef;
+
+=end testing
+=cut
 sub drop
 {
     my $self = shift;
@@ -112,6 +182,20 @@ sub drop
     $self->SUPER::drop($table, $name) or $self->do($self->{drop_expr}, [$name, $table]);
 }
 
+=item store
+
+=begin testing store after get list
+
+isnt $_tobj->create('fusqlfs_table', 'fusqlfs_trigger'), undef;
+cmp_set $_tobj->list('fusqlfs_table'), [ 'fusqlfs_trigger' ];
+is_deeply $_tobj->get('fusqlfs_table', 'fusqlfs_trigger'), $_tobj->{template};
+
+isnt $_tobj->store('fusqlfs_table', 'fusqlfs_trigger', $new_trigger), undef;
+cmp_set $_tobj->list('fusqlfs_table'), [ 'fusqlfs_trigger' ];
+is_deeply $_tobj->get('fusqlfs_table', 'fusqlfs_trigger'), $new_trigger;
+
+=end testing
+=cut
 sub store
 {
     my $self = shift;
@@ -120,14 +204,25 @@ sub store
 
     my $when     = uc($struct->{when});
     my $for_each = uc($struct->{for_each});
+    my $events   = join ' OR ', map { uc $_ } @{$struct->{events}};
     my $handler  = ${$data->{handler}};
-    $handler =~ s#^\.\./\.\./functions/##;
+    $handler =~ s#^\.\./\.\./\.\./\.\./functions/##;
 
-    local $" = ' OR ';
-    my $sql = "CREATE TRIGGER $name $when @{$struct->{events}} ON $table FOR EACH $for_each EXECUTE PROCEDURE $handler";
-    $self->drop($table, $name) and $self->do($sql);
+    $self->drop($table, $name) and $self->do($self->{store_expr}, [$name, $when, $events, $table, $for_each, $handler]);
 }
 
+=item rename
+
+=begin testing rename after store
+
+isnt $_tobj->rename('fusqlfs_table', 'fusqlfs_trigger', 'new_fusqlfs_trigger'), undef;
+is $_tobj->get('fusqlfs_table', 'fusqlfs_trigger'), undef;
+$new_trigger->{'create.sql'} =~ s/TRIGGER fusqlfs_trigger/TRIGGER new_fusqlfs_trigger/;
+is_deeply $_tobj->get('fusqlfs_table', 'new_fusqlfs_trigger'), $new_trigger;
+cmp_set $_tobj->list('fusqlfs_table'), [ 'new_fusqlfs_trigger' ];
+
+=end testing
+=cut
 sub rename
 {
     my $self = shift;
@@ -146,7 +241,17 @@ __END__
 
 #!class FusqlFS::Backend::PgSQL::Table::Test
 
-my $new_trigger = {};
+my $new_trigger = {
+    'create.sql' => 'CREATE TRIGGER fusqlfs_trigger BEFORE INSERT OR UPDATE ON fusqlfs_table FOR EACH ROW EXECUTE PROCEDURE fusqlfs_function()',
+    handler => \'../../../../functions/fusqlfs_function()',
+    struct => '---
+events:
+  - insert
+  - update
+for_each: row
+when: before
+',
+};
 
 =end testing
 
