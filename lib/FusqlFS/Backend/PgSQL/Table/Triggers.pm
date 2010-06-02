@@ -1,6 +1,30 @@
 use strict;
 use v5.10.0;
 
+=head1 NAME
+
+FusqlFS::Backend::PgSQL::Table::Triggers
+
+=head1 SYNOPSIS
+
+    use FusqlFS::Backend::PgSQL::Table::Triggers
+
+    my $triggers = FusqlFS::Backend::PgSQL::Table::Triggers->new();
+
+=head1 DESCRIPTION
+
+=head1 EXPOSED STRUCTURE
+
+=over
+
+=back
+
+=head1 METHODS
+
+=over
+
+=cut
+
 package FusqlFS::Backend::PgSQL::Table::Triggers;
 use parent 'FusqlFS::Artifact';
 
@@ -65,3 +89,16 @@ sub list
 }
 
 1;
+
+__END__
+
+=back
+
+=begin testing SETUP
+
+#!class FusqlFS::Backend::PgSQL::Table::Test
+
+my $new_trigger = {};
+
+=end testing
+
