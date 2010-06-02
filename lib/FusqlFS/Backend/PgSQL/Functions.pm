@@ -90,6 +90,7 @@ sub get
     return unless $data;
 
     my $result = {};
+    $result->{language} = \"../../languages/$data->{lang}";
     $result->{'content.'.delete($data->{lang})} = delete($data->{content});
     $result->{struct} = $self->dump($data);
 
@@ -212,6 +213,7 @@ __END__
 
 my $created_func = {
     'content.sql' => 'SELECT 1;',
+    'language' => \'../../languages/sql',
     'struct' => '---
 arguments: integer
 result: integer
@@ -223,6 +225,7 @@ volatility: volatile
 
 my $new_func = {
     'content.sql' => 'SELECT $1 | $2;',
+    'language' => \'../../languages/sql',
     'struct' => '---
 arguments: \'integer, integer\'
 result: integer
