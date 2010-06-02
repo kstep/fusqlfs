@@ -220,8 +220,7 @@ sub truncate
     return -EINVAL() unless $entry->isfile();
     return -EACCES() unless $entry->writable();
 
-    $inbuffer{$path} ||= $entry->get();
-    substr($inbuffer{$path}, $offset, length($inbuffer{$path}), '');
+    $entry->write($offset);
     return 0;
 }
 
