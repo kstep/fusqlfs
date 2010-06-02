@@ -63,7 +63,7 @@ sub get
 
 =begin testing list
 
-list_ok $_tobj->list('fusqlfs_table'), [ 'fusqlfs_table_pkey' ];
+cmp_set $_tobj->list('fusqlfs_table'), [ 'fusqlfs_table_pkey' ];
 
 =end testing
 =cut

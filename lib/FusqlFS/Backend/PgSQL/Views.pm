@@ -25,7 +25,7 @@ sub new
 
 =begin testing list
 
-list_ok $_tobj->list(), [];
+cmp_set $_tobj->list(), [];
 
 =end testing
 =cut

@@ -169,7 +169,7 @@ sub get
 
 =begin testing list
 
-list_ok $_tobj->list(), sub { grep { $_ eq 'postgres' } @_ }, 'Roles list is sane';
+cmp_deeply $_tobj->list(), supersetof('postgres'), 'Roles list is sane';
 
 =end testing
 =cut

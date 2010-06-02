@@ -97,7 +97,7 @@ sub rename
 
 =begin testing list
 
-list_ok $_tobj->list(), [], 'Tables list is sane';
+cmp_set $_tobj->list(), [], 'Tables list is sane';
 
 =end testing
 =cut

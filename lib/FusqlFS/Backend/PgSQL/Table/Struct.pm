@@ -38,7 +38,7 @@ sub new
 =begin testing list
 
 is $_tobj->list('unknown'), undef;
-list_ok $_tobj->list('fusqlfs_table'), [ 'id' ];
+cmp_set $_tobj->list('fusqlfs_table'), [ 'id' ];
 
 =end testing
 =cut

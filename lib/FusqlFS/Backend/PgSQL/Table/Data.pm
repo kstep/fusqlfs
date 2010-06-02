@@ -21,7 +21,7 @@ sub new
 
 =begin testing list
 
-list_ok $_tobj->list('fusqlfs_table'), [];
+cmp_set $_tobj->list('fusqlfs_table'), [];
 
 =end testing
 =cut

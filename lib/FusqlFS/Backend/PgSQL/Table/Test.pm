@@ -2,10 +2,7 @@ use strict;
 use v5.10.0;
 
 package FusqlFS::Backend::PgSQL::Table::Test;
-use base 'Exporter';
 use FusqlFS::Backend::PgSQL::Test;
-
-our @EXPORT = qw(list_ok);
 
 our $fusqlh;
 
