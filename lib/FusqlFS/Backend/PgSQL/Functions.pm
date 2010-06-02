@@ -57,7 +57,7 @@ sub new
     $self->{get_expr} = $class->expr("SELECT $get_func_res AS result,
                 trim(both from p.prosrc) AS content, l.lanname AS lang,
                 CASE p.provolatile WHEN 'i' THEN 'immutable' WHEN 's' THEN 'stable' WHEN 'v' THEN 'volatile' END AS volatility,
-                CASE WHEN p.proisagg THEN 'aggregate' WHEN p.proiswindow THEN 'window' WHEN p.prorettype = 'pg_catalog.trigger'::pg_catalog.regtype THEN 'trigger' ELSE NULL END AS type
+                CASE WHEN p.proisagg THEN 'aggregate' WHEN p.proiswindow THEN 'window' WHEN p.prorettype = 'pg_catalog.trigger'::pg_catalog.regtype THEN 'trigger' ELSE 'normal' END AS type
             FROM pg_catalog.pg_proc AS p
                 LEFT JOIN pg_catalog.pg_language AS l ON l.oid = p.prolang
             WHERE p.proname = ? AND $get_func_args = ?");
@@ -139,22 +139,23 @@ sub store
 {
     my $self = shift;
     my ($name, $data) = @_;
-    my $struct = $self->load($data->{struct}||{});
-    return unless ref($struct) eq 'HASH';
+    return unless $data;
 
-    my ($contkey) = grep(/^content\./, keys %$data);
-    return unless $contkey;
-
-    my $content = $data->{$contkey};
-    my (undef, $lang) = split /\./, $contkey, 2;
-    return unless $content && $lang;
+    my $struct = $self->validate($data, {
+        struct => {
+            volatility => qr/^(volatile|immutable|stable)$/i,
+            type       => qr/^(window|trigger|normal)$/i,
+            result     => '',
+        },
+        language => ['SCALAR', sub{ $$_ =~ /^(?:\.\.\/){2}languages\/(.+)$/ && $1 }],
+    }, sub{ $_->{content} = $_[0]->{'content.'.$_->{language}}||undef })
+        or return;
 
     my $opts = ' ';
-    $opts .= 'WINDOW ' if defined($struct->{type}) && $struct->{type} eq 'window';
-    $opts .= uc $struct->{volatility} if defined($struct->{volatility})
-        and grep $struct->{volatility} eq $_, qw(volatile immutable stable);
+    $opts .= 'WINDOW ' if $struct->{struct}->{type} eq 'window';
+    $opts .= uc $struct->{struct}->{volatility};
 
-    $self->do($self->{store_expr}, [$name, $struct->{result}, $lang, $content, $opts]);
+    $self->do($self->{store_expr}, [$name, $struct->{struct}->{result}, $struct->{language}, $struct->{content}, $opts]);
 }
 
 =begin testing rename after create
@@ -214,7 +215,7 @@ my $created_func = {
     'language' => \'../../languages/sql',
     'struct' => '---
 result: integer
-type: ~
+type: normal
 volatility: volatile
 ',
     'owner' => $_tobj->{owner},
@@ -225,7 +226,7 @@ my $new_func = {
     'language' => \'../../languages/sql',
     'struct' => '---
 result: integer
-type: ~
+type: normal
 volatility: immutable
 ',
     'owner' => $_tobj->{owner},

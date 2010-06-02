@@ -237,7 +237,125 @@ sub all_row
 sub load
 {
     return $_[1] if ref $_[1];
-    return $instance->{loader}->($_[1]);
+    my $data;
+    eval { $data = $instance->{loader}->($_[1]) };
+    return if $@;
+    return $data;
+}
+
+=item validate
+
+Validates input data against a set of simple rules.
+
+Input: $data, $rule, $overrule.
+Output: $validated_data|undef.
+
+A rule can be:
+
+=over
+
+=item Hashref
+
+The input data must be a hashref, every field in from rule's hash must also
+exist in data hash, rule's hash values are subrules to be matched against
+data's hash values. Hash keys with minus as first char are optional.
+
+If input data is a scalar, it will be parsed with standard loader using
+L</load> method, and validation will fail if C<load()> call is.
+
+=item Scalar
+
+Ref of data value must be equal to this rule's value.
+If undef, data value must be simple scalar.
+
+=item Arrayref
+
+Every element in rule's array is a subrule, data value must match
+against all of the subrules.
+
+=item Coderef
+
+A subroutine referenced by the rule's value is called with data value
+as the first argument, it should return processed data if data is correct
+or undef if data is incorrect.
+
+=item Anything else
+
+Data's value must magically match rule's value (with C<~~> operator).
+
+=back
+
+Optional third argument (C<$overrule>) must be a coderef. It will be called with
+$_ locally set to parsed data and must return boolean value. If this value is
+false, then all data is discarded and validation fails, otherwise everything is
+ok.
+
+=cut
+sub validate
+{
+    my $self = shift;
+    my ($data, $rule, $overrule) = @_;
+    return $data unless defined $rule;
+    my $result;
+
+    my $ref = ref $rule;
+    if ($ref eq 'ARRAY') {
+        $result = $data;
+        foreach my $subrule (@$rule)
+        {
+            $result = $self->validate($result, $subrule);
+            return unless defined $result;
+        }
+    } elsif ($ref eq 'CODE') {
+        local $_ = $data;
+        $result = $rule->();
+    } elsif ($ref eq 'HASH') {
+        $result = {};
+        my $struct = ref $data? $data: $self->load($data);
+        return unless ref $struct eq 'HASH';
+        while (my ($field, $subrule) = each %$rule)
+        {
+            my $opt = $field =~ s/^-//;
+            unless (exists $struct->{$field})
+            {
+                next if $opt;
+                return;
+            }
+            return unless defined($result->{$field} = $self->validate($struct->{$field}, $subrule));
+        }
+    } elsif ($ref eq '') {
+        return unless ref $data eq $rule;
+        $result = $data;
+    } else {
+        return unless $data ~~ $rule;
+        $result = $data;
+    }
+
+    if ($overrule)
+    {
+        local $_ = $result;
+        return unless $overrule->($data);
+    }
+    return $result;
+}
+
+=item set_of
+
+Helper validation function, creates L</validate> rule to check
+if given value is a set with elements from given variants set.
+
+Input: @variants.
+Output: $rule.
+
+=cut
+sub set_of
+{
+    my (undef, @variants) = @_;
+    return sub {
+        return unless ref $_ eq 'ARRAY';
+        my @items = grep $_ ~~ @variants, keys %{{ map { $_ => 1 } @$_ }};
+        return \@items if scalar(@items) > 0;
+    };
 }
 
 sub dump

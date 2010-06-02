@@ -64,10 +64,22 @@ sub store
 {
     my $self = shift;
     my ($name, $data) = @_;
-    $data = $self->load($data->{struct})||{};
+	return unless $data;
+
+    my $struct = $self->validate($data, {
+		struct => {
+			is_cycled    => '',
+			increment_by => qr/^-?\d+$/,
+			cache_value  => qr/^-?\d+$/,
+			last_value   => qr/^-?\d+$/,
+			max_value    => qr/^-?\d+$/,
+			min_value    => qr/^-?\d+$/,,
+		}
+	}) or return;
+	$data = $struct->{struct};
 
     my $sql = "ALTER SEQUENCE \"$name\" ";
-    $sql .= $data->{is_cycled}? 'CYCLE ': 'NO CYCLE ' if exists $data->{is_cycled};
+    $sql .= $data->{is_cycled}? 'CYCLE ': 'NO CYCLE ' if $data->{is_cycled};
 
     my $sth = $self->build($sql, sub{
             my ($a, $b) = @$_;

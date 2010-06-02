@@ -135,7 +135,12 @@ sub store
 {
     my $self = shift;
     my ($table, $name, $data) = @_;
-    $data = $self->load($data);
+    $data = $self->validate($data, {
+		type       => qr//,
+		dimensions => qr/^\d+$/,
+		default    => '',
+		nullable   => '',
+	}) or return;
 
     my $newtype = $data->{'type'};
     $newtype =~ s/(\[\])+$//;

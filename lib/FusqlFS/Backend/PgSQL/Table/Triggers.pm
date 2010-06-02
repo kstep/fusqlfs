@@ -105,9 +105,9 @@ sub new
     $self->{template} = {
         'create.sql' => '---
 events:
-    - insert
-    - update
-    - delete
+  - insert
+  - update
+  - delete
 for_each: row
 when: before
 ',
@@ -200,13 +200,21 @@ sub store
 {
     my $self = shift;
     my ($table, $name, $data) = @_;
-    my $struct = $self->load($data->{struct});
+    return unless $data;
 
-    my $when     = uc($struct->{when});
-    my $for_each = uc($struct->{for_each});
-    my $events   = join ' OR ', map { uc $_ } @{$struct->{events}};
-    my $handler  = ${$data->{handler}};
-    $handler =~ s#^\.\./\.\./\.\./\.\./functions/##;
+    my $struct = $self->validate($data, {
+        struct => {
+            when     => qr/^(before|after)$/i,
+            for_each => qr/^(row|statement)$/i,
+            events   => $self->set_of(qw(insert update delete truncate)),
+        },
+        handler => ['SCALAR', sub{ $$_ =~ /^(?:\.\.\/){4}functions\/(\S+\(.*\))$/ && $1 }]
+    }) or return;
+
+    my $when     = uc($struct->{struct}->{when});
+    my $for_each = uc($struct->{struct}->{for_each});
+    my $events   = join ' OR ', map { uc $_ } @{$struct->{struct}->{events}};
+    my $handler  = $struct->{handler};
 
     $self->drop($table, $name) and $self->do($self->{store_expr}, [$name, $when, $events, $table, $for_each, $handler]);
 }

@@ -213,17 +213,21 @@ sub store
 {
     my $self = shift;
     my ($name, $data) = @_;
-    my $struct = $self->load($data->{struct});
+	return unless $data;
 
-    my $trusted = $struct->{trusted}? 'TRUSTED ': '';
+    my $struct = $self->validate($data, {
+		-validator => ['SCALAR', sub { $$_ =~ /^(?:\.\.\/){2}functions\/(\S+)\(.*\)$/ && $1 }],
+		-handler   => ['SCALAR', sub { $$_ =~ /^(?:\.\.\/){2}functions\/(\S+)\(.*\)$/ && $1 }],
+		struct    => {
+			trusted => '',
+			ispl    => '',
+		}
+	}, sub{ exists $_->{validator} || exists $_->{handler} })
+        or return;
+
+    my $trusted = $struct->{struct}->{trusted}? 'TRUSTED ': '';
     my $sql = "CREATE ${trusted}LANGUAGE $name";
-
-    foreach (qw(handler validator))
-    {
-        next unless $data->{$_};
-        my ($func) = split /\(/, $data->{$_}, 2;
-        $sql .= ' '.uc($_).' '.$func;
-    }
+    $sql .= ' '.uc($_).' '.$struct->{$_} foreach (qw(handler validator));
 
     $self->drop($name) and $self->do($sql);
 }

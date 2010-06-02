@@ -251,6 +251,7 @@ sub store
 {
     my $self = shift;
     my ($name, $data) = @_;
+	return unless $data;
 
     my $olddata = $self->one_row($self->{get_expr}, $name);
     my %contains = map { $_ => 1 } @{$olddata->{contains}};
