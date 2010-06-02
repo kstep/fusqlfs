@@ -8,7 +8,8 @@ our $fusqlh;
 sub dbi_connect
 {
     use DBI;
-    DBI->connect('DBI:Pg:database=postgres', 'postgres', '', { PrintError => 0, PrintWarn => 0 });
+    my $debug = 0;
+    DBI->connect('DBI:Pg:database=postgres', 'postgres', '', { PrintError => $debug, PrintWarn => $debug });
 }
 
 sub set_up
