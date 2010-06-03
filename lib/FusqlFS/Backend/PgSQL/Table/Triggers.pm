@@ -103,7 +103,7 @@ sub new
     $self->{store_expr} = 'CREATE TRIGGER %s %s %s ON %s FOR EACH %s EXECUTE PROCEDURE %s';
 
     $self->{template} = {
-        'create.sql' => '---
+        'struct' => '---
 events:
   - insert
   - update
