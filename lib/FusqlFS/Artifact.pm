@@ -394,11 +394,10 @@ sub concat
 
 sub build
 {
-    my ($self, $sql, $filter, @iter) = @_;
+    my ($self, $sql, $filter, %iter) = @_;
     my (@binds, @bind);
-    foreach (@iter)
+    while (local ($a, $b) = each %iter)
     {
-        local $_ = $_;
         next unless (@bind) = ($filter->());
         $sql .= shift @bind;
         push @binds, [ @bind ] if @bind;
