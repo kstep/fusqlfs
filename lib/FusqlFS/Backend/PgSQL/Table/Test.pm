@@ -15,8 +15,8 @@ sub set_up
     $fusqlh->{subpackages}->{functions}->store('fusqlfs_function()',
         {
             'content.plperl' => 'return;',
-            struct => { result => 'trigger' },
-            language => \'../../languages/sql'
+            struct => { result => 'trigger', type => 'trigger', volatility => 'immutable' },
+            language => \'../../languages/plperl'
         }
     );
 }
