@@ -216,8 +216,8 @@ sub store
 	return unless $data;
 
     my $struct = $self->validate($data, {
-		-validator => ['SCALAR', sub { $$_ =~ /^(?:\.\.\/){2}functions\/(\S+)\(.*\)$/ && $1 }],
-		-handler   => ['SCALAR', sub { $$_ =~ /^(?:\.\.\/){2}functions\/(\S+)\(.*\)$/ && $1 }],
+		-validator => ['SCALAR', sub { $$_ =~ /^\/functions\/(\S+)\(.*\)$/ && $1 }],
+		-handler   => ['SCALAR', sub { $$_ =~ /^\/functions\/(\S+)\(.*\)$/ && $1 }],
 		struct    => {
 			trusted => '',
 			ispl    => '',
@@ -244,8 +244,8 @@ __END__
 
 my $new_lang = {
     owner     => $_tobj->{owner},
-    handler   => \"../../functions/plperl_call_handler()",
-    validator => \"../../functions/plperl_validator(oid)",
+    handler   => \"/functions/plperl_call_handler()",
+    validator => \"/functions/plperl_validator(oid)",
     struct    => '---
 ispl: 1
 trusted: 1

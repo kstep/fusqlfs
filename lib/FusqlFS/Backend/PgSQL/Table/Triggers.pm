@@ -208,7 +208,7 @@ sub store
             for_each => qr/^(row|statement)$/i,
             events   => $self->set_of(qw(insert update delete truncate)),
         },
-        handler => ['SCALAR', sub{ $$_ =~ /^(?:\.\.\/){4}functions\/(\S+\(.*\))$/ && $1 }]
+        handler => ['SCALAR', sub{ $$_ =~ /^\/functions\/(\S+\(.*\))$/ && $1 }]
     }) or return;
 
     my $when     = uc($struct->{struct}->{when});
@@ -251,7 +251,7 @@ __END__
 
 my $new_trigger = {
     'create.sql' => 'CREATE TRIGGER fusqlfs_trigger BEFORE INSERT OR UPDATE ON fusqlfs_table FOR EACH ROW EXECUTE PROCEDURE fusqlfs_function()',
-    handler => \'../../../../functions/fusqlfs_function()',
+    handler => \'/functions/fusqlfs_function()',
     struct => '---
 events:
   - insert

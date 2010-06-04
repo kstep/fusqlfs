@@ -147,7 +147,7 @@ sub store
             type       => qr/^(window|trigger|normal)$/i,
             result     => '',
         },
-        language => ['SCALAR', sub{ $$_ =~ /^(?:\.\.\/){2}languages\/(.+)$/ && $1 }],
+        language => ['SCALAR', sub{ $$_ =~ /^\/languages\/(.+)$/ && $1 }],
     }, sub{ $_->{content} = $_[0]->{'content.'.$_->{language}}||undef })
         or return;
 
@@ -212,7 +212,7 @@ __END__
 
 my $created_func = {
     'content.sql' => 'SELECT 1;',
-    'language' => \'../../languages/sql',
+    'language' => \'/languages/sql',
     'struct' => '---
 result: integer
 type: normal
@@ -223,7 +223,7 @@ volatility: volatile
 
 my $new_func = {
     'content.sql' => 'SELECT $1 | $2;',
-    'language' => \'../../languages/sql',
+    'language' => \'/languages/sql',
     'struct' => '---
 result: integer
 type: normal
