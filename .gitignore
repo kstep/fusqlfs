@@ -14,5 +14,6 @@
 /FusqlFS-*.tar.gz
 /MANIFEST
 /META.yml
+/MYMETA.yml
 /Changelog
 /debian
