@@ -233,9 +233,9 @@ sub symlink
     my $origin = by_path($path);
     return -ENOENT() unless $origin;
 
-    my ($tail) = ($path =~ m{/([^/]+)$});
-    my $entry = $fusqlh->by_path($symlink, \$tail);
-    return -EEXIST() unless $entry->get() == \$tail;
+    $path =~ s{^/}{};
+    my $entry = $fusqlh->by_path($symlink, \$path);
+    return -EEXIST() unless $entry->get() == \$path;
 
     $entry->store();
     clear_cache($symlink, $entry->depth());
