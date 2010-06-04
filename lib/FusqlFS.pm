@@ -199,7 +199,7 @@ sub flush
     return -ENOENT() unless $entry;
 
     flush_inbuffer($path, $entry);
-    clear_cache($path) unless $entry->ispipe();
+    clear_cache($path, $entry->depth()) unless $entry->ispipe();
     return 0;
 }
 
@@ -221,6 +221,7 @@ sub truncate
     return -EACCES() unless $entry->writable();
 
     $entry->write($offset);
+    clear_cache($path, $entry->depth()) unless $entry->ispipe();
     return 0;
 }
 
