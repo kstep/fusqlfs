@@ -54,7 +54,7 @@ our $threaded;
 our %cache;
 our %inbuffer;
 
-our $VERSION = '0.004';
+our $VERSION = '0.0041';
 
 =item init
 
