@@ -91,7 +91,7 @@ sub new
     $self->{drop_expr} = 'DROP LANGUAGE %s';
     $self->{rename_expr} = 'ALTER LANGUAGE %s RENAME TO %s';
 
-    $self->{owner} = FusqlFS::Backend::PgSQL::Role::Owner->new('_L', 2);
+    $self->{owner} = FusqlFS::Backend::PgSQL::Role::Owner->new('_L');
 
     bless $self, $class;
 }

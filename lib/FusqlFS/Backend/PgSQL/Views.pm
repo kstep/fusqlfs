@@ -18,7 +18,7 @@ sub new
     $self->{get_expr} = $class->expr("SELECT definition FROM pg_catalog.pg_views WHERE viewname = ?");
     $self->{list_expr} = $class->expr("SELECT viewname FROM pg_catalog.pg_views WHERE schemaname = 'public'");
 
-    $self->{owner} = new FusqlFS::Backend::PgSQL::Role::Owner('v', 2);
+    $self->{owner} = FusqlFS::Backend::PgSQL::Role::Owner->new('v');
 
     bless $self, $class;
 }

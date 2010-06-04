@@ -23,12 +23,12 @@ sub new
     $self->{get_expr} = $class->expr("SELECT 1 FROM pg_catalog.pg_tables WHERE schemaname = 'public' AND tablename = ?");
 
     $self->{subpackages} = {
-        indices     => new FusqlFS::Backend::PgSQL::Table::Indices(),
-        struct      => new FusqlFS::Backend::PgSQL::Table::Struct(),
-        data        => new FusqlFS::Backend::PgSQL::Table::Data(),
-        constraints => new FusqlFS::Backend::PgSQL::Table::Constraints(),
-        triggers    => new FusqlFS::Backend::PgSQL::Table::Triggers(),
-        owner       => new FusqlFS::Backend::PgSQL::Role::Owner('r', 2),
+        indices     => FusqlFS::Backend::PgSQL::Table::Indices->new(),
+        struct      => FusqlFS::Backend::PgSQL::Table::Struct->new(),
+        data        => FusqlFS::Backend::PgSQL::Table::Data->new(),
+        constraints => FusqlFS::Backend::PgSQL::Table::Constraints->new(),
+        triggers    => FusqlFS::Backend::PgSQL::Table::Triggers->new(),
+        owner       => FusqlFS::Backend::PgSQL::Role::Owner->new('r'),
     };
 
     bless $self, $class;

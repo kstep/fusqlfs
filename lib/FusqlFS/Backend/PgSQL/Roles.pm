@@ -45,7 +45,6 @@ sub new
 {
     my $class = shift;
     my $relkind = shift;
-    my $depth = 0+shift;
 
     my ($kind, $rel) = @{$relkinds{$relkind}};
     my $table = $reltables{$rel};

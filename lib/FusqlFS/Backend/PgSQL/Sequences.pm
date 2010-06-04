@@ -18,7 +18,7 @@ sub new
     $self->{create_expr} = 'CREATE SEQUENCE "%s"';
     $self->{drop_expr} = 'DROP SEQUENCE "%s"';
 
-    $self->{owner} = new FusqlFS::Backend::PgSQL::Role::Owner('S', 2);
+    $self->{owner} = FusqlFS::Backend::PgSQL::Role::Owner->new('S');
 
     bless $self, $class;
 }

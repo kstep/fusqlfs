@@ -67,7 +67,7 @@ sub new
     $self->{drop_expr} = 'DROP FUNCTION %s';
     $self->{store_expr} = 'CREATE OR REPLACE FUNCTION %s RETURNS %s LANGUAGE %s AS $function$ %s $function$ %s';
 
-    $self->{owner} = new FusqlFS::Backend::PgSQL::Role::Owner('_F', 2);
+    $self->{owner} = FusqlFS::Backend::PgSQL::Role::Owner->new('_F');
 
     bless $self, $class;
 }
