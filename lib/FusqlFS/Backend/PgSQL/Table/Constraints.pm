@@ -105,7 +105,7 @@ sub get
             my @herfields = split /,/, $herfields;
             foreach (0..$#myfields)
             {
-                $data->{$myfields[$_]} = \"../../../$table/struct/$herfields[$_]";
+                $data->{$myfields[$_]} = \"tables/$table/struct/$herfields[$_]";
             }
         }
         return $data;

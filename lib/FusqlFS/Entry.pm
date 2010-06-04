@@ -71,7 +71,7 @@ sub new
     }
     my $self = [ $pkg, \@names, $entry, $list, \@tail, undef ];
     bless $self, $class.$subclass;
-    $self->init();
+    $self->init(@path);
     return $self;
 }
 
@@ -201,7 +201,9 @@ sub list { $_[0]->[3] }
 package FusqlFS::Entry::Symlink;
 use parent 'FusqlFS::Entry';
 
-sub size { length ${$_[0]->[2]} }
+sub init { $_[0]->[3] = ('../' x (scalar(@_)-2)).${$_[0]->[2]} }
+sub read { $_[0]->[3] }
+sub size { length $_[0]->[3] }
 sub islink { 1 }
 
 1;

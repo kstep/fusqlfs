@@ -136,7 +136,7 @@ sub store
     my $self = shift;
     my ($table, $name, $data) = @_;
     $data = $self->validate($data, {
-		type       => qr//,
+		type       => '',
 		dimensions => qr/^\d+$/,
 		default    => '',
 		nullable   => '',

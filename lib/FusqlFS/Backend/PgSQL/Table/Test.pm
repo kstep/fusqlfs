@@ -16,7 +16,7 @@ sub set_up
         {
             'content.plperl' => 'return;',
             struct => { result => 'trigger', type => 'trigger', volatility => 'immutable' },
-            language => \'/languages/plperl'
+            language => \'languages/plperl'
         }
     );
 }

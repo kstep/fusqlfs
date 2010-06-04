@@ -396,9 +396,9 @@ sub build
 {
     my ($self, $sql, $filter, %iter) = @_;
     my (@binds, @bind);
-    while (local ($a, $b) = each %iter)
+    while (my ($field, $value) = each %iter)
     {
-        next unless (@bind) = ($filter->());
+        next unless (@bind) = ($filter->($field, $value));
         $sql .= shift @bind;
         push @binds, [ @bind ] if @bind;
     }

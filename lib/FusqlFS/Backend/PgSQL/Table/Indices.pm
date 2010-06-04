@@ -33,7 +33,7 @@ is_deeply $_tobj->get('fusqlfs_table', 'fusqlfs_table_pkey'), {
     '.primary' => 1,
     '.unique'  => 1,
     '.order'   => [ 'id' ],
-    'id'       => \'../../struct/id',
+    'id'       => \'tables/fusqlfs_table/struct/id',
     'create.sql' => 'CREATE UNIQUE INDEX fusqlfs_table_pkey ON fusqlfs_table USING btree (id)',
 };
 is $_tobj->get('fusqlfs_table', 'fusqlfs_index'), undef;
@@ -53,7 +53,7 @@ sub get
         {
             my @fields = @{FusqlFS::Backend::PgSQL::Table::Struct->new()->list($table)};
             $result->{'.order'} = [ map { $fields[$_-1] } split / /, $result->{'.order'} ];
-            $result->{$_} = \"../../struct/$_" foreach @{$result->{'.order'}};
+            $result->{$_} = \"tables/$table/struct/$_" foreach @{$result->{'.order'}};
         }
         delete $result->{'.unique'} unless $result->{'.unique'};
         delete $result->{'.primary'} unless $result->{'.primary'};
@@ -163,7 +163,7 @@ __END__
 
 #!class FusqlFS::Backend::PgSQL::Table::Test
 
-my $new_index = { 'id' => \'../../struct/id', '.order' => [ 'id' ], '.unique' => 1,
+my $new_index = { 'id' => \'tables/fusqlfs_table/struct/id', '.order' => [ 'id' ], '.unique' => 1,
     'create.sql' => 'CREATE UNIQUE INDEX fusqlfs_index ON fusqlfs_table USING btree (id)' };
 
 =end testing

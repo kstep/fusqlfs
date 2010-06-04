@@ -53,7 +53,6 @@ sub new
 
     my $self = {};
 
-    $self->{depth} = '../' x $depth;
     $self->{get_expr} = $class->expr("SELECT pg_catalog.pg_get_userbyid(${rel}owner) FROM pg_catalog.$table WHERE ${rel}name = ? $kindclause");
     $self->{store_expr} = "ALTER ${kind} \"%s\" OWNER TO \"%s\"";
 
@@ -66,7 +65,7 @@ sub get
     my $name = pop;
     $name = $1 if $name =~ /^([a-zA-Z0-9_]+)/;
     my $owner = $self->all_col($self->{get_expr}, $name);
-    return \"$self->{depth}roles/$owner->[0]" if $owner;
+    return \"roles/$owner->[0]" if $owner;
 }
 
 sub store
@@ -75,7 +74,7 @@ sub store
     my $data = pop;
     my $name = pop;
     $data = $$data if ref $data eq 'SCALAR';
-    return if ref $data || $data !~ m#^$self->{depth}roles/([^/]+)$#;
+    return if ref $data || $data !~ m#^roles/([^/]+)$#;
     $self->do($self->{store_expr}, [$name, $1]);
 }
 
@@ -106,7 +105,7 @@ inherit: 0
 superuser: 1
 valid_until: '2010-01-01 00:00:00+02'
 },
-    postgres => \"../postgres",
+    postgres => \"roles/postgres",
 };
 
 =end testing
@@ -161,7 +160,7 @@ sub get
     my $data = $self->one_row($self->{get_expr}, $name);
     return unless $data;
 
-    my $result = { map { $_ => \"../$_" } @{delete($data->{contains})} };
+    my $result = { map { $_ => \"roles/$_" } @{delete($data->{contains})} };
 
     $result->{struct} = $self->dump($data);
     return $result;
@@ -264,6 +263,7 @@ sub store
     $data = $self->load($data->{struct})||{};
 
     my $sth = $self->build("ALTER ROLE \"$name\" ", sub{
+            my ($a, $b) = @_;
             if (ref $b)
             {
                 return unless $data->{$a};

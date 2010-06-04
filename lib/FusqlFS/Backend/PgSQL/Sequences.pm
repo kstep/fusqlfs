@@ -82,6 +82,7 @@ sub store
     $sql .= $data->{is_cycled}? 'CYCLE ': 'NO CYCLE ' if $data->{is_cycled};
 
     my $sth = $self->build($sql, sub{
+            my ($a, $b) = @_;
             return unless exists $data->{$a};
             if (!defined $data->{$a})
             {

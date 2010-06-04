@@ -104,7 +104,7 @@ is $_tobj->get('xxxxxx'), undef;
 my $data = $_tobj->get('internal');
 is_deeply $data, {
     owner => $_tobj->{owner},
-    validator => \"../../functions/fmgr_internal_validator(oid)",
+    validator => \"functions/fmgr_internal_validator(oid)",
     struct => '---
 ispl: 0
 trusted: 0
@@ -121,8 +121,8 @@ sub get
     return unless $data;
 
     my $result = {};
-    $result->{handler}   = \"../../functions/$data->{handler}"   if $data->{handler};
-    $result->{validator} = \"../../functions/$data->{validator}" if $data->{validator};
+    $result->{handler}   = \"functions/$data->{handler}"   if $data->{handler};
+    $result->{validator} = \"functions/$data->{validator}" if $data->{validator};
     delete $data->{handler};
     delete $data->{validator};
 
@@ -216,8 +216,8 @@ sub store
 	return unless $data;
 
     my $struct = $self->validate($data, {
-		-validator => ['SCALAR', sub { $$_ =~ /^\/functions\/(\S+)\(.*\)$/ && $1 }],
-		-handler   => ['SCALAR', sub { $$_ =~ /^\/functions\/(\S+)\(.*\)$/ && $1 }],
+		-validator => ['SCALAR', sub { $$_ =~ /^functions\/(\S+)\(.*\)$/ && $1 }],
+		-handler   => ['SCALAR', sub { $$_ =~ /^functions\/(\S+)\(.*\)$/ && $1 }],
 		struct    => {
 			trusted => '',
 			ispl    => '',
@@ -244,8 +244,8 @@ __END__
 
 my $new_lang = {
     owner     => $_tobj->{owner},
-    handler   => \"/functions/plperl_call_handler()",
-    validator => \"/functions/plperl_validator(oid)",
+    handler   => \"functions/plperl_call_handler()",
+    validator => \"functions/plperl_validator(oid)",
     struct    => '---
 ispl: 1
 trusted: 1

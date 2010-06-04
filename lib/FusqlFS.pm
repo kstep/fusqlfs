@@ -165,7 +165,7 @@ sub readlink
     my $entry = by_path($path);
     return -ENOENT() unless $entry;
     return -EINVAL() unless $entry->islink();
-    return ${$entry->get()};
+    return $entry->read();
 }
 
 sub read
