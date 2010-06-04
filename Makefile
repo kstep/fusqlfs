@@ -58,7 +58,7 @@ clean:
 
 realclean distclean:
 	test ! -e Build || ./Build $@
-	rm -f META.yml MANIFEST Changelog
+	rm -f MYMETA.yml META.yml MANIFEST Changelog
 
 debianclean:
 	rm -rf debian
