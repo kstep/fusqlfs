@@ -56,3 +56,4 @@
 ^doc.*
 ^debian
 \.log$
+^MYMETA.yml$
