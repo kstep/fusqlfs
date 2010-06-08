@@ -17,7 +17,7 @@ FusqlFS::Artifact - basic abstract class to represent database artifact in Fusql
         my $class = shift;
         my $self = {};
 
-        // initialize Tables specific resources
+        # initialize Tables specific resources
 
         bless $self, $class;
     }
@@ -34,6 +34,34 @@ FusqlFS::Artifact - basic abstract class to represent database artifact in Fusql
         my $self = shift;
         my ($table) = @_;
         return $self->all_col("SELECT id FROM %s %s", [$table, $self->limit]);
+    }
+
+    sub store
+    {
+        my $self = shift;
+        my ($table, $data) = @_;
+        my $row = $self->validate($data, {
+                id    => qr/^\d+$/,
+                -func => '',
+            }) or return;
+
+        my $func = $row->{func}? $row->{func}.'(?)': '?';
+        my $sth = $self->build("UPDATE $table SET ", sub{
+            my ($k, $v) = @_;
+            return " WHERE " unless $k;
+            return " $k = $func ", $row->{$k}, $v;
+        }, %{$self->get_table_fields($table)},
+           '' => '',
+           id => SQL_INTEGER);
+
+        $sth->execute();
+    }
+
+    sub get_table_fields
+    {
+        my $self = shift;
+        my ($table) = @_;
+        # fetches and returns field name => type hashref.
     }
 
 =head1 DESCRIPTION
@@ -54,13 +82,11 @@ For more examples see childrens of this class.
 
 =head1 METHODS
 
-=over
-
 =cut
 
 our $instance;
 
-=item Basic interface methods
+=head2 Abstract interface methods
 
 =begin testing Artifact
 
@@ -180,6 +206,71 @@ sub drop { return 1 }
 sub create { return 1 }
 sub store { return 1 }
 
+=head2 DBI interface methods
+
+=over
+
+=item dbh
+
+Returns underlayed DBI handler.
+
+Output: $dbh.
+
+=item expr, cexpr
+
+Prepare expression with $dbh->prepare() or $dbh->prepare_cached().
+
+Input: $sql, @sprintf.
+Output: $sth.
+
+If C<@sprintf> is not empty, C<$sql> must be a scalar string with
+L<printf|perlfunc/sprintf FORMAT, LIST >-compatible placeholders, and
+C<sprintf()> will be called to populate this string with values from
+C<@sprintf> array.
+
+The difference between C<expr> and C<cexpr> is the first calls L<DBI/prepare>
+and the second calls L<DBI/prepare_cached>.
+
+=item do, cdo
+
+Prepare and execute expression just like L<DBI/do>.
+
+Input: $sth, @binds or $sql, $sprintf, @binds.
+Output: $result.
+
+Both of them can take either SQL statement as a scalar string or prepared DBI
+statement in place of first argument.
+
+If the first argument is a scalar string, the second argument can be arrayref,
+and if it is, the string must be L<printf|perlfunc/sprintf EXPR, LIST >-compatible
+format string and C<sprintf()> will be used to populate SQL statement with
+values from second argument just like with L<expr|/expr, cexpr>.
+
+C<do> just calls L<DBI/do> and returns success value returned with it,
+while C<cdo> calls L<DBI/prepare_cached> and returns this prepared statement
+in case it was successfully executed, undef otherwise.
+
+=item one_row, all_col, all_row
+
+Executes given statement and returns well formatted result.
+
+Input: $sth, @binds or $sql, $sprintf, @binds.
+Output: $result.
+
+Basicly these methods accept the same arguments (and process them the same way)
+as L<do|/do, cdo>, but return results in format better suited for immediate
+usage.
+
+C<one_row> returns the first row as hashref with field names as keys and field
+values as values. C<all_col> returns arrayref composed from first field values
+from all result rows. C<all_row> returns arrayref composed from hashrefs, where
+each hashref represents data row with field names as keys and field values as
+values.
+
+=back
+
+=cut
+
 sub dbh
 {
     $instance->{dbh};
@@ -234,6 +325,28 @@ sub all_row
     return $instance->{dbh}->selectall_arrayref($sql, { Slice => {} }, @binds);
 }
 
+=head2 Data manipulation methods
+
+=over
+
+=item load
+
+Parses input data in configured string format (e.g. YAML, JSON or XML) and
+returns perl structure (hashref or arrayref).
+
+Input: $string_data.
+Output: $parsed_data.
+
+Uses configured parser to deserialize plain string and produce perl structure
+(usually a hashref). In case of parsing failure returns undef.
+
+If C<$string_data> is not a plain string, this method returns this value
+intact, so you can call this method on input data any number of times just to
+make sure they are correct perl structure, not a serialized data.
+
+It is opposite of L</dump>.
+
+=cut
 sub load
 {
     return $_[1] if ref $_[1];
@@ -358,40 +471,104 @@ sub set_of
     };
 }
 
+=item dump
+
+Convert perl structure into string of configured format (e.g. YAML, JSON or
+XML).
+
+Input: $data.
+Output: $string.
+
+Uses configured dumper to serialize perl structure into plain scalar string.
+
+It is opposite of L</load>.
+
+=cut
 sub dump
 {
     return $instance->{dumper}->($_[1]) if $_[1];
     return;
 }
 
-sub limit
-{
-    my $limit = $instance->{limit};
-    return $limit? "LIMIT $limit": '';
-}
+=item asplit
 
-sub fnsep
-{
-    return $instance->{fnsep};
-}
+Splits string using configured split character.
 
+Input: $string.
+Output: @chunks.
+
+It is opposite of L</ajoin>.
+
+=cut
 sub asplit
 {
     return split $instance->{fnsplit}, $_[1];
 }
 
+=item ajoin
+
+Joins chunks with configured split character as a glue.
+
+Input: @chunks.
+Output: $string.
+
+It is opposite of L</asplit>.
+
+=cut
 sub ajoin
 {
     shift @_;
     return join $instance->{fnsep}, @_;
 }
 
+=item concat
+
+Produces SQL statement to join given data chunks with configured split
+character as a glue.
+
+Input: @chunks.
+Output: $sql_clause.
+
+It is opposite of L</asplit> (in some sense).
+
+=cut
 sub concat
 {
     shift @_;
     return '"' . join("\" || '$instance->{fnsep}' || \"", @_) . '"';
 }
 
+=item build
+
+Builds SQL statement step by step from given configuration data chunks,
+prepares and binds it afterwards.
+
+Input: $sql, $filter, %iter.
+Output: $sth.
+
+C<$filter> must be a coderef, C<$sql> is a initial SQL statement value to build
+upon and C<%iter> is a series of key-value pairs (normally meant to be field
+value => build config pairs, but it is not carved in stone).
+
+For every key-value pair in C<%iter> C<$filter-E<gt>($key, $value)> is called in
+list context. It must return the next chunk of SQL which will be added to
+resulting SQL statement and an optional bind value to be associated with this
+SQL chunk. This bind value must be either a single bind value or a bind value
+and a configaration parameter for L<DBI/bind_param> (i.e. third argument).
+If C<$filter> returns empty list (or undef, which is the same for list context)
+the iteration is silently skipped and the next pair from C<%iter> is taken.
+
+When C<%iter> is depleted, constructed SQL statement is prepared, all gathered
+bind values are bound to it using C<bind_param()> and the resulting statement
+handler is returned.
+
+So you can use this method to construct complex SQL statements using table
+driven SQL statements construction, producing finely tuned binds with correctly
+typed bind values.
+
+=back
+
+=cut
 sub build
 {
     my ($self, $sql, $filter, %iter) = @_;
@@ -406,6 +583,39 @@ sub build
     $sql->bind_param($_+1, @{$binds[$_]}) foreach (0..$#binds);
     return $sql;
 }
+
+=head2 Configuration methods
+
+=over
+
+=item limit
+
+Returns configured C<LIMIT ...> clause or empty string if it's not configured.
+
+Output: $limit_clause.
+
+This method can be used to compose C<SELECT ...> statements according to
+configured limit option.
+
+=cut
+sub limit
+{
+    my $limit = $instance->{limit};
+    return $limit? "LIMIT $limit": '';
+}
+
+=item fnsep
+
+Returns configured split character.
+
+Output: $fnsep.
+
+=cut
+sub fnsep
+{
+    return $instance->{fnsep};
+}
+
 
 1;
 
