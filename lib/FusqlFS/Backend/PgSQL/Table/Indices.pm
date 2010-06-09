@@ -72,7 +72,7 @@ sub list
     my $self = shift;
     my ($table) = @_;
     my @list = @{$self->SUPER::list($table)};
-    return [ (@{$self->all_col($self->{list_expr}, $table)}, @list) ] || \@list;
+    return [ (@{$self->all_col($self->{list_expr}, $table)}, @list) ];
 }
 
 =begin testing drop after rename
