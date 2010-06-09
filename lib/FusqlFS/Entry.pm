@@ -174,8 +174,8 @@ sub new
         {
             @tail = ();
             $pkg = $entry;
-            $entry = $pkg->get(@names, $p);
             push @names, $p;
+            $entry = $pkg->get(@names);
         }
         elsif (my $ref = ref $entry)
         {
