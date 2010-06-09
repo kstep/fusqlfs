@@ -301,6 +301,29 @@ sub get
     return $self->{create_cache}->{$table}->{$name}||undef;
 }
 
+=item store
+
+Updates creation cache under given name with new data.
+
+Input: $table, $name, $data.
+Output: $success.
+
+This method stores new data in creation cache under given name and returns true
+on success or undef on failure (which should never happen).
+
+You should use this method in your own C<store> method in this class's subclass
+to update creation cache item if there were not enough data to create the
+object in database immediately.
+
+=cut
+sub store
+{
+    my $self = shift;
+    my ($table, $name, $data) = @_;
+    $self->{create_cache}->{$table} ||= {};
+    $self->{create_cache}->{$table}->{$name} = $data;
+}
+
 1;
 
 __END__
