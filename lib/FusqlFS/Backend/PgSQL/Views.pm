@@ -3,6 +3,48 @@ use v5.10.0;
 
 package FusqlFS::Backend::PgSQL::Views;
 use parent 'FusqlFS::Artifact';
+
+=head1 NAME
+
+FusqlFS::Backend::PgSQL::Views - FusqlFS PostgreSQL database views interface
+
+=head1 SYNOPSIS
+
+    use FusqlFS::Backend::PgSQL::Views;
+
+    my $views = FusqlFS::Backend::PgSQL::Views->new();
+    my $list = $views->list();
+    $views->create('aview');
+    $views->store('aview', { 'content.sql' => 'SELECT * FROM sometable' });
+    my $view = $views->get('aview');
+
+=head1 DESCRIPTION
+
+This is FusqlFS an interface to PostgreSQL database views. This class is not
+to be used by itself.
+
+See L<FusqlFS::Artifact> for description of interface methods,
+L<FusqlFS::Backend> to learn more on backend initialization and
+L<FusqlFS::Backend::Base> for more info on database backends writing.
+
+=head1 EXPOSED STRUCTURE
+
+=over
+
+=item F<./content.sql>
+
+Plain file with C<SELECT ...> SQL statement used to construct query in it. Can
+be written to redefine view.
+
+=item F<./owner>
+
+Symlink to view's owner in F<../../roles>.
+
+=back
+
+=cut
+
+
 use FusqlFS::Backend::PgSQL::Roles;
 
 sub new

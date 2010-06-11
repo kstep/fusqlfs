@@ -3,6 +3,43 @@ use v5.10.0;
 
 package FusqlFS::Backend::PgSQL::Sequences;
 use parent 'FusqlFS::Artifact';
+
+=head1 NAME
+
+FusqlFS::Backend::PgSQL::Roles - FusqlFS PostgreSQL database sequences interface
+
+=head1 SYNOPSIS
+
+    use FusqlFS::Backend::PgSQL::Sequences;
+
+    my $seqs = FusqlFS::Backend::PgSQL::Sequences->new();
+
+=head1 DESCRIPTION
+
+This is FusqlFS an interface to PostgreSQL database sequences. This class is
+not to be used by itself.
+
+See L<FusqlFS::Artifact> for description of interface methods,
+L<FusqlFS::Backend> to learn more on backend initialization and
+L<FusqlFS::Backend::Base> for more info on database backends writing.
+
+=head1 EXPOSED STRUCTURE
+
+=over
+
+=item F<./struct>
+
+Additional sequence info. To learn more about these fields see PostgreSQL
+documentation about C<CREATE SEQUENCE>.
+
+=item F<./owner>
+
+Symlink to sequence's owner in F<../../roles>.
+
+=back
+
+=cut
+
 use FusqlFS::Backend::PgSQL::Roles;
 use DBI qw(:sql_types);
 

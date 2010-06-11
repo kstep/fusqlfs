@@ -4,6 +4,50 @@ use v5.10.0;
 package FusqlFS::Backend::PgSQL::Functions;
 use parent 'FusqlFS::Artifact';
 
+=head1 NAME
+
+FusqlFS::Backend::PgSQL::Functions - FusqlFS PostgreSQL database functions
+(a.k.a. stored procedures) interface
+
+=head1 SYNOPSIS
+
+    use FusqlFS::Backend::PgSQL::Functions;
+
+    my $funcs = FusqlFS::Backend::PgSQL::Functions->new();
+
+=head1 DESCRIPTION
+
+This is FusqlFS an interface to PostgreSQL database functions (or stored
+procedures as they are called in "big DBMS world"). This class is not to be
+used by itself.
+
+See L<FusqlFS::Artifact> for description of interface methods,
+L<FusqlFS::Backend> to learn more on backend initialization and
+L<FusqlFS::Backend::Base> for more info on database backends writing.
+
+=head1 EXPOSED STRUCTURE
+
+=over
+
+=item F<./language>
+
+Symlink to language used to write this function in F<../../languages>.
+See L<FusqlFS::Backend::PgSQL::Languages> for details.
+
+=item F<./content.*>
+
+This file have suffix equal to language name used to write this function and
+contains this function's body. You can edit it in order to change function's
+definition.
+
+=item F<./owner>
+
+Symlink to sequence's owner in F<../../roles>.
+
+=back
+
+=cut
+
 use FusqlFS::Backend::PgSQL::Roles;
 
 sub new

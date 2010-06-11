@@ -31,8 +31,33 @@ See L<FusqlFS::Artifact> for description of interface methods,
 L<FusqlFS::Backend> to learn more on backend initialization and
 L<FusqlFS::Backend::Base> for more info on database backends writing.
 
-=cut
+=head1 EXPOSED STRUCTURE
 
+=over
+
+=item F<./indices>
+
+Table's indices, see L<FusqlFS::Backend::PgSQL::Table::Indices> for details.
+
+=item F<./struct>
+
+Table's structure, see L<FusqlFS::Backend::PgSQL::Table::Struct> for details.
+
+=item F<./constraints>
+
+Table's constraints, see L<FusqlFS::Backend::PgSQL::Table::Constraints> for details.
+
+=item F<./triggers>
+
+Table's triggers, see L<FusqlFS::Backend::PgSQL::Table::Triggers> for details.
+
+=item F<./owner>
+
+Symlink to table's owner role in F<../../roles>.
+
+=back
+
+=cut
 
 use FusqlFS::Backend::PgSQL::Roles;
 use FusqlFS::Backend::PgSQL::Table::Indices;
