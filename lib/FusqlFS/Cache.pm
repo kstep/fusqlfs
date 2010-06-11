@@ -2,6 +2,47 @@ use strict;
 use v5.10.0;
 
 package FusqlFS::Cache;
+
+=head1 NAME
+
+FusqlFS::Cache - main FusqlFS cache factory
+
+=head1 SYNOPSIS
+
+    use FusqlFS::Cache;
+
+    our %cache;
+    my $cache = FusqlFS::Cache->init(\%cache, 'limited', 10);
+    # tied(%cache) == $cache
+
+=head1 DESCRIPTION
+
+This is a cache subsystem initialization class. It is an abstract factory
+class, just like L<FusqlFS::Backend>, and thus it can't be instantiated
+directly.
+
+Its single method C<init()> accepts hashref as first argument, cache strategy
+as second argument and cache threshold as third argument, and returns
+L<FusqlFS::Cache::Base> subclass instance or undef, if cache is done directly
+in memory without any complex cache logic layers.
+
+FusqlFS cache is actually a simple hash, so all cache strategies are
+implemented as hash tie()-able classes. See L<FusqlFS::Cache::Base> and its
+subclasses on details of cache strategies implementation.
+
+All this concrete class does (with its single C<init()> method) is just
+verifies cache threshold, recognizes cache strategy by name and tie()s cache
+hash given by hashref to cache class corresponding chosen cache strategy.
+
+Special `memory' strategy means cache is done directly in memory and thus no
+tie()ing is needed, and so C<init()> returns undef as no tied class is
+instantiated. This strategy is also chosen in case of any errors, so if cache
+strategy is not defined or not recognized or cache threshold have no sense for
+chosen cache strategy, `memory' strategy is chosen, debug message is displayed
+and undef is returned, leaving cache hash untied.
+
+=cut
+
 use Carp;
 
 use FusqlFS::Cache::Limited;
