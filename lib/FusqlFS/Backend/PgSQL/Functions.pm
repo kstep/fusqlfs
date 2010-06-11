@@ -28,7 +28,7 @@ sub new
         END ||
         CASE
           WHEN COALESCE(p.proargnames[s.i], \'\') = \'\' THEN \'\'
-          ELSE p.proargnames[s.i] || \' \' 
+          ELSE p.proargnames[s.i] || \' \'
         END ||
         pg_catalog.format_type(p.proallargtypes[s.i], NULL)
       FROM

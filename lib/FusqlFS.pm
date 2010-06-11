@@ -143,7 +143,7 @@ See L<Fuse> for details.
 =cut
 sub getdir
 {
-    
+
     my ($path) = @_;
     my $entry = by_path($path);
     return -ENOENT() unless $entry;

@@ -325,7 +325,7 @@ by C<FusqlFS::Artifact>, so it is necessary to get whole structure from
 entry's package, modify it in necessary place and store it back with
 L<FusqlFS::Artifact/store> method call.
 
-And that's what this method does. 
+And that's what this method does.
 
 It returns true if such complex modification/storage process is required and done,
 undef if otherwise.
@@ -485,7 +485,7 @@ sub isfile { 1 }
 sub size { length $_[0]->[2] }
 sub get { $_[0]->[3] }
 sub read { substr($_[0]->[2], $_[1], $_[2]) }
-sub write { $_[0]->[2] = $_[0]->[3]->($_[2]); } 
+sub write { $_[0]->[2] = $_[0]->[3]->($_[2]); }
 
 1;
 

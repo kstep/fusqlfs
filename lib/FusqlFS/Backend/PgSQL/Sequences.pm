@@ -145,7 +145,7 @@ min_value: 1
 sequence_name: fusqlfs_sequence
 start_value: 1
 }, owner => $_tobj->{owner} };
-is_deeply $_tobj->list(), [ 'fusqlfs_sequence' ]; 
+is_deeply $_tobj->list(), [ 'fusqlfs_sequence' ];
 
 =end testing
 =cut

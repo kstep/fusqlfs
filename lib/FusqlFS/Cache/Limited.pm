@@ -147,7 +147,7 @@ sub cleanup
     #carp "cleanup: remove $del_num out from $self->[2], threshold is $self->[3]";
     #$self->[5]++;
     my @keys = sort { $self->[1]->{$a} <=> $self->[1]->{$b} } keys %{$self->[1]};
- 
+
     #carp "top 10 least used keys: ", join(", ", @keys[0..9]);
     #carp "top 10 least counts: ", join(", ", @{$self->[1]}{@keys[0..9]});
     #carp "top 10 most used keys: ", join(", ", @keys[-10..-1]);

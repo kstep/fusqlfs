@@ -111,10 +111,10 @@ sub new
 {
     my $class = shift;
     my $self = {};
-    
+
     $self->{create_cache} = {};
     $self->{template} = {};
-    
+
     bless $self, $class;
 }
 
