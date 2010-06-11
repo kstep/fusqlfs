@@ -4,6 +4,36 @@ use v5.10.0;
 package FusqlFS::Backend::PgSQL::Tables;
 use parent 'FusqlFS::Artifact';
 
+=head1 NAME
+
+FusqlFS::Backend::PgSQL::Tables - FusqlFS PostgreSQL database tables interface
+
+=head1 SYNOPSIS
+
+    use FusqlFS::Backend::PgSQL::Tables;
+
+    my $tables = FusqlFS::Backend::PgSQL::Tables->new();
+    my $list = $tables->list();
+    $tables->create('sometable');
+    my $table = $tables->get('sometable');
+    $tables->drop('sometable');
+
+=head1 DESCRIPTION
+
+This is FusqlFS an interface to PostgreSQL database tables. This class is not
+to be used by itself.
+
+This class provides a view of a set of different table's artifacts like
+indices, struct (fields description), data rows/records, constraints, triggers
+etc.
+
+See L<FusqlFS::Artifact> for description of interface methods,
+L<FusqlFS::Backend> to learn more on backend initialization and
+L<FusqlFS::Backend::Base> for more info on database backends writing.
+
+=cut
+
+
 use FusqlFS::Backend::PgSQL::Roles;
 use FusqlFS::Backend::PgSQL::Table::Indices;
 use FusqlFS::Backend::PgSQL::Table::Struct;
