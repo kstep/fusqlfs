@@ -3,6 +3,66 @@ use v5.10.0;
 
 package FusqlFS::Cache::File;
 use parent 'FusqlFS::Cache::Base';
+
+=head1 NAME
+
+FusqlFS::Cache::File - FusqlFS file backed cache strategy implementation
+
+=head1 SYNOPSIS
+
+    use FusqlFS::Cache::File;
+
+    our %cache;
+    tie %cache, 'FusqlFS::Cache::File', 2048;
+
+=head1 DESCRIPTION
+
+This is file backed cache strategy implementation. This class is not to be used
+directly.
+
+This cache strategy accepts single `threshold' parameter which must be an
+integer greater than zero and determines minimum file system entry size to be
+stored in file.
+
+The idea behind this cache strategy is simple: it stores file records with size
+greater than given threshold in real files on disk. This cache method processes
+simple plain files and pseudopipes only, directories and symlinks are always
+stored in memory, which is not that bad as they are usually quite small in
+comparison to plain files and psuedopipes output cache.
+
+Disk cache is situated in F</tmp/fusqlfs-$PID.cache>, where C<$PID> is
+substituted with current fusqlfs daemon's pid. This directory should be removed
+after fusqlfs is unmounted, if it doesn't, you can remove it by yourself and
+report me a bug (unless daemon was finished in some unusual way like power
+failure, system crash or C<kill -9>, as it had not any way to cleanup its
+garbage in such a case).
+
+This cache strategy is good if you are going to mount database with a lot
+number of records with large blob or text fields in it, as it focuses on per
+records cache optimization. If you need to keep memory usage low and have a
+database with a really lot number of quite small records you can consider using
+L<FusqlFS::Cache::Limited> strategy instead.
+
+=head1 SEE ALSO
+
+=over
+
+=item *
+
+L<FusqlFS::Cache> and L<FusqlFS::Cache::Base> about FusqlFS cache strategies.
+
+=item *
+
+L<FusqlFS::Entry> for file system entry structure description.
+
+=item *
+
+L<perltie> about object tie()ing in perl.
+
+=back
+
+=cut
+
 use Carp;
 
 =begin testing
@@ -179,6 +239,29 @@ sub cachefile
 1;
 
 package FusqlFS::Cache::File::Record;
+
+=head1 NAME
+
+FusqlFS::Cache::File::Record - file cache strategy backend class
+
+=head1 SYNOPSIS
+
+    use FusqlFS::Cache::File::Record;
+
+    my $value;
+    tie $value, 'FusqlFS::Cache::File::Record', '/tmp/value-storage.tmp';
+
+=head1 DESCRIPTION
+
+This class is scalar tie()-able class, which stores tied scalar in a file on
+disk. This is a backend class for L<FusqlFS::Cache::File> used to store single
+entry value in a file. This class is not to be used by itself.
+
+Please see L<FusqlFS::Cache::File> for full description about `file' cache
+strategy and everything related to it.
+
+=cut
+
 use Carp;
 
 =begin testing

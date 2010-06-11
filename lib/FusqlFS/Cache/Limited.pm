@@ -4,6 +4,71 @@ use v5.10.0;
 package FusqlFS::Cache::Limited;
 use parent 'FusqlFS::Cache::Base';
 
+=head1 NAME
+
+FusqlFS::Cache::Limited - FusqlFS limited cache strategy implementation
+
+=head1 SYNOPSIS
+
+    use FusqlFS::Cache::Limited;
+
+    our %cache;
+    tie %cache, 'FusqlFS::Cache::Limited', 10000;
+
+=head1 DESCRIPTION
+
+This is a limited by items number cache strategy implementation. This class is
+not to be used directly.
+
+This cache strategy accepts single `threshold' parameter which must be integer
+greater than zero and determines maximum number of items to be stored in cache.
+
+This cache strategy tries to keep memory usage low enough by limiting number of
+cache items. If on cache write number of items in cache exceeds given
+threshold, cache cleanup is forced, striving to decrease cached items number
+down to threshold plus 1/8 of total current number of items. So number of cache
+items varies between I<(7/8)*threshold> and I<threshold> in fact. It does
+cleanup this way to avoid cleanup situations appearance too often.
+
+The cleanup process chooses items to remove quite cleverly: this class keeps
+items usage statistics and cleanup process uses this statistics to remove least
+used items first. It makes cleanup and cache hit try processes a little slower,
+but speeds up cache performance in whole, as resulting hit/miss ratio is
+better, than in case of naive cleanup algorithm.
+
+This cache strategy is good if you are going to mount database with a lot
+number of records and you have memory issues because of this, as it focuses on
+keeping overall number of cached items low enough. If you need to mount
+database with moderate number of large records, like records with huge blob or
+text fields, you might consider using L<FusqlFS::Cache::File> strategy.
+
+I also recommend setting threshold for this cache strategy to at least 3/4 of
+total objects in your database (including all tables, sequences, views, data
+rows etc.), which will bring you about 60% cache hits (~45% for 1/2 and ~56%
+for 2/3). But this is just a basic recommendation based on educated guess and
+some tests with "entry" names generated with normally distributed random
+generator. Experiment is your best advisor in this case.
+
+=head1 SEE ALSO
+
+=over
+
+=item *
+
+L<FusqlFS::Cache> and L<FusqlFS::Cache::Base> about FusqlFS cache strategies.
+
+=item *
+
+L<FusqlFS::Entry> for file system entry structure description.
+
+=item *
+
+L<perltie> about object tie()ing in perl.
+
+=back
+
+=cut
+
 =begin testing
 
 #!noinst

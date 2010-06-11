@@ -73,7 +73,7 @@ File name fields separator, used to compose filenames out from multi-field
 primary keys. If you have table with primary key like (obj_id, name), every
 record in DB will be visible as a file with its name composed of this two
 fields (like "12.odrie", "43.nanny" etc.) This option's value is used as a
-separator to glue field values togather. Defaults to single dot (.). You may
+separator to glue field values together. Defaults to single dot (.). You may
 wish to change it if you have table with text fields in primary key with a dot
 in them.
 
@@ -106,14 +106,15 @@ memory in case of big databases,
 
 =item limited
 
-like memory, but number of stored elements is limited to some
-defined value, and cache is cleared down to this limit if it's exceeded (least
-used entries removed first); good if you have limited memory space,
+like memory, but number of stored elements is limited to some defined value,
+and cache is cleared down to this limit if it's exceeded (least used entries
+removed first); good if you have limited memory space (see
+L<FusqlFS::Cache::Limited> for details),
 
 =item file
 
-store some data in files, good if you are going to work with really
-big databases, e.g. with large blobs.
+store some data in files, good if you are going to work with really big
+databases, e.g. with large blobs (see L<FusqlFS::Cache::File> for details).
 
 =back
 
@@ -132,7 +133,7 @@ entries removed first.
 I recommend to set this value to at least 3/4 of total objects in your database
 (including all tables, sequences, views, data rows and other objects, browsable
 with this program), which is about 60% cache hits (~45% for 1/2 and ~56% for
-2/3). But this is just a basic recomendation based on educated guess and some
+2/3). But this is just a basic recommendation based on educated guess and some
 tests with "entry" names generated with normally distributed random generator.
 Experiment is your best advisor in this case.
 
@@ -150,6 +151,9 @@ usage, and so it's slower than simple "memory" cache strategy, while "file"
 cache method has to check and update real files on your disk, so both of them
 are slower than simple "memory" caching (they're still faster than database
 requests, however).
+
+See also L<FusqlFS::Cache>, L<FusqlFS::Cache::Base>, L<FusqlFS::Cache::File>
+and L<FusqlFS::Cache::Limited> for detailed description of cache strategies.
 
 =item B<--format, -f>
 
