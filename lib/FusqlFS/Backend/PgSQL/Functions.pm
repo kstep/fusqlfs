@@ -48,7 +48,7 @@ Symlink to sequence's owner in F<../../roles>.
 
 =cut
 
-use FusqlFS::Backend::PgSQL::Roles;
+use FusqlFS::Backend::PgSQL::Role::Owner;
 
 sub new
 {

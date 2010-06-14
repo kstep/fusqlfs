@@ -59,7 +59,7 @@ Symlink to table's owner role in F<../../roles>.
 
 =cut
 
-use FusqlFS::Backend::PgSQL::Roles;
+use FusqlFS::Backend::PgSQL::Role::Owner;
 use FusqlFS::Backend::PgSQL::Table::Indices;
 use FusqlFS::Backend::PgSQL::Table::Struct;
 use FusqlFS::Backend::PgSQL::Table::Data;
