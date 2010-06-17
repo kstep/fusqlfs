@@ -19,13 +19,12 @@ FusqlFS - FUSE filesystem to work with database via DBI interface
         password => 'pas$w0rd',
         limit    => 100,
         debug    => 2,
+        threaded => 0,
     );
 
     FusqlFS::mount(
         '/path/to/mount/point',
-        mountopts => 'allow_other',
-        debug     => 2,
-        threaded  => 0,
+        'allow_other',
     );
 
 =head1 DESCRIPTION
