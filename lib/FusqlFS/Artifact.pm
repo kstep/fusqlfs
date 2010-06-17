@@ -241,10 +241,11 @@ Output: $result.
 Both of them can take either SQL statement as a scalar string or prepared DBI
 statement in place of first argument.
 
-If the first argument is a scalar string, the second argument can be arrayref,
-and if it is, the string must be L<printf|perlfunc/sprintf EXPR, LIST >-compatible
-format string and C<sprintf()> will be used to populate SQL statement with
-values from second argument just like with L<expr|/expr, cexpr>.
+If the first argument is a scalar string, the second argument can be either an
+arrayref or a hashref, and if it is, the string must be
+L<printf|perlfunc/sprintf EXPR, LIST >-compatible format string and
+L</hprintf()> will be used to populate SQL statement with values from second
+argument just like with L<expr|/expr, cexpr>.
 
 C<do> just calls L<DBI/do> and returns success value returned with it,
 while C<cdo> calls L<DBI/prepare_cached> and returns this prepared statement
@@ -293,7 +294,7 @@ sub cexpr
 sub do
 {
     my ($self, $sql, @binds) = @_;
-    $sql = sprintf($sql, @{shift @binds}) if !ref($sql) && ref($binds[0]);
+    $sql = hprintf($sql, shift @binds) if !ref($sql) && ref($binds[0]);
     $instance->{dbh}->do($sql, {}, @binds);
 }
 
@@ -307,21 +308,21 @@ sub cdo
 sub one_row
 {
     my ($self, $sql, @binds) = @_;
-    $sql = sprintf($sql, @{shift @binds}) if !ref($sql) && ref($binds[0]);
+    $sql = hprintf($sql, shift @binds) if !ref($sql) && ref($binds[0]);
     return $instance->{dbh}->selectrow_hashref($sql, {}, @binds);
 }
 
 sub all_col
 {
     my ($self, $sql, @binds) = @_;
-    $sql = sprintf($sql, @{shift @binds}) if !ref($sql) && ref($binds[0]);
+    $sql = hprintf($sql, shift @binds) if !ref($sql) && ref($binds[0]);
     return $instance->{dbh}->selectcol_arrayref($sql, {}, @binds);
 }
 
 sub all_row
 {
     my ($self, $sql, @binds) = @_;
-    $sql = sprintf($sql, @{shift @binds}) if !ref($sql) && ref($binds[0]);
+    $sql = hprintf($sql, shift @binds) if !ref($sql) && ref($binds[0]);
     return $instance->{dbh}->selectall_arrayref($sql, { Slice => {} }, @binds);
 }
 
@@ -582,6 +583,48 @@ sub build
     $sql = $instance->{dbh}->prepare($sql);
     $sql->bind_param($_+1, @{$binds[$_]}) foreach (0..$#binds);
     return $sql;
+}
+
+=item hprintf
+
+I<Static method>. Extended L<sprintf|perlfunc/sprintf FORMAT, LIST > version.
+
+Input: $format, $binds.
+Output: $string.
+
+The C<$format> is the same as for C<sprintf>, C<$binds> is either an arrayref
+or a hashref. If it is an arrayref the result of the method is the same as of
+C<sprintf($format, @$binds)>. If it is a hashref the result is a little
+different.
+
+For hashref C<$binds> all placeholders in C<$format> must be in the form
+of C<%(key)$x>, where C<x> is any C<sprintf> compatible conversion
+and C<key> is the key in the C<%$binds>, so that instead of positional
+placeholders substitution, placeholders in C<$format> are substituted
+with correspondent C<%$binds>' values.
+
+E.g. if you call C<hprintf("%(msg)s: %(count)d\n", { msg =E<gt> 'The counter is',
+count =E<gt> 10 })> you will get the string C<"The counter is: 10\n"> as the
+result. This is really useful if you need to keep formatting strings loosely
+linked with real data inserted into them, e.g. in case of l10n with something
+like gettext.
+
+=cut
+sub hprintf
+{
+    my ($format, $vars) = @_;
+    my @binds;
+
+    if (ref $vars eq 'ARRAY')
+    {
+        @binds = @$vars;        
+    }
+    else
+    {
+        my $i = 0;
+        @binds = map { $format =~ s/\%\($_\)\$/'%'.(++$i).'$'/ge; $vars->{$_} } keys %$vars;
+    }
+    return sprintf($format, @binds);
 }
 
 =head2 Configuration methods
