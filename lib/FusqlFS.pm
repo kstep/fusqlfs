@@ -238,7 +238,7 @@ sub symlink
     return -EEXIST() unless $entry->get() == \$path;
 
     $entry->store();
-    clear_cache($symlink, $entry->depth());
+    clear_cache($symlink, 1+$entry->depth());
     return 0;
 }
 
@@ -250,8 +250,8 @@ sub unlink
     return -EACCES() unless $entry->writable();
     return -EISDIR() if $entry->isdir();
 
+    clear_cache($path, 1+$entry->depth());
     $entry->drop();
-    clear_cache($path, $entry->depth());
     return 0;
 }
 
@@ -264,7 +264,7 @@ sub mkdir
     return -EEXIST() unless $entry->get() == $newdir;
 
     $entry->create();
-    clear_cache($path, $entry->depth());
+    clear_cache($path, 1+$entry->depth());
     return 0;
 }
 
@@ -277,7 +277,7 @@ sub rmdir
     return -ENOTDIR() unless $entry->isdir();
 
     $entry->drop();
-    clear_cache($path, $entry->depth());
+    clear_cache($path, 1+$entry->depth());
     return 0;
 }
 
