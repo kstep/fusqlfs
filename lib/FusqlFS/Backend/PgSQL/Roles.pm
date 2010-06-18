@@ -1,27 +1,6 @@
 use strict;
 use v5.10.0;
 
-package FusqlFS::Backend::PgSQL::Role::Permissions;
-use parent 'FusqlFS::Artifact';
-
-sub get
-{
-    my $self = shift;
-    my ($name) = @_;
-    return {
-        tables    => {},
-        views     => {},
-        functions => {},
-    };
-}
-
-sub list
-{
-    return [ qw(tables views functions) ];
-}
-
-1;
-
 package FusqlFS::Backend::PgSQL::Role::Owned;
 use parent 'FusqlFS::Artifact';
 
