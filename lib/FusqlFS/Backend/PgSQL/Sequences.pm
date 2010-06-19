@@ -36,11 +36,17 @@ documentation about C<CREATE SEQUENCE>.
 
 Symlink to sequence's owner in F<../../roles>.
 
+=item F<./acl>
+
+Sequence's ACL with permissions given to different roles. See
+L<FusqlFS::Backend::PgSQL::Role::Acl> for details.
+
 =back
 
 =cut
 
 use FusqlFS::Backend::PgSQL::Role::Owner;
+use FusqlFS::Backend::PgSQL::Role::Acl;
 use DBI qw(:sql_types);
 
 sub new
@@ -56,6 +62,7 @@ sub new
     $self->{drop_expr} = 'DROP SEQUENCE "%s"';
 
     $self->{owner} = FusqlFS::Backend::PgSQL::Role::Owner->new('S');
+    $self->{acl}   = FusqlFS::Backend::PgSQL::Role::Acl->new('S');
 
     bless $self, $class;
 }
@@ -75,6 +82,7 @@ sub get
     return {
         struct => $self->dump($self->one_row($self->{get_expr}, [$name])),
         owner  => $self->{owner},
+        acl    => $self->{acl},
     };
 }
 
@@ -181,7 +189,7 @@ max_value: 9223372036854775807
 min_value: 1
 sequence_name: fusqlfs_sequence
 start_value: 1
-}, owner => $_tobj->{owner} };
+}, owner => $_tobj->{owner}, acl => $_tobj->{acl} };
 is_deeply $_tobj->list(), [ 'fusqlfs_sequence' ];
 
 =end testing
@@ -212,7 +220,7 @@ max_value: 1000
 min_value: '-10'
 sequence_name: fusqlfs_sequence
 start_value: 1
-}, owner => $_tobj->{owner} };
+}, owner => $_tobj->{owner}, acl => $_tobj->{acl} };
 
 =end testing
 =cut
