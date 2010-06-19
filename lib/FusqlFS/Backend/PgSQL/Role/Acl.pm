@@ -128,6 +128,7 @@ sub get
     my $self = shift;
     my $role = pop;
     my $name = pop;
+    $name = $1 if $name =~ /^([a-zA-Z0-9_]+)/;
     my $acl = $self->all_col($self->{get_expr}, $name);
     return unless $acl && @$acl;
     my @acl = split /[=\/]/, (grep /^$role=/, @{$acl->[0]})[0];
@@ -140,6 +141,7 @@ sub list
 {
     my $self = shift;
     my $name = pop;
+    $name = $1 if $name =~ /^([a-zA-Z0-9_]+)/;
     my $acl = $self->all_col($self->{get_expr}, $name);
     return unless $acl && @$acl;
     return [ map { (split(/=/, $_))[0] } @{$acl->[0]} ];
@@ -153,7 +155,7 @@ sub store
     my $role = pop;
     my $name = pop;
 
-    my $acl = $self->all_col($self->{get_expr}, $name);
+    my $acl = $self->all_col($self->{get_expr}, $name =~ /([a-zA-Z0-9_]+)/? $1: $name);
     return unless $acl && @$acl;
     my $oldacl = (split /[=\/]/, (grep /^$role=/, @{$acl->[0]})[0])[1];
     return unless $oldacl;
