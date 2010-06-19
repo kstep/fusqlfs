@@ -60,6 +60,7 @@ Symlink to table's owner role in F<../../roles>.
 =cut
 
 use FusqlFS::Backend::PgSQL::Role::Owner;
+use FusqlFS::Backend::PgSQL::Role::Permissions;
 use FusqlFS::Backend::PgSQL::Table::Indices;
 use FusqlFS::Backend::PgSQL::Table::Struct;
 use FusqlFS::Backend::PgSQL::Table::Data;
@@ -84,6 +85,7 @@ sub new
         constraints => FusqlFS::Backend::PgSQL::Table::Constraints->new(),
         triggers    => FusqlFS::Backend::PgSQL::Table::Triggers->new(),
         owner       => FusqlFS::Backend::PgSQL::Role::Owner->new('r'),
+        acl         => FusqlFS::Backend::PgSQL::Role::Permissions->new('r'),
     };
 
     bless $self, $class;
