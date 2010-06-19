@@ -130,8 +130,9 @@ sub get
     $name = $1 if $name =~ /^([a-zA-Z0-9_]+)/;
     my $acl = $self->all_col($self->{get_expr}, $name);
     return unless $acl && @$acl;
-    $role = '' if $role eq '%';
-    my @acl = split /[=\/]/, (grep /^$role=/, @{$acl->[0]})[0];
+
+    my $rolep = $role eq 'public'? '': $role;
+    my @acl = split /[=\/]/, (grep /^$rolep=/, @{$acl->[0]})[0];
     return unless @acl;
 
     return { granter => \"roles/$acl[2]", role => \"roles/$acl[0]", map { $_ => 1 } grep $acl[1] =~ /$aclmap{$_}/, @{$self->{perms}} };
@@ -144,7 +145,7 @@ sub list
     $name = $1 if $name =~ /^([a-zA-Z0-9_]+)/;
     my $acl = $self->all_col($self->{get_expr}, $name);
     return unless $acl && @$acl;
-    return [ map { (split(/=/, $_))[0]||'%' } @{$acl->[0]} ];
+    return [ map { (split(/=/, $_))[0]||'public' } @{$acl->[0]} ];
 }
 
 sub store
@@ -156,7 +157,9 @@ sub store
 
     my $acl = $self->all_col($self->{get_expr}, $name =~ /([a-zA-Z0-9_]+)/? $1: $name);
     return unless $acl && @$acl;
-    my $oldacl = (split /[=\/]/, (grep /^$role=/, @{$acl->[0]})[0])[1];
+
+    my $rolep = $role eq 'public'? '': $role;
+    my $oldacl = (split /[=\/]/, (grep /^$rolep=/, @{$acl->[0]})[0])[1];
     return unless $oldacl;
     my @oldacl = grep $oldacl =~ /$aclmap{$_}/, @{$self->{perms}};
 
@@ -169,7 +172,6 @@ sub create
 {
     my $self = shift;
     my ($role, $name) = reverse @_;
-    return if $role eq '%';
     $self->do($self->{create_expr}, [$name, $role]);
 }
 
@@ -177,7 +179,6 @@ sub drop
 {
     my $self = shift;
     my ($role, $name) = reverse @_;
-    return if $role eq '%';
     $self->do($self->{drop_expr}, [$name, $role]);
 }
 
