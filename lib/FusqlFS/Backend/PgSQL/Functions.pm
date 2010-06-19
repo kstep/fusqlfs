@@ -44,11 +44,17 @@ definition.
 
 Symlink to sequence's owner in F<../../roles>.
 
+=item F<./acl>
+
+Functions's ACL with permissions given to different roles. See
+L<FusqlFS::Backend::PgSQL::Role::Acl> for details.
+
 =back
 
 =cut
 
 use FusqlFS::Backend::PgSQL::Role::Owner;
+use FusqlFS::Backend::PgSQL::Role::Acl;
 
 sub new
 {
@@ -112,6 +118,7 @@ sub new
     $self->{store_expr} = 'CREATE OR REPLACE FUNCTION %s RETURNS %s LANGUAGE %s AS $function$ %s $function$ %s';
 
     $self->{owner} = FusqlFS::Backend::PgSQL::Role::Owner->new('_F');
+    $self->{acl}   = FusqlFS::Backend::PgSQL::Role::Acl->new('_F');
 
     bless $self, $class;
 }
@@ -138,6 +145,7 @@ sub get
     $result->{struct} = $self->dump($data);
 
     $result->{owner} = $self->{owner};
+    $result->{acl}   = $self->{acl};
 
     return $result;
 }
@@ -263,6 +271,7 @@ type: normal
 volatility: volatile
 ',
     'owner' => $_tobj->{owner},
+    'acl' => $_tobj->{acl},
 };
 
 my $new_func = {
@@ -274,6 +283,7 @@ type: normal
 volatility: immutable
 ',
     'owner' => $_tobj->{owner},
+    'acl' => $_tobj->{acl},
 };
 
 =end testing
