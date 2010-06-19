@@ -627,6 +627,28 @@ sub hprintf
     return sprintf($format, @binds);
 }
 
+=item adiff
+
+Get difference between to arrays.
+
+Input: $oldarray, $newarray.
+Output: $newitems, $olditems.
+
+Gets two arrayrefs and returns two arrayrefs with items existing in $arrayref2 only
+(C<$newitems>) and in $arrayref1 only (C<$olditems>).
+
+=cut
+sub adiff
+{
+    my $self = shift;
+    my ($oldarray, $newarray) = @_;
+    my %oldarray = map { $_ => 1 } @$oldarray;
+    my %newarray = map { $_ => 1 } @$newarray;
+    my @newitems = grep !exists $oldarray{$_}, @$newarray;
+    my @olditems = grep !exists $newarray{$_}, @$oldarray;
+    return \@newitems, \@olditems;
+}
+
 =head2 Configuration methods
 
 =over
