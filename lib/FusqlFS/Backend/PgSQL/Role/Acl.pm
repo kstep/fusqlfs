@@ -100,7 +100,7 @@ our %aclmap = qw(
     references x
     trigger    t
     execute    x
-    usage      u
+    usage      U
 );
 
 sub new
