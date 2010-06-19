@@ -126,8 +126,7 @@ sub new
 sub get
 {
     my $self = shift;
-    my $role = pop;
-    my $name = pop;
+    my ($role, $name) = reverse @_;
     $name = $1 if $name =~ /^([a-zA-Z0-9_]+)/;
     my $acl = $self->all_col($self->{get_expr}, $name);
     return unless $acl && @$acl;
@@ -153,8 +152,7 @@ sub store
     my $self = shift;
     my $perms = $self->validate(pop, { map { '-'.$_ => undef } @{$self->{perms}} }) or return;
     my @newacl = keys %$perms;
-    my $role = pop;
-    my $name = pop;
+    my ($role, $name) = reverse @_;
 
     my $acl = $self->all_col($self->{get_expr}, $name =~ /([a-zA-Z0-9_]+)/? $1: $name);
     return unless $acl && @$acl;
@@ -170,8 +168,7 @@ sub store
 sub create
 {
     my $self = shift;
-    my $role = pop;
-    my $name = pop;
+    my ($role, $name) = reverse @_;
     return if $role eq '%';
     $self->do($self->{create_expr}, [$name, $role]);
 }
@@ -179,8 +176,7 @@ sub create
 sub drop
 {
     my $self = shift;
-    my $role = pop;
-    my $name = pop;
+    my ($role, $name) = reverse @_;
     return if $role eq '%';
     $self->do($self->{drop_expr}, [$name, $role]);
 }
