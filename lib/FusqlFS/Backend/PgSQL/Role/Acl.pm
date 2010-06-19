@@ -1,12 +1,12 @@
 use strict;
 use v5.10.0;
 
-package FusqlFS::Backend::PgSQL::Role::Permissions;
+package FusqlFS::Backend::PgSQL::Role::Acl;
 use parent 'FusqlFS::Artifact';
 
 =head1 NAME
 
-FusqlFS::Backend::PgSQL::Role::Permissions - FusqlFS class to expose PostgreSQL
+FusqlFS::Backend::PgSQL::Role::Acl - FusqlFS class to expose PostgreSQL
 artifact's permissions
 
 =head1 SYNOPSIS
@@ -14,7 +14,7 @@ artifact's permissions
     package FusqlFS::Backend::PgSQL::Tables;
     use parent 'FusqlFS::Artifact';
 
-    use FusqlFS::Backend::PgSQL::Role::Permissions;
+    use FusqlFS::Backend::PgSQL::Role::Acl;
 
     sub new
     {
@@ -23,7 +23,7 @@ artifact's permissions
 
         # initialize class
 
-        $self->{owner} = FusqlFS::Backend::PgSQL::Role::Permissions->new('r');
+        $self->{acl} = FusqlFS::Backend::PgSQL::Role::Acl->new('r');
         bless $self, $class;
     }
 
@@ -35,7 +35,7 @@ artifact's permissions
 
         # load structures into $result
 
-        $result->{permissions} = $self->{permissions};
+        $result->{acl} = $self->{acl};
         return $result;
     }
 
