@@ -86,7 +86,7 @@ the files to revoke the permission or create new file with one of the names
 use FusqlFS::Backend::PgSQL::Role::Owner;
 
 our %relperms = (
-    r  => [ qw(select insert update delete references trigger) ],
+    r  => [ qw(select insert update delete truncate references trigger) ],
     S  => [ qw(usage select update) ],
     _F => [ qw(execute) ],
     _L => [ qw(usage) ],
@@ -97,10 +97,14 @@ our %aclmap = qw(
     insert     a
     update     w
     delete     d
+    truncate   D
     references x
     trigger    t
     execute    X
     usage      U
+    create     C
+    connect    c
+    temporary  T
 );
 
 sub new
