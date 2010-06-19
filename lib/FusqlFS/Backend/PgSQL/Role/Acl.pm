@@ -181,5 +181,13 @@ sub drop
     $self->do($self->{drop_expr}, [$name, $role]);
 }
 
+sub rename
+{
+    my $self = shift;
+    my ($newrole, $role, $name) = reverse @_;
+    my $acl = $self->get($name, $role);
+    $self->drop($name, $role) and $self->store($name, $newrole, $acl);
+}
+
 1;
 
