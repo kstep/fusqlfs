@@ -55,6 +55,8 @@ sub new
     $self->{get_expr} = $class->expr("SELECT ${rel}acl FROM pg_catalog.$table WHERE ${rel}name = ? $kindclause");
     $self->{grant_expr}  = "GRANT %s ON $kind %s TO %s";
     $self->{revoke_expr} = "REVOKE %s ON $kind %s FROM %s";
+    $self->{create_expr} = "GRANT ALL ON $kind %s TO %s";
+    $self->{drop_expr}   = "REVOKE ALL ON $kind %s FROM %s";
 
     bless $self, $class;
 }
@@ -62,32 +64,58 @@ sub new
 sub get
 {
     my $self = shift;
-    my $perm = pop;
+    my $role = pop;
     my $name = pop;
     my $acl = $self->all_col($self->{get_expr}, $name);
     return unless $acl && @$acl;
-    my %acl = map { (split(/[=\/]/, $_))[0,1] } @{$acl->[0]};
+    my @acl = split /[=\/]/, (grep /^$role=/, @{$acl->[0]})[0];
+    return unless @acl;
 
-    return { map { $_ => \"roles/$_" } grep $acl{$_} =~ /$aclmap{$perm}/, keys %acl };
+    return { granter => \"roles/$acl[2]", role => \"roles/$acl[0]", map { $_ => 1 } grep $acl[1] =~ /$aclmap{$_}/, @{$self->{perms}} };
 }
 
 sub list
 {
     my $self = shift;
-    return $self->{perms};
+    my $name = pop;
+    my $acl = $self->all_col($self->{get_expr}, $name);
+    return unless $acl && @$acl;
+    return [ map { (split(/=/, $_))[0] } @{$acl->[0]} ];
 }
 
 sub store
 {
     my $self = shift;
-    my $roles = $self->validate(pop, ['HASH', sub{ [ keys %$_ ] }]) or return;
-    my $perm = pop;
+    my $perms = $self->validate(pop, { map { '-'.$_ => undef } @{$self->{perms}} }) or return;
+    my @newacl = keys %$perms;
+    my $role = pop;
     my $name = pop;
 
-    my @oldroles = keys %{$self->get($name, $perm)};
-    my ($grant, $revoke) = $self->adiff(\@oldroles, $roles);
-    $self->do($self->{revoke_expr}, [$perm, $name, $_]) foreach @$revoke;
-    $self->do($self->{grant_expr},  [$perm, $name, $_]) foreach @$grant;
+    my $acl = $self->all_col($self->{get_expr}, $name);
+    return unless $acl && @$acl;
+    my $oldacl = (split /[=\/]/, (grep /^$role=/, @{$acl->[0]})[0])[1];
+    return unless $oldacl;
+    my @oldacl = grep $oldacl =~ /$aclmap{$_}/, @{$self->{perms}};
+
+    my ($grant, $revoke) = $self->adiff(\@oldacl, \@newacl);
+    $self->do($self->{revoke_expr}, [$_, $name, $role]) foreach @$revoke;
+    $self->do($self->{grant_expr},  [$_, $name, $role]) foreach @$grant;
+}
+
+sub create
+{
+    my $self = shift;
+    my $role = pop;
+    my $name = pop;
+    $self->do($self->{create_expr}, [$name, $role]);
+}
+
+sub drop
+{
+    my $self = shift;
+    my $role = pop;
+    my $name = pop;
+    $self->do($self->{drop_expr}, [$name, $role]);
 }
 
 1;
