@@ -55,6 +55,11 @@ Table's triggers, see L<FusqlFS::Backend::PgSQL::Table::Triggers> for details.
 
 Symlink to table's owner role in F<../../roles>.
 
+=item F<./acl>
+
+Table's ACL with permissions given to different roles. See
+L<FusqlFS::Backend::PgSQL::Role::Acl> for details.
+
 =back
 
 =cut
