@@ -171,15 +171,26 @@ sub store
 {
     my $self = shift;
     my ($name, $data) = @_;
-	return unless $data;
+    my $struct = $self->validate($data, {
+        struct => {
+            -superuser   => undef,
+            -create_db   => undef,
+            -create_role => undef,
+            -inherit     => undef,
+            -can_login   => undef,
+            -conn_limit  => qr/^\d+$/,
+            -valid_until => undef,
+            -password    => undef,
+        },
+    }, sub{
+        $_->{contains} = [ grep ref $data->{$_} eq 'SCALAR', keys %{$_[0]} ];
+    }) or return;
 
     my $olddata = $self->one_row($self->{get_expr}, $name);
-    my %contains = map { $_ => 1 } @{$olddata->{contains}};
-    my @revoke = grep { !exists $data->{$_} } @{$olddata->{contains}};
-    my @grant = grep { ref $data->{$_} eq 'SCALAR' && !exists $contains{$_} } keys %{$data};
+    my ($grant, $revoke) = $self->adiff($olddata->{contains}, $struct->{contains});
 
-    $self->do($self->{revoke_expr}, [$name, $_]) foreach @revoke;
-    $self->do($self->{grant_expr}, [$name, $_]) foreach @grant;
+    $self->do($self->{revoke_expr}, [$name, $_]) foreach @$revoke;
+    $self->do($self->{grant_expr},  [$name, $_]) foreach @$grant;
 
     $data = $self->load($data->{struct})||{};
 
