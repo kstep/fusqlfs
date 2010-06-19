@@ -11,13 +11,75 @@ artifact's permissions
 
 =head1 SYNOPSIS
 
+    package FusqlFS::Backend::PgSQL::Tables;
+    use parent 'FusqlFS::Artifact';
+
+    use FusqlFS::Backend::PgSQL::Role::Permissions;
+
+    sub new
+    {
+        my $class = shift;
+        my $self = {};
+
+        # initialize class
+
+        $self->{owner} = FusqlFS::Backend::PgSQL::Role::Permissions->new('r');
+        bless $self, $class;
+    }
+
+    sub get
+    {
+        my $self = shift;
+        my ($name) = @_;
+        my $result = {};
+
+        # load structures into $result
+
+        $result->{permissions} = $self->{permissions};
+        return $result;
+    }
 
 =head1 DESCRIPTION
 
+This class exposes PostgreSQL artifact's permissions (a.k.a. ACL) as a
+directory with subdirectories named after roles with marker files named after
+permissions. It is best used with plugged in L<FusqlFS::Backend::PgSQL::Roles>
+module (see L<FusqlFS::Backend::Base> for more info on plugging in different
+modules).
 
-=head1 METHODS
+The class's C<new> constructor accepts single char argument designating
+type of artifact the owner of which is to be exposed. Possible values are
+the same as for L<FusqlFS::Backend::PgSQL::Role::Owner> module.
+
+=head1 EXPOSED STRUCTURE
+
+First level of exposed files are subdirectories named after roles, e.g. if a
+table has perms granted to roles C<user1> and C<user2> this module will expose
+subdirectories F<./user1> and F<./user2>.
+
+Removing such subdirectory revokes all permissions from the role, creating
+subdirectory with some role's name grants all permission to the role.
+
+Every such subdirectory has following structure:
 
 =over
+
+=item F<./granter>
+
+Symlink to role in F<../../../../roles> which granted current role its permissions.
+
+=item F<./role>
+
+Symlink to current role in F<../../../../roles> (i.e. the role with the name
+equal to current subdirectory's name).
+
+=item F<./insert>, F<./update>, F<./delete>, F<./references>, F<./trigger>, F<./usage>
+
+Plain files to designated correspondent permission is granted. Remove some of
+the files to revoke the permission or create new file with one of the names
+(e.g. with C<touch ./insert>) to grant such permission.
+
+=back
 
 =cut
 
