@@ -131,6 +131,7 @@ sub get
     $name = $1 if $name =~ /^([a-zA-Z0-9_]+)/;
     my $acl = $self->all_col($self->{get_expr}, $name);
     return unless $acl && @$acl;
+    $role = '' if $role eq '%';
     my @acl = split /[=\/]/, (grep /^$role=/, @{$acl->[0]})[0];
     return unless @acl;
 
@@ -144,7 +145,7 @@ sub list
     $name = $1 if $name =~ /^([a-zA-Z0-9_]+)/;
     my $acl = $self->all_col($self->{get_expr}, $name);
     return unless $acl && @$acl;
-    return [ map { (split(/=/, $_))[0] } @{$acl->[0]} ];
+    return [ map { (split(/=/, $_))[0]||'%' } @{$acl->[0]} ];
 }
 
 sub store
@@ -171,6 +172,7 @@ sub create
     my $self = shift;
     my $role = pop;
     my $name = pop;
+    return if $role eq '%';
     $self->do($self->{create_expr}, [$name, $role]);
 }
 
@@ -179,6 +181,7 @@ sub drop
     my $self = shift;
     my $role = pop;
     my $name = pop;
+    return if $role eq '%';
     $self->do($self->{drop_expr}, [$name, $role]);
 }
 
