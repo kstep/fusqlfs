@@ -117,8 +117,8 @@ sub new
     $self->{get_expr} = $class->expr("SELECT ${rel}acl FROM pg_catalog.$table WHERE ${rel}name = ? $kindclause");
     $self->{grant_expr}  = "GRANT %s ON $kind %s TO %s";
     $self->{revoke_expr} = "REVOKE %s ON $kind %s FROM %s";
-    $self->{create_expr} = "GRANT ALL ON $kind %s TO %s";
-    $self->{drop_expr}   = "REVOKE ALL ON $kind %s FROM %s";
+    $self->{create_expr} = "GRANT ALL PRIVILEGES ON $kind %s TO %s";
+    $self->{drop_expr}   = "REVOKE ALL PRIVILEGES ON $kind %s FROM %s";
 
     bless $self, $class;
 }
