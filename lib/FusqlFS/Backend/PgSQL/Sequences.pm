@@ -6,7 +6,7 @@ use parent 'FusqlFS::Artifact';
 
 =head1 NAME
 
-FusqlFS::Backend::PgSQL::Roles - FusqlFS PostgreSQL database sequences interface
+FusqlFS::Backend::PgSQL::Sequences - FusqlFS PostgreSQL database sequences interface
 
 =head1 SYNOPSIS
 
