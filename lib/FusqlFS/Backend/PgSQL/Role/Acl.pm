@@ -99,7 +99,7 @@ our %aclmap = qw(
     delete     d
     references x
     trigger    t
-    execute    x
+    execute    X
     usage      U
 );
 
