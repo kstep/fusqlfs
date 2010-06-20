@@ -1,11 +1,6 @@
 use strict;
 use v5.10.0;
 
-package FusqlFS::Backend::PgSQL::Role::Owned;
-use parent 'FusqlFS::Artifact';
-
-1;
-
 package FusqlFS::Backend::PgSQL::Roles;
 use parent 'FusqlFS::Artifact';
 use DBI qw(:sql_types);
