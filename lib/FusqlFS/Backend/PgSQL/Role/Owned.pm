@@ -2,7 +2,7 @@ use strict;
 use v5.10.0;
 
 package FusqlFS::Backend::PgSQL::Role::Owned;
-use base 'FusqlFS::Artifact';
+use base 'FusqlFS::Backend::PgSQL::Role::Base';
 
 =head1 NAME
 
@@ -69,14 +69,55 @@ F</functions/someproc>.
 
 =cut
 
+our %kinds = qw(
+    tables    r
+    sequences S
+    functions _F
+    languages _L
+);
+
 sub new
 {
     my $class = shift;
     my $self = {};
 
-    #Body
+    while (my ($kind, $rel) = each %kinds)
+    {
+        my @kind = $class->kind($rel);
+        $self->{$kind} = [
+            $class->expr('SELECT %2$sname FROM pg_catalog.%3$s AS r
+                    LEFT JOIN pg_catalog.pg_roles AS u ON r.%2$sowner = u.oid
+                WHERE u.rolname = ? %4$s', @kind),
+            sprintf('ALTER %1$s "%%s" OWNER TO "%%s"', @kind),
+        ];
+    }
 
     bless $self, $class;
+}
+
+sub get
+{
+    my $self = shift;
+    my ($role, $kind) = @_;
+    return unless exists $self->{$kind};
+    my $data = $self->all_col($self->{$kind}->[0], $role);
+    return unless $data;
+    return { map { $_ => \"$kind/$_" } @$data };
+}
+
+sub list
+{
+    my $self = shift;
+    my ($role) = @_;
+    return [ keys %kinds ];
+}
+
+sub store
+{
+    my $self = shift;
+    my ($role, $kind, $data) = @_;
+    my $list = $self->validate($data, ['HASH', sub{ [ keys %$_ ] }]) or return;
+    $self->do($self->{$kind}->[1], $_, $role) foreach @$list;
 }
 
 1;
