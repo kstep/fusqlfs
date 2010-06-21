@@ -3,7 +3,6 @@ use v5.10.0;
 
 package FusqlFS::Backend::PgSQL::Roles;
 use parent 'FusqlFS::Artifact';
-use DBI qw(:sql_types);
 
 =begin testing SETUP
 
@@ -22,10 +21,14 @@ superuser: 1
 valid_until: '2010-01-01 00:00:00+02'
 },
     postgres => \"roles/postgres",
+    owned => $_tobj->{owned},
 };
 
 =end testing
 =cut
+
+use DBI qw(:sql_types);
+use FusqlFS::Backend::PgSQL::Role::Owned;
 
 sub new
 {
@@ -48,6 +51,8 @@ sub new
     $self->{revoke_expr} = 'REVOKE "%s" FROM "%s"';
     $self->{grant_expr} = 'GRANT "%s" TO "%s"';
 
+    $self->{owned} = FusqlFS::Backend::PgSQL::Role::Owned->new();
+
     bless $self, $class;
 }
 
@@ -64,7 +69,9 @@ create_role: 1
 inherit: 1
 superuser: 1
 valid_until: ~
-} }, 'Known role is sane';
+},
+owned => $_tobj->{owned},
+}, 'Known role is sane';
 
 =end testing
 =cut
@@ -79,6 +86,7 @@ sub get
     my $result = { map { $_ => \"roles/$_" } @{delete($data->{contains})} };
 
     $result->{struct} = $self->dump($data);
+    $result->{owned}  = $self->{owned};
     return $result;
 }
 
