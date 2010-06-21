@@ -2,7 +2,7 @@ use strict;
 use v5.10.0;
 
 package FusqlFS::Backend::PgSQL::Role::Owner;
-use parent 'FusqlFS::Artifact';
+use parent 'FusqlFS::Backend::PgSQL::Role::Base';
 
 =head1 NAME
 
@@ -79,35 +79,17 @@ Language.
 
 =cut
 
-our %relkinds = (
-    r  => [ qw(TABLE rel) ],
-    i  => [ qw(INDEX rel) ],
-    S  => [ qw(SEQUENCE rel) ],
-    v  => [ qw(VIEW rel) ],
-
-    _F => [ qw(FUNCTION pro) ],
-    _L => [ qw(LANGUAGE lan) ],
-);
-
-our %reltables = qw(
-    rel pg_class
-    pro pg_proc
-    lan pg_language
-);
-
 sub new
 {
     my $class = shift;
     my $relkind = shift;
 
-    my ($kind, $rel) = @{$relkinds{$relkind}};
-    my $table = $reltables{$rel};
-    my $kindclause = $table eq 'pg_class'? "AND relkind = '$relkind'": "";
+    my @kind = $class->kind($relkind);
 
     my $self = {};
 
-    $self->{get_expr} = $class->expr("SELECT pg_catalog.pg_get_userbyid(${rel}owner) FROM pg_catalog.$table WHERE ${rel}name = ? $kindclause");
-    $self->{store_expr} = "ALTER ${kind} \"%s\" OWNER TO \"%s\"";
+    $self->{get_expr} = $class->expr('SELECT pg_catalog.pg_get_userbyid(%2$sowner) FROM pg_catalog.%3$s WHERE %2$sname = ? %4$s', @kind);
+    $self->{store_expr} = sprintf('ALTER %1$s "%%s" OWNER TO "%%s"', @kind);
 
     bless $self, $class;
 }

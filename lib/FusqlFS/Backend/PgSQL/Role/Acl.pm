@@ -2,7 +2,7 @@ use strict;
 use v5.10.0;
 
 package FusqlFS::Backend::PgSQL::Role::Acl;
-use parent 'FusqlFS::Artifact';
+use parent 'FusqlFS::Backend::PgSQL::Role::Base';
 
 =head1 NAME
 
@@ -113,16 +113,14 @@ sub new
     my $relkind = shift;
     my $self = {};
 
-    my ($kind, $rel) = @{$FusqlFS::Backend::PgSQL::Role::Owner::relkinds{$relkind}};
-    my $table = $FusqlFS::Backend::PgSQL::Role::Owner::reltables{$rel};
-    my $kindclause = $table eq 'pg_class'? "AND relkind = '$relkind'": "";
+    my @kind = $class->kind($relkind);
 
     $self->{perms} = $relperms{$relkind};
-    $self->{get_expr} = $class->expr("SELECT ${rel}acl FROM pg_catalog.$table WHERE ${rel}name = ? $kindclause");
-    $self->{grant_expr}  = "GRANT %s ON $kind %s TO %s";
-    $self->{revoke_expr} = "REVOKE %s ON $kind %s FROM %s";
-    $self->{create_expr} = "GRANT ALL PRIVILEGES ON $kind %s TO %s";
-    $self->{drop_expr}   = "REVOKE ALL PRIVILEGES ON $kind %s FROM %s";
+    $self->{get_expr} = $class->expr('SELECT %2$sacl FROM pg_catalog.%3$s WHERE %2$sname = ? %4$s', @kind);
+    $self->{grant_expr}  = sprintf('GRANT %%s ON %1$s %%s TO %%s', @kind);
+    $self->{revoke_expr} = sprintf('REVOKE %%s ON %1$s %%s FROM %%s', @kind);
+    $self->{create_expr} = sprintf('GRANT ALL PRIVILEGES ON %1$s %%s TO %%s', @kind);
+    $self->{drop_expr}   = sprintf('REVOKE ALL PRIVILEGES ON %1$s %%s FROM %%s', @kind);
 
     bless $self, $class;
 }
