@@ -88,7 +88,7 @@ sub new
 
     my $self = {};
 
-    $self->{get_expr} = $class->expr('SELECT pg_catalog.pg_get_userbyid(%2$sowner) FROM pg_catalog.%3$s WHERE %2$sname = ? %4$s', @kind);
+    $self->{get_expr} = $class->expr('SELECT pg_catalog.pg_get_userbyid(%2$sowner) FROM pg_catalog.%3$s WHERE %4$s = ? %5$s', @kind);
     $self->{store_expr} = sprintf('ALTER %1$s "%%s" OWNER TO "%%s"', @kind);
 
     bless $self, $class;
@@ -98,7 +98,6 @@ sub get
 {
     my $self = shift;
     my $name = pop;
-    $name = $1 if $name =~ /^([a-zA-Z0-9_]+)/;
     my $owner = $self->all_col($self->{get_expr}, $name);
     return \"roles/$owner->[0]" if $owner;
 }

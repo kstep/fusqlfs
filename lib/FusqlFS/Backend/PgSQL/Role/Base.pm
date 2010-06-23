@@ -57,6 +57,12 @@ artifact type, e.g. C<rel> for C<pg_class> or C<pro> for C<pg_proc>,
 is the table in C<pg_catalog> schema with information about artifacts of this
 kind, e.g. C<pg_class>, C<pg_proc> or C<pg_language>,
 
+=item C<$name>
+
+is the SQL statement to get artifact's name (usually it's just C<${pfx}name>,
+but can be rather different, e.g. in case of functions), use this instead of
+self-composed name fields in both C<WHERE> and C<SELECT> expressions.
+
 =item C<$kindc>
 
 is the additional C<WHERE> clause for C<pg_class> table to filter data by
@@ -66,8 +72,8 @@ C<pg_class>.
 =back
 
 In scalar context this method returns hashref with keys named C<kind>, C<pfx>,
-C<table>, C<kindc> and values as described above, so this hashref is usable
-with C<FusqlFS::Artifact/hprintf> method.
+C<table>, C<name>, C<kindc> and values as described above, so this hashref is
+usable with C<FusqlFS::Artifact/hprintf> method.
 
 =cut
 
@@ -77,7 +83,7 @@ our %relkinds = (
     S  => [ qw(SEQUENCE rel) ],
     v  => [ qw(VIEW rel) ],
 
-    _F => [ qw(FUNCTION pro) ],
+    _F => [ 'FUNCTION', 'pro', q<proname||'('||pg_catalog.pg_get_function_arguments(pg_proc.oid)||')'> ],
     _L => [ qw(LANGUAGE lan) ],
 );
 
@@ -92,11 +98,13 @@ sub kind
     my $class = shift;
     my ($relkind) = @_;
 
-    my ($kind, $pfx) = @{$relkinds{$relkind}};
+    my ($kind, $pfx, $name) = @{$relkinds{$relkind}};
     my $table = $reltables{$pfx};
     my $kindclause = $table eq 'pg_class'? "AND relkind = '$relkind'": "";
+    $name ||= "${pfx}name";
 
-    return wantarray? ($kind, $pfx, $table, $kindclause): { kind => $kind, pfx => $pfx, table => $table, kindc => $kindclause };
+    return wantarray? ($kind, $pfx, $table, $name, $kindclause):
+        { kind => $kind, pfx => $pfx, table => $table, name => $name, kindc => $kindclause };
 }
 
 1;

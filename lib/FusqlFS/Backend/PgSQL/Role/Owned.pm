@@ -85,9 +85,7 @@ sub new
     {
         my @kind = $class->kind($rel);
         $self->{$kind} = [
-            $class->expr('SELECT %2$sname FROM pg_catalog.%3$s AS r
-                    LEFT JOIN pg_catalog.pg_roles AS u ON r.%2$sowner = u.oid
-                WHERE u.rolname = ? %4$s', @kind),
+            $class->expr('SELECT %4$s FROM pg_catalog.%3$s WHERE pg_catalog.pg_get_userbyid(%2$sowner) = ? %5$s', @kind),
             sprintf('ALTER %1$s "%%s" OWNER TO "%%s"', @kind),
         ];
     }

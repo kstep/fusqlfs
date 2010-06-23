@@ -116,7 +116,7 @@ sub new
     my @kind = $class->kind($relkind);
 
     $self->{perms} = $relperms{$relkind};
-    $self->{get_expr} = $class->expr('SELECT %2$sacl FROM pg_catalog.%3$s WHERE %2$sname = ? %4$s', @kind);
+    $self->{get_expr} = $class->expr('SELECT %2$sacl FROM pg_catalog.%3$s WHERE %4$s = ? %5$s', @kind);
     $self->{grant_expr}  = sprintf('GRANT %%s ON %1$s %%s TO %%s', @kind);
     $self->{revoke_expr} = sprintf('REVOKE %%s ON %1$s %%s FROM %%s', @kind);
     $self->{create_expr} = sprintf('GRANT ALL PRIVILEGES ON %1$s %%s TO %%s', @kind);
@@ -129,7 +129,6 @@ sub get
 {
     my $self = shift;
     my ($role, $name) = reverse @_;
-    $name = $1 if $name =~ /^([a-zA-Z0-9_]+)/;
     my $acl = $self->all_col($self->{get_expr}, $name);
     return unless $acl && @$acl;
 
@@ -144,7 +143,6 @@ sub list
 {
     my $self = shift;
     my $name = pop;
-    $name = $1 if $name =~ /^([a-zA-Z0-9_]+)/;
     my $acl = $self->all_col($self->{get_expr}, $name);
     return unless $acl && @$acl;
     return [ map { (split(/=/, $_))[0]||'public' } @{$acl->[0]} ];
@@ -157,7 +155,7 @@ sub store
     my @newacl = keys %$perms;
     my ($role, $name) = reverse @_;
 
-    my $acl = $self->all_col($self->{get_expr}, $name =~ /([a-zA-Z0-9_]+)/? $1: $name);
+    my $acl = $self->all_col($self->{get_expr}, $name);
     return unless $acl && @$acl;
 
     my $rolep = $role eq 'public'? '': $role;
