@@ -49,13 +49,12 @@ use FusqlFS::Backend::PgSQL::Role::Owner;
 use FusqlFS::Backend::PgSQL::Role::Acl;
 use DBI qw(:sql_types);
 
-sub new
+sub init
 {
-    my $class = shift;
-    my $self = {};
+    my $self = shift;
 
-    $self->{list_expr} = $class->expr("SELECT relname FROM pg_catalog.pg_class WHERE relkind = 'S'");
-    $self->{exists_expr} = $class->expr("SELECT 1 FROM pg_catalog.pg_class WHERE relkind = 'S' AND relname = ?");
+    $self->{list_expr} = $self->expr("SELECT relname FROM pg_catalog.pg_class WHERE relkind = 'S'");
+    $self->{exists_expr} = $self->expr("SELECT 1 FROM pg_catalog.pg_class WHERE relkind = 'S' AND relname = ?");
     $self->{get_expr} = 'SELECT * FROM "%s"';
     $self->{rename_expr} = 'ALTER SEQUENCE "%s" RENAME TO "%s"';
     $self->{create_expr} = 'CREATE SEQUENCE "%s"';
@@ -63,8 +62,6 @@ sub new
 
     $self->{owner} = FusqlFS::Backend::PgSQL::Role::Owner->new('S');
     $self->{acl}   = FusqlFS::Backend::PgSQL::Role::Acl->new('S');
-
-    bless $self, $class;
 }
 
 =begin testing get

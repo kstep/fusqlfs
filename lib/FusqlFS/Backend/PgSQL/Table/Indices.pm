@@ -6,25 +6,23 @@ use parent 'FusqlFS::Artifact::Table::Lazy';
 
 use FusqlFS::Backend::PgSQL::Table::Struct;
 
-sub new
+sub init
 {
-    my $class = shift;
-    my $self = $class->SUPER::new(@_);
+    my $self = shift;
+
     $self->{rename_expr} = 'ALTER INDEX "%s" RENAME TO "%s"';
     $self->{drop_expr} = 'DROP INDEX "%s"';
     $self->{create_expr} = 'CREATE %s INDEX "%s" ON "%s" (%s)';
 
-    $self->{list_expr} = $class->expr("SELECT (SELECT c1.relname FROM pg_catalog.pg_class as c1 WHERE c1.oid = indexrelid) as Index_name
+    $self->{list_expr} = $self->expr("SELECT (SELECT c1.relname FROM pg_catalog.pg_class as c1 WHERE c1.oid = indexrelid) as Index_name
         FROM pg_catalog.pg_index
             WHERE indrelid = (SELECT oid FROM pg_catalog.pg_class as c WHERE c.relname = ? AND relkind = 'r')");
-    $self->{get_expr} = $class->expr("SELECT pg_get_indexdef(indexrelid, 0, true) AS \"create.sql\",
+    $self->{get_expr} = $self->expr("SELECT pg_get_indexdef(indexrelid, 0, true) AS \"create.sql\",
             indisunique as \".unique\", indisprimary as \".primary\", indkey as \".order\"
         FROM pg_catalog.pg_index
             WHERE indexrelid = (SELECT oid FROM pg_catalog.pg_class as c WHERE c.relname = ? AND relkind = 'i')");
 
     $self->{template} = { '.order' => [] };
-
-    bless $self, $class;
 }
 
 =begin testing get

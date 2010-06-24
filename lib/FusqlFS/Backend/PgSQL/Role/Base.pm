@@ -14,16 +14,13 @@ complexity for FusqlFS::Backend::PgSQL::Role::* classes
     package FusqlFS::Backend::PgSQL::Role::Acl;
     use parent 'FusqlFS::Backend::PgSQL::Role::Base';
 
-    sub new
+    sub init
     {
-        my $class = shift;
+        my $self = shift;
         my $relkind = shift;
-        my @kind = $class->kind($relkind);
-        my $self = {};
+        my @kind = $self->kind($relkind);
 
         # initialize instance
-
-        bless $self, $class;
     }
 
 =head1 DESCRIPTION

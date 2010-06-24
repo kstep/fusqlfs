@@ -16,15 +16,13 @@ artifact's owner
 
     use FusqlFS::Backend::PgSQL::Role::Owner;
 
-    sub new
+    sub init
     {
-        my $class = shift;
-        my $self = {};
+        my $self = shift;
 
         # initialize class
 
         $self->{owner} = FusqlFS::Backend::PgSQL::Role::Owner->new('r');
-        bless $self, $class;
     }
 
     sub get
@@ -79,19 +77,15 @@ Language.
 
 =cut
 
-sub new
+sub init
 {
-    my $class = shift;
+    my $self = shift;
     my $relkind = shift;
 
-    my @kind = $class->kind($relkind);
+    my @kind = $self->kind($relkind);
 
-    my $self = {};
-
-    $self->{get_expr} = $class->expr('SELECT pg_catalog.pg_get_userbyid(%2$sowner) FROM pg_catalog.%3$s WHERE %4$s = ? %5$s', @kind);
+    $self->{get_expr} = $self->expr('SELECT pg_catalog.pg_get_userbyid(%2$sowner) FROM pg_catalog.%3$s WHERE %4$s = ? %5$s', @kind);
     $self->{store_expr} = sprintf('ALTER %1$s "%%s" OWNER TO "%%s"', @kind);
-
-    bless $self, $class;
 }
 
 sub get

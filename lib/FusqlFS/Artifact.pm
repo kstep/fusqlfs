@@ -12,14 +12,11 @@ FusqlFS::Artifact - basic abstract class to represent database artifact in Fusql
     package FusqlFS::Backend::PgSQL::Tables;
     use parent 'FusqlFS::Artifact';
 
-    sub new
+    sub init
     {
-        my $class = shift;
-        my $self = {};
+        my $self = shift;
 
         # initialize Tables specific resources
-
-        bless $self, $class;
     }
 
     sub get
@@ -106,10 +103,24 @@ foreach my $method (qw(rename drop create store))
 
 =item new
 
-Fallback constructor, shouldn't be called at all.
+Base constructor, shouldn't be overridden in most cases. Use L</init> method to
+initialize object instance.
+
+Override it only if you really know what you do and you have no other way to
+achieve you goal.
 
 Input: $class
 Output: $artifact_instance.
+
+=item init
+
+I<Abstract method> called on object instance (C<$self>) by constructor L</new>
+immediately after instance is created and blessed in order to initialize it.
+
+All parameters given to constructor are passed to this method intact, value
+returned by this method is ignored.
+
+Override this method instead of L</new> in order to initialize your class.
 
 =item get
 
@@ -198,7 +209,17 @@ The method must return any "true" value on success or undef on failure.
 =back
 
 =cut
-sub new { bless {}, $_[0] }
+sub new
+{
+    my $class = shift;
+    my $self  = {};
+
+    bless $self, $class;
+    $self->init(@_);
+
+    return $self;
+}
+sub init { }
 sub get { return '' }
 sub list { return }
 sub rename { return 1 }

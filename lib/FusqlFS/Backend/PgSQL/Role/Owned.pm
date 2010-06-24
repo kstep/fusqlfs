@@ -16,16 +16,13 @@ PostgreSQL artifacts owned by a role into single place
 
     use FusqlFS::Backend::PgSQL::Role::Owned;
 
-    sub new
+    sub init
     {
-        my $class = shift;
-        my $self = {};
+        my $self = shift;
 
         # initialize instance and class
 
         $self->{owned} = FusqlFS::Backend::PgSQL::Role::Owned->new();
-
-        bless $self, $class;
     }
 
     sub get
@@ -76,21 +73,18 @@ our %kinds = qw(
     languages _L
 );
 
-sub new
+sub init
 {
-    my $class = shift;
-    my $self = {};
+    my $self = shift;
 
     while (my ($kind, $rel) = each %kinds)
     {
-        my @kind = $class->kind($rel);
+        my @kind = $self->kind($rel);
         $self->{$kind} = [
-            $class->expr('SELECT %4$s FROM pg_catalog.%3$s WHERE pg_catalog.pg_get_userbyid(%2$sowner) = ? %5$s', @kind),
+            $self->expr('SELECT %4$s FROM pg_catalog.%3$s WHERE pg_catalog.pg_get_userbyid(%2$sowner) = ? %5$s', @kind),
             sprintf('ALTER %1$s "%%s" OWNER TO "%%s"', @kind),
         ];
     }
-
-    bless $self, $class;
 }
 
 sub get

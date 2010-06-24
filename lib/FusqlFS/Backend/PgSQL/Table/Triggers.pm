@@ -69,10 +69,9 @@ isa_ok $triggers, $_tcls;
 
 =end testing
 =cut
-sub new
+sub init
 {
-    my $class = shift;
-    my $self = {};
+    my $self = shift;
 
     # tgtype:
     # 0  1 = for each row
@@ -81,7 +80,7 @@ sub new
     # 3  8 = delete
     # 4 16 = update
     # 5 32 = truncate (?)
-    $self->{get_expr} = $class->expr('SELECT pg_catalog.pg_get_triggerdef(t.oid) AS "create.sql",
+    $self->{get_expr} = $self->expr('SELECT pg_catalog.pg_get_triggerdef(t.oid) AS "create.sql",
             p.proname||\'(\'||pg_catalog.pg_get_function_arguments(p.oid)||\')\' AS handler,
             CASE WHEN (t.tgtype & 1) != 0 THEN \'row\' ELSE \'statement\' END AS for_each,
             CASE WHEN (t.tgtype & 2) != 0 THEN \'before\' ELSE \'after\' END AS when,
@@ -95,7 +94,7 @@ sub new
             LEFT JOIN pg_catalog.pg_class AS r ON (t.tgrelid = r.oid)
             LEFT JOIN pg_catalog.pg_proc AS p ON (t.tgfoid = p.oid)
         WHERE r.relname = ? AND t.tgname = ? AND t.tgconstraint = 0');
-    $self->{list_expr} = $class->expr('SELECT t.tgname FROM pg_catalog.pg_trigger AS t
+    $self->{list_expr} = $self->expr('SELECT t.tgname FROM pg_catalog.pg_trigger AS t
         LEFT JOIN pg_catalog.pg_class AS r ON (t.tgrelid = r.oid) WHERE r.relname = ?');
 
     $self->{rename_expr} = 'ALTER TRIGGER %s ON %s RENAME TO %s';
@@ -112,8 +111,6 @@ for_each: row
 when: before
 ',
     };
-
-    bless $self, $class;
 }
 
 =item get

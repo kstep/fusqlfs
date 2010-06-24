@@ -72,16 +72,15 @@ use FusqlFS::Backend::PgSQL::Table::Data;
 use FusqlFS::Backend::PgSQL::Table::Constraints;
 use FusqlFS::Backend::PgSQL::Table::Triggers;
 
-sub new
+sub init
 {
-    my $class = shift;
-    my $self = {};
+    my $self = shift;
     $self->{rename_expr} = 'ALTER TABLE "%s" RENAME TO "%s"';
     $self->{drop_expr} = 'DROP TABLE "%s"';
     $self->{create_expr} = 'CREATE TABLE "%s" (id serial, PRIMARY KEY (id))';
 
-    $self->{list_expr} = $class->expr("SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname = 'public'");
-    $self->{get_expr} = $class->expr("SELECT 1 FROM pg_catalog.pg_tables WHERE schemaname = 'public' AND tablename = ?");
+    $self->{list_expr} = $self->expr("SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname = 'public'");
+    $self->{get_expr} = $self->expr("SELECT 1 FROM pg_catalog.pg_tables WHERE schemaname = 'public' AND tablename = ?");
 
     $self->{subpackages} = {
         indices     => FusqlFS::Backend::PgSQL::Table::Indices->new(),
@@ -92,8 +91,6 @@ sub new
         owner       => FusqlFS::Backend::PgSQL::Role::Owner->new('r'),
         acl         => FusqlFS::Backend::PgSQL::Role::Acl->new('r'),
     };
-
-    bless $self, $class;
 }
 
 =begin testing get

@@ -6,17 +6,14 @@ use parent 'FusqlFS::Artifact';
 
 use FusqlFS::Backend::PgSQL::Table::Struct;
 
-sub new
+sub init
 {
-    my $class = shift;
-    my $self = {};
+    my $self = shift;
 
-    $self->{get_primary_expr} = $class->expr("SELECT indkey FROM pg_catalog.pg_index
+    $self->{get_primary_expr} = $self->expr("SELECT indkey FROM pg_catalog.pg_index
             WHERE indisprimary AND indrelid = (SELECT oid FROM pg_catalog.pg_class as c WHERE c.relname = ? AND relkind = 'r')");
 
     $self->{query_cache} = {};
-
-    bless $self, $class;
 }
 
 =begin testing list

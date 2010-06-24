@@ -4,14 +4,14 @@ use v5.10.0;
 package FusqlFS::Backend::PgSQL::Table::Struct;
 use parent 'FusqlFS::Artifact';
 
-sub new
+sub init
 {
-    my $class = shift;
-    my $self = {};
-    $self->{list_expr} = $class->expr("SELECT attname FROM pg_catalog.pg_attribute as a
+    my $self = shift;
+
+    $self->{list_expr} = $self->expr("SELECT attname FROM pg_catalog.pg_attribute as a
                 WHERE attrelid = (SELECT oid FROM pg_catalog.pg_class as c WHERE c.relname = ? AND relkind = 'r') AND attnum > 0
             ORDER BY attnum");
-    $self->{get_expr} = $class->expr("SELECT pg_catalog.format_type(atttypid, atttypmod) AS type,
+    $self->{get_expr} = $self->expr("SELECT pg_catalog.format_type(atttypid, atttypmod) AS type,
                 NOT attnotnull as nullable,
                 CASE WHEN atthasdef THEN
                     (SELECT pg_catalog.pg_get_expr(adbin, adrelid) FROM pg_attrdef as d
@@ -32,7 +32,6 @@ sub new
     $self->{set_nullable_expr} = 'ALTER TABLE "%s" ALTER COLUMN "%s" DROP NOT NULL';
     $self->{drop_nullable_expr} = 'ALTER TABLE "%s" ALTER COLUMN "%s" SET NOT NULL';
     $self->{store_type_expr} = 'ALTER TABLE "%s" ALTER COLUMN "%s" TYPE %s';
-    bless $self, $class;
 }
 
 =begin testing list

@@ -16,15 +16,13 @@ artifact's permissions
 
     use FusqlFS::Backend::PgSQL::Role::Acl;
 
-    sub new
+    sub init
     {
-        my $class = shift;
-        my $self = {};
+        my $self = shift;
 
         # initialize class
 
         $self->{acl} = FusqlFS::Backend::PgSQL::Role::Acl->new('r');
-        bless $self, $class;
     }
 
     sub get
@@ -107,22 +105,19 @@ our %aclmap = qw(
     temporary  T
 );
 
-sub new
+sub init
 {
-    my $class = shift;
+    my $self = shift;
     my $relkind = shift;
-    my $self = {};
 
-    my @kind = $class->kind($relkind);
+    my @kind = $self->kind($relkind);
 
     $self->{perms} = $relperms{$relkind};
-    $self->{get_expr} = $class->expr('SELECT %2$sacl FROM pg_catalog.%3$s WHERE %4$s = ? %5$s', @kind);
+    $self->{get_expr} = $self->expr('SELECT %2$sacl FROM pg_catalog.%3$s WHERE %4$s = ? %5$s', @kind);
     $self->{grant_expr}  = sprintf('GRANT %%s ON %1$s %%s TO %%s', @kind);
     $self->{revoke_expr} = sprintf('REVOKE %%s ON %1$s %%s FROM %%s', @kind);
     $self->{create_expr} = sprintf('GRANT ALL PRIVILEGES ON %1$s %%s TO %%s', @kind);
     $self->{drop_expr}   = sprintf('REVOKE ALL PRIVILEGES ON %1$s %%s FROM %%s', @kind);
-
-    bless $self, $class;
 }
 
 sub get

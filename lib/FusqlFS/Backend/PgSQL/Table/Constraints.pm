@@ -4,22 +4,19 @@ use v5.10.0;
 package FusqlFS::Backend::PgSQL::Table::Constraints;
 use parent 'FusqlFS::Artifact::Table::Lazy';
 
-sub new
+sub init
 {
-    my $class = shift;
-    my $self = $class->SUPER::new(@_);
+    my $self = shift;
 
-    $self->{get_expr} = $class->expr('SELECT pg_catalog.pg_get_constraintdef(co.oid, true) AS "content.sql", co.contype AS ".type" FROM pg_catalog.pg_constraint co
+    $self->{get_expr} = $self->expr('SELECT pg_catalog.pg_get_constraintdef(co.oid, true) AS "content.sql", co.contype AS ".type" FROM pg_catalog.pg_constraint co
             JOIN pg_catalog.pg_class AS cl ON (cl.oid = co.conrelid) WHERE cl.relname = ? AND co.conname = ?');
-    $self->{list_expr} = $class->expr('SELECT co.conname FROM pg_catalog.pg_constraint AS co
+    $self->{list_expr} = $self->expr('SELECT co.conname FROM pg_catalog.pg_constraint AS co
             JOIN pg_catalog.pg_class AS cl ON (cl.oid = co.conrelid) WHERE cl.relname = ?');
 
     $self->{drop_expr} = 'ALTER TABLE "%s" DROP CONSTRAINT "%s"';
     $self->{store_expr} = 'ALTER TABLE "%s" ADD CONSTRAINT "%s" %s';
 
     $self->{template} = { 'content.sql' => "" };
-
-    bless $self, $class;
 }
 
 =begin testing store after create

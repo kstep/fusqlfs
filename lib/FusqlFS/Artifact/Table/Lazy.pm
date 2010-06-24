@@ -116,6 +116,8 @@ sub new
     $self->{template} = {};
 
     bless $self, $class;
+    $self->init(@_);
+    return $self;
 }
 
 =item clone

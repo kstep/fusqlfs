@@ -30,13 +30,12 @@ valid_until: '2010-01-01 00:00:00+02'
 use DBI qw(:sql_types);
 use FusqlFS::Backend::PgSQL::Role::Owned;
 
-sub new
+sub init
 {
-    my $class = shift;
-    my $self = {};
+    my $self = shift;
 
-    $self->{list_expr} = $class->expr("SELECT rolname FROM pg_catalog.pg_roles");
-    $self->{get_expr} = $class->expr("SELECT r.rolcanlogin AS can_login, r.rolcatupdate AS cat_update, r.rolconfig AS config,
+    $self->{list_expr} = $self->expr("SELECT rolname FROM pg_catalog.pg_roles");
+    $self->{get_expr} = $self->expr("SELECT r.rolcanlogin AS can_login, r.rolcatupdate AS cat_update, r.rolconfig AS config,
             r.rolconnlimit AS conn_limit, r.rolcreatedb AS create_db, r.rolcreaterole AS create_role, r.rolinherit AS inherit,
             r.rolsuper AS superuser, r.rolvaliduntil AS valid_until,
             ARRAY(SELECT b.rolname FROM pg_catalog.pg_roles AS b
@@ -52,8 +51,6 @@ sub new
     $self->{grant_expr} = 'GRANT "%s" TO "%s"';
 
     $self->{owned} = FusqlFS::Backend::PgSQL::Role::Owned->new();
-
-    bless $self, $class;
 }
 
 =begin testing get

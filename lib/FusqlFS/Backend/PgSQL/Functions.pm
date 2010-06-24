@@ -56,12 +56,11 @@ L<FusqlFS::Backend::PgSQL::Role::Acl> for details.
 use FusqlFS::Backend::PgSQL::Role::Owner;
 use FusqlFS::Backend::PgSQL::Role::Acl;
 
-sub new
+sub init
 {
-    my $class = shift;
-    my $self = {};
+    my $self = shift;
 
-    my $pgver = $class->dbh->{pg_server_version};
+    my $pgver = $self->dbh->{pg_server_version};
     my $get_func_args = 'pg_catalog.pg_get_function_arguments(p.oid)';
     my $get_func_res  = 'pg_catalog.pg_get_function_result(p.oid)';
 
@@ -99,12 +98,12 @@ sub new
         $get_func_res = 'pg_catalog.format_type(p.prorettype, NULL)';
     }
 
-    $self->{list_expr} = $class->expr("SELECT DISTINCT p.proname||'('||$get_func_args||')' FROM pg_catalog.pg_proc AS p
+    $self->{list_expr} = $self->expr("SELECT DISTINCT p.proname||'('||$get_func_args||')' FROM pg_catalog.pg_proc AS p
                 LEFT JOIN pg_catalog.pg_namespace AS ns ON ns.oid = p.pronamespace
             WHERE ns.nspname = 'public'");
 
     #CASE WHEN p.proisagg THEN NULL ELSE pg_catalog.pg_get_functiondef(p.oid) END AS struct
-    $self->{get_expr} = $class->expr("SELECT $get_func_res AS result,
+    $self->{get_expr} = $self->expr("SELECT $get_func_res AS result,
                 trim(both from p.prosrc) AS content, l.lanname AS lang,
                 CASE p.provolatile WHEN 'i' THEN 'immutable' WHEN 's' THEN 'stable' WHEN 'v' THEN 'volatile' END AS volatility,
                 CASE WHEN p.proisagg THEN 'aggregate' WHEN p.proiswindow THEN 'window' WHEN p.prorettype = 'pg_catalog.trigger'::pg_catalog.regtype THEN 'trigger' ELSE 'normal' END AS type
@@ -119,8 +118,6 @@ sub new
 
     $self->{owner} = FusqlFS::Backend::PgSQL::Role::Owner->new('_F');
     $self->{acl}   = FusqlFS::Backend::PgSQL::Role::Acl->new('_F');
-
-    bless $self, $class;
 }
 
 =begin testing get

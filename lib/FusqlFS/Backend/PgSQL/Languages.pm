@@ -73,27 +73,24 @@ isa_ok $instance, $_tcls;
 
 =end testing
 =cut
-sub new
+sub init
 {
-    my $class = shift;
-    my $self = {};
+    my $self = shift;
 
-    $self->{get_expr} = $class->expr('SELECT l.lanispl AS ispl, l.lanpltrusted AS trusted,
+    $self->{get_expr} = $self->expr('SELECT l.lanispl AS ispl, l.lanpltrusted AS trusted,
             hp.proname||\'(\'||pg_catalog.pg_get_function_arguments(hp.oid)||\')\' AS handler,
             vp.proname||\'(\'||pg_catalog.pg_get_function_arguments(vp.oid)||\')\' AS validator
         FROM pg_catalog.pg_language AS l
             LEFT JOIN pg_catalog.pg_proc AS hp ON (l.lanplcallfoid = hp.oid)
             LEFT JOIN pg_catalog.pg_proc AS vp ON (l.lanvalidator = vp.oid)
         WHERE lanname = ?');
-    $self->{list_expr} = $class->expr('SELECT lanname FROM pg_catalog.pg_language');
+    $self->{list_expr} = $self->expr('SELECT lanname FROM pg_catalog.pg_language');
 
     $self->{create_expr} = 'CREATE LANGUAGE %s';
     $self->{drop_expr} = 'DROP LANGUAGE %s';
     $self->{rename_expr} = 'ALTER LANGUAGE %s RENAME TO %s';
 
     $self->{owner} = FusqlFS::Backend::PgSQL::Role::Owner->new('_L');
-
-    bless $self, $class;
 }
 
 =item get
