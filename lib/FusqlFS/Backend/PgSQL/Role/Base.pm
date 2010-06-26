@@ -35,7 +35,7 @@ referenced database artifact and returns a number of configuration parameters
 to construct correct SQL statements for the artifact's kind.
 
 If list context C<kind()> method returns a list of C<($kind, $pfx, $table,
-$kindc)> where
+$filter)> where
 
 =over
 
@@ -60,7 +60,7 @@ is the SQL statement to get artifact's name (usually it's just C<${pfx}name>,
 but can be rather different, e.g. in case of functions), use this instead of
 self-composed name fields in both C<WHERE> and C<SELECT> expressions.
 
-=item C<$kindc>
+=item C<$filter>
 
 is the additional C<WHERE> clause for C<pg_class> table to filter data by
 required C<relkind> field value, contains empty string for tables other than
@@ -69,7 +69,7 @@ C<pg_class>.
 =back
 
 In scalar context this method returns hashref with keys named C<kind>, C<pfx>,
-C<table>, C<name>, C<kindc> and values as described above, so this hashref is
+C<table>, C<name>, C<filter> and values as described above, so this hashref is
 usable with C<FusqlFS::Artifact/hprintf> method.
 
 =cut
@@ -97,11 +97,11 @@ sub kind
 
     my ($kind, $pfx, $name) = @{$relkinds{$relkind}};
     my $table = $reltables{$pfx};
-    my $kindclause = $table eq 'pg_class'? "AND relkind = '$relkind'": "";
+    my $filter = $table eq 'pg_class'? "AND relkind = '$relkind'": "";
     $name ||= "${pfx}name";
 
-    return wantarray? ($kind, $pfx, $table, $name, $kindclause):
-        { kind => $kind, pfx => $pfx, table => $table, name => $name, kindc => $kindclause };
+    return wantarray? ($kind, $pfx, $table, $name, $filter):
+        { kind => $kind, pfx => $pfx, table => $table, name => $name, filter => $filter };
 }
 
 1;
