@@ -451,12 +451,12 @@ sub validate
         while (my ($field, $subrule) = each %$rule)
         {
             my $opt = $field =~ s/^-//;
-            unless (exists $struct->{$field})
+            unless (exists($struct->{$field})
+                and defined($result->{$field} = $self->validate($struct->{$field}, $subrule)))
             {
                 next if $opt;
                 return;
             }
-            return unless defined($result->{$field} = $self->validate($struct->{$field}, $subrule));
         }
     } elsif ($ref eq '') {
         return unless ref $data eq $rule;
