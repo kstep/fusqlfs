@@ -238,7 +238,8 @@ sub symlink
     return -EEXIST() unless $entry->get() == \$path;
 
     $entry->store();
-    clear_cache($symlink, 1+$entry->depth());
+    say STDERR "depth = ",$entry->depth(), "; height = ", $entry->height();
+    clear_cache($symlink, $entry->depth());
     return 0;
 }
 
@@ -250,7 +251,7 @@ sub unlink
     return -EACCES() unless $entry->writable();
     return -EISDIR() if $entry->isdir();
 
-    clear_cache($path, 1+$entry->depth());
+    clear_cache($path, $entry->depth());
     $entry->drop();
     return 0;
 }
@@ -264,7 +265,7 @@ sub mkdir
     return -EEXIST() unless $entry->get() == $newdir;
 
     $entry->create();
-    clear_cache($path, 1+$entry->depth());
+    clear_cache($path, $entry->depth());
     return 0;
 }
 
@@ -277,7 +278,7 @@ sub rmdir
     return -ENOTDIR() unless $entry->isdir();
 
     $entry->drop();
-    clear_cache($path, 1+$entry->depth());
+    clear_cache($path, $entry->depth());
     return 0;
 }
 
@@ -289,7 +290,7 @@ sub mknod
     return -EEXIST() unless $entry->get() eq '';
 
     $entry->create();
-    clear_cache($path, 1+$entry->depth());
+    clear_cache($path, $entry->depth());
     return 0;
 }
 
@@ -433,9 +434,9 @@ sub clear_cache
     if (defined $_[1])
     {
         my $key = $_[0];
-        my $lk  = length($key);
         my $re = "/[^/]+" x $_[1];
         $key =~ s{$re$}{} if $re;
+        my $lk  = length($key);
         while (my $_ = each %cache)
         {
             next unless substr($_, 0, $lk) eq $key;
