@@ -173,17 +173,18 @@ sub store
     my ($name, $data) = @_;
     my $struct = $self->validate($data, {
         struct => {
-            -superuser   => undef,
-            -create_db   => undef,
-            -create_role => undef,
-            -inherit     => undef,
-            -can_login   => undef,
+            -superuser   => '',
+            -create_db   => '',
+            -create_role => '',
+            -inherit     => '',
+            -can_login   => '',
             -conn_limit  => qr/^\d+$/,
-            -valid_until => undef,
-            -password    => undef,
+            -valid_until => '',
+            -password    => '',
         },
     }, sub{
         $_->{contains} = [ grep ref $data->{$_} eq 'SCALAR', keys %{$_[0]} ];
+        return 1;
     }) or return;
 
     my $olddata = $self->one_row($self->{get_expr}, $name);

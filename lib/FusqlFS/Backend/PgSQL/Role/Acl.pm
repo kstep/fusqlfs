@@ -144,7 +144,7 @@ sub list
 sub store
 {
     my $self = shift;
-    my $perms = $self->validate(pop, { map { '-'.$_ => undef } @{$self->{perms}} }) or return;
+    my $perms = $self->validate(pop, { map { '-'.$_ => '' } @{$self->{perms}} }) or return;
     my @newacl = keys %$perms;
     my ($role, $name) = reverse @_;
 
