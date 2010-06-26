@@ -46,8 +46,8 @@ module (see L<FusqlFS::Backend::Base> for more info on plugging in different
 modules).
 
 The class's C<new> constructor accepts single char argument designating
-type of artifact the owner of which is to be exposed. Possible values are
-the same as for L<FusqlFS::Backend::PgSQL::Role::Owner> module.
+type of artifact the owner of which is to be exposed. Possible values can
+be seen in L<FusqlFS::Backend::PgSQL::Role::Base> module.
 
 =head1 EXPOSED STRUCTURE
 
@@ -80,8 +80,6 @@ the files to revoke the permission or create new file with one of the names
 =back
 
 =cut
-
-use FusqlFS::Backend::PgSQL::Role::Owner;
 
 our %relperms = (
     r  => [ qw(select insert update delete truncate references trigger) ],

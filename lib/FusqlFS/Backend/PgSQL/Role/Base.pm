@@ -30,9 +30,38 @@ C<FusqlFS::Backend::PgSQL::Role::*> family of modules including
 L<FusqlFS::Backend::PgSQL::Role::Acl> and
 L<FusqlFS::Backend::PgSQL::Role::Owner>.
 
-Its single method C<kind()> accepts single character designating the kind of
-referenced database artifact and returns a number of configuration parameters
-to construct correct SQL statements for the artifact's kind.
+Its single method C<kind()> accepts single character argument designating the
+kind of referenced database artifact and returns a number of configuration
+parameters to construct correct SQL statements for the artifact's kind. The
+possible values of this argument are:
+
+=over
+
+=item C<r>
+
+Table (a.k.a. relation).
+
+=item C<i>
+
+Table's index.
+
+=item C<S>
+
+Sequence.
+
+=item C<v>
+
+View.
+
+=item C<_F>
+
+Function (a.k.a. stored procedure).
+
+=item C<_L>
+
+Language.
+
+=back
 
 If list context C<kind()> method returns a list of C<($kind, $pfx, $table,
 $filter)> where

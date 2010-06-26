@@ -44,36 +44,9 @@ F</roles> directory. It is best used with plugged in
 L<FusqlFS::Backend::PgSQL::Roles> module (see L<FusqlFS::Backend::Base> for
 more info on plugging in different modules).
 
-The class's C<new> constructor accepts single char argument designating
-type of artifact the owner of which is to be exposed. Possible values are:
-
-=over
-
-=item C<r>
-
-Table (a.k.a. relation).
-
-=item C<i>
-
-Table's index.
-
-=item C<S>
-
-Sequence.
-
-=item C<v>
-
-View.
-
-=item C<_F>
-
-Function (a.k.a. stored procedure).
-
-=item C<_L>
-
-Language.
-
-=back
+The class's C<new> constructor accepts single char argument designating type of
+artifact the owner of which is to be exposed. Possible values of this argument
+can be seen in L<FusqlFS::Backend::PgSQL::Role::Base> module.
 
 =cut
 
