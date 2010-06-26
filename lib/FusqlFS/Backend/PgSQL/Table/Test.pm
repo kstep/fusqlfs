@@ -2,6 +2,7 @@ use strict;
 use v5.10.0;
 
 package FusqlFS::Backend::PgSQL::Table::Test;
+our $VERSION = "0.005";
 use FusqlFS::Backend::PgSQL::Test;
 
 our $fusqlh;

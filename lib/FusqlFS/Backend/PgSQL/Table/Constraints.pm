@@ -2,6 +2,7 @@ use strict;
 use v5.10.0;
 
 package FusqlFS::Backend::PgSQL::Table::Constraints;
+our $VERSION = "0.005";
 use parent 'FusqlFS::Artifact::Table::Lazy';
 
 sub init

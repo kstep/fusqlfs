@@ -2,6 +2,7 @@ use strict;
 use v5.10.0;
 
 package FusqlFS::Entry;
+our $VERSION = "0.005";
 
 =head1 NAME
 
@@ -461,6 +462,7 @@ sub write { }
 1;
 
 package FusqlFS::Entry::File;
+our $VERSION = "0.005";
 use parent 'FusqlFS::Entry';
 
 sub isfile { 1 }
@@ -471,6 +473,7 @@ sub read { substr($_[0]->[2], $_[1], $_[2]) }
 1;
 
 package FusqlFS::Entry::Pipe;
+our $VERSION = "0.005";
 use parent 'FusqlFS::Entry';
 
 sub init
@@ -490,6 +493,7 @@ sub write { $_[0]->[2] = $_[0]->[3]->($_[2]); }
 1;
 
 package FusqlFS::Entry::Dir;
+our $VERSION = "0.005";
 use parent 'FusqlFS::Entry';
 
 sub init
@@ -506,6 +510,7 @@ sub list { $_[0]->[3] }
 1;
 
 package FusqlFS::Entry::Symlink;
+our $VERSION = "0.005";
 use parent 'FusqlFS::Entry';
 
 sub init { $_[0]->[3] = ('../' x (scalar(@_)-2)).${$_[0]->[2]} }

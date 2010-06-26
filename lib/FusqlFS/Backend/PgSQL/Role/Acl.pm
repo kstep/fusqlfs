@@ -2,6 +2,7 @@ use strict;
 use v5.10.0;
 
 package FusqlFS::Backend::PgSQL::Role::Acl;
+our $VERSION = "0.005";
 use parent 'FusqlFS::Backend::PgSQL::Role::Base';
 
 =head1 NAME

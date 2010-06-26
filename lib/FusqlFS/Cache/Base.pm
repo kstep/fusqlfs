@@ -2,6 +2,7 @@ use strict;
 use v5.10.0;
 
 package FusqlFS::Cache::Base;
+our $VERSION = "0.005";
 
 =head1 NAME
 

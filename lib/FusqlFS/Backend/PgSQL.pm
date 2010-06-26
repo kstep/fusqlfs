@@ -2,6 +2,7 @@ use strict;
 use v5.10.0;
 
 package FusqlFS::Backend::PgSQL;
+our $VERSION = "0.005";
 use parent 'FusqlFS::Backend::Base';
 
 use FusqlFS::Backend::PgSQL::Tables;

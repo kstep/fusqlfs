@@ -2,6 +2,7 @@ use strict;
 use v5.10.0;
 
 package FusqlFS::Backend::PgSQL::Functions;
+our $VERSION = "0.005";
 use parent 'FusqlFS::Artifact';
 
 =head1 NAME
