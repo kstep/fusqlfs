@@ -271,7 +271,7 @@ destroyed in process, and target entry becomes identical to original one.
 This method is used in rename fuse hook. It is recommended to construct new
 target entry with defined C<$leaf_absent> argument to L</new>, as this operation
 on already existing entry backed up with real database object can be unpredictable
-or event destructive.
+or even destructive.
 
 =item drop
 
@@ -329,7 +329,7 @@ L<FusqlFS::Artifact/store> method call.
 And that's what this method does.
 
 It returns true if such complex modification/storage process is required and done,
-undef if otherwise.
+undef otherwise.
 
 =cut
 sub put
