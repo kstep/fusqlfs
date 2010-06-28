@@ -9,7 +9,8 @@ tags: lib
 	ctags --language-force=Perl -R lib
 
 mount: umount
-	fusqlfs -e PgSQL -u postgres -l ./fusqlfs.log -L 100 -d unite_dev $(if $(MOP),$(MOP),-D) ./mnt
+	#fusqlfs -e PgSQL -u postgres -l ./fusqlfs.log -L 100 -d unite_dev $(if $(MOP),$(MOP),-D) ./mnt
+	fusqlfs -e MySQL -u root -l ./fusqlfs.log -L 100 -d nastya $(if $(MOP),$(MOP),-D) ./mnt
 
 umount:
 	-fusermount -u -z ./mnt

@@ -11,7 +11,7 @@ sub init
 {
     my $self = shift;
     $self->{subpackages} = {
-        tables => new FusqlFS::Backend::MySQL::Tables(),
+        tables => FusqlFS::Backend::MySQL::Tables->new(),
     };
 }
 
