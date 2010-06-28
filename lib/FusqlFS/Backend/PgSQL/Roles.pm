@@ -1,5 +1,5 @@
 use strict;
-use v5.10.0;
+use 5.010;
 
 package FusqlFS::Backend::PgSQL::Roles;
 our $VERSION = "0.005";
