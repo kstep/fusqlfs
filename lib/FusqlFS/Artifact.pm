@@ -273,7 +273,7 @@ C<do> just calls L<DBI/do> and returns success value returned with it,
 while C<cdo> calls L<DBI/prepare_cached> and returns this prepared statement
 in case it was successfully executed, undef otherwise.
 
-=item one_row, all_col, all_row
+=item one_row, one_col, all_col, all_row
 
 Executes given statement and returns well formatted result.
 
@@ -288,7 +288,8 @@ C<one_row> returns the first row as hashref with field names as keys and field
 values as values. C<all_col> returns arrayref composed from first field values
 from all result rows. C<all_row> returns arrayref composed from hashrefs, where
 each hashref represents data row with field names as keys and field values as
-values.
+values. C<one_col> returns single scalar - the value of first field of first
+record fetched by query.
 
 =back
 
@@ -332,6 +333,14 @@ sub one_row
     my ($self, $sql, @binds) = @_;
     $sql = hprintf($sql, shift @binds) if !ref($sql) && ref($binds[0]);
     return $instance->{dbh}->selectrow_hashref($sql, {}, @binds);
+}
+
+sub one_col
+{
+	my $self = shift;
+	my $cols = $self->all_col(@_);
+	return unless $cols && @$cols;
+	return $cols->[0];
 }
 
 sub all_col
