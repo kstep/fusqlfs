@@ -98,14 +98,15 @@ sub new
     my $fnsep = $options{fnsep}||'.';
     my $self = {
         subpackages => {},
-        limit => 0 + ($options{limit}||0),
-        fnsep => $fnsep,
-        fnsplit => qr/[$fnsep]/,
-        dbh => DBI->connect($dsn, @options{qw(user password)},
-            {
-                PrintError => $debug > 0,
-                PrintWarn  => $debug > 1
-            }),
+        limit       => 0 + ($options{limit}||0),
+        charset     => $options{charset}||'',
+        fnsep       => $fnsep,
+        fnsplit     => qr/[$fnsep]/,
+        dbh         => DBI->connect($dsn, @options{qw(user password)},
+                        {
+                            PrintError => $debug > 0,
+                            PrintWarn  => $debug > 1
+                        }),
     };
 
     given ($options{format})

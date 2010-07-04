@@ -10,6 +10,10 @@ use FusqlFS::Backend::MySQL::Tables;
 sub init
 {
     my $self = shift;
+    $self->do('SET character_set_results = ?'   , $self->{charset});
+    $self->do('SET character_set_client = ?'    , $self->{charset});
+    $self->do('SET character_set_connection = ?', $self->{charset});
+
     $self->{subpackages} = {
         tables => FusqlFS::Backend::MySQL::Tables->new(),
     };
