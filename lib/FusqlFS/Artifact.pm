@@ -534,15 +534,24 @@ sub dump
 
 Splits string using configured split character.
 
-Input: $string.
+Input: $string, $max_chunks=undef.
 Output: @chunks.
 
-It is opposite of L</ajoin>.
+It is opposite of L</ajoin>. Second optional argument is an integer, and is
+identical to one of C<split>, i.e. sets max number of chunks to split input
+C<$string> into, but it also defines B<minimum> number of chunks as well, so if
+C<$string> contains less than given C<$max_chunks> chunks, the result will be
+padded with C<undef>s to the right up to this number, so output always contain
+C<$max_chunks> elements.
 
 =cut
 sub asplit
 {
-    return split $instance->{fnsplit}, $_[1];
+    my ($self, $string, $max_chunks) = @_;
+    $max_chunks ||= 0;
+    my @result = split $instance->{fnsplit}, $string, $max_chunks;
+    push @result, undef while @result < $max_chunks;
+    return @result;
 }
 
 =item ajoin
