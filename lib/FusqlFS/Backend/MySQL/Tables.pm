@@ -29,6 +29,7 @@ See L<FusqlFS::Backend::PgSQL::Tables> for details.
 =cut
 
 use FusqlFS::Backend::MySQL::Table::Struct;
+use FusqlFS::Backend::MySQL::Table::Indices;
 
 sub init
 {
@@ -41,7 +42,8 @@ sub init
     $self->{get_expr} = 'SHOW TABLES LIKE "%s"';
 
     $self->{subpackages} = {
-        struct      => FusqlFS::Backend::MySQL::Table::Struct->new(),
+        struct  => FusqlFS::Backend::MySQL::Table::Struct->new(),
+        indices => FusqlFS::Backend::MySQL::Table::Indices->new(),
     };
 }
 
