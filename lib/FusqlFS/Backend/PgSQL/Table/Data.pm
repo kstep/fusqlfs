@@ -56,6 +56,7 @@ sub get
     my $self = shift;
     my ($table, $name) = @_;
     my ($where_clause, @binds) = $self->where_clause($table, $name);
+    return unless $where_clause || @binds;
 
     $self->{query_cache}->{$table} ||= {};
     $self->{query_cache}->{$table}->{$where_clause} ||= $where_clause?
