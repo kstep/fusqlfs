@@ -28,6 +28,7 @@ sub init
 
     $self->{create_expr} = 'ALTER TABLE `%s` ADD COLUMN `%s` INT NOT NULL DEFAULT 0';
     $self->{rename_expr} = 'ALTER TABLE `%s` CHANGE COLUMN `%s` `%s` %s';
+    $self->{store_expr} = 'ALTER TABLE `%s` MODIFY COLUMN `%s` %s';
     $self->{drop_expr} = 'ALTER TABLE `%s` DROP COLUMN `%s`';
 }
 
@@ -112,7 +113,7 @@ sub create
     $self->do($self->{create_expr}, [$table, $name]);
 }
 
-=begin testing rename after create
+=begin testing rename after store
 
 isnt $_tobj->rename('fusqlfs_table', 'field', 'new_field'), undef, 'Field renamed';
 is $_tobj->get('fusqlfs_table', 'field'), undef, 'New field is unaccessible by old name';
@@ -130,21 +131,37 @@ sub rename
     my $fielddef = sprintf('%s %s NULL DEFAULT %s %s',
                             $field->{Type},
                             $field->{Null} eq 'YES'? '': 'NOT',
-                            $field->{Default},
+                            defined $field->{Default}? $field->{Default}: 'NULL',
                             $field->{Extra});
     $self->do($self->{rename_expr}, [$table, $name, $newname, $fielddef]);
 }
 
 =begin testing store after create
 
-#test body ...
+$new_field =~ s/type: int\(11\)/type: varchar(255)/;
+$new_field =~ s/default: 0/default: ~/;
+$new_field =~ s/null: 0/null: 1/;
+isnt $_tobj->store('fusqlfs_table', 'field', $new_field), undef, 'Field changed';
+is $_tobj->get('fusqlfs_table', 'field'), $new_field;
 
 =end testing
 =cut
 sub store
 {
     my $self = shift;
-    #body ...
+    my ($table, $name, $data) = @_;
+    $data = $self->validate($data, {
+		type     => '',
+		null     => qr/^\d$/,
+		extra    => '',
+		-default => '',
+	}) or return;
+    my $fielddef = sprintf('%s %s NULL DEFAULT %s %s',
+                            $data->{type},
+                            $data->{null}? '': 'NOT',
+                            defined $data->{default}? $data->{default}: 'NULL',
+                            $data->{extra});
+    $self->do($self->{store_expr}, [$table, $name, $fielddef]);
 }
 1;
 
