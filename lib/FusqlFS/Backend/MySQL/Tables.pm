@@ -28,6 +28,8 @@ See L<FusqlFS::Backend::PgSQL::Tables> for details.
 
 =cut
 
+use FusqlFS::Backend::MySQL::Table::Struct;
+
 sub init
 {
     my $self = shift;
@@ -39,6 +41,7 @@ sub init
     $self->{get_expr} = 'SHOW TABLES LIKE "%s"';
 
     $self->{subpackages} = {
+        struct      => FusqlFS::Backend::MySQL::Table::Struct->new(),
     };
 }
 
