@@ -25,6 +25,10 @@ sub init
 
     $self->{list_expr} = 'SHOW COLUMNS FROM `%s`';
     $self->{get_expr} = 'SHOW FULL COLUMNS FROM `%s` LIKE "%s"';
+
+    $self->{create_expr} = 'ALTER TABLE `%s` ADD COLUMN `%s` INT NOT NULL DEFAULT 0';
+    $self->{rename_expr} = 'ALTER TABLE `%s` CHANGE COLUMN `%s` `%s` %s';
+    $self->{drop_expr} = 'ALTER TABLE `%s` DROP COLUMN `%s`';
 }
 
 =begin testing list
@@ -89,31 +93,46 @@ is_deeply $_tobj->list('fusqlfs_table'), ['id'], 'Field is not listable';
 sub drop
 {
     my $self = shift;
-    #body ...
+    my ($table, $name) = @_;
+    $self->do($self->{drop_expr}, [$table, $name]);
 }
 
 =begin testing create after get list
 
-#test body ...
+isnt $_tobj->create('fusqlfs_table', 'field'), undef, 'Create field';
+is $_tobj->get('fusqlfs_table', 'field'), $new_field, 'New field exists';
+is_deeply $_tobj->list('fusqlfs_table'), ['id', 'field'], 'New field is listable';
 
 =end testing
 =cut
 sub create
 {
     my $self = shift;
-    #body ...
+    my ($table, $name) = @_;
+    $self->do($self->{create_expr}, [$table, $name]);
 }
 
-=begin testing rename after store
+=begin testing rename after create
 
-#test body ...
+isnt $_tobj->rename('fusqlfs_table', 'field', 'new_field'), undef, 'Field renamed';
+is $_tobj->get('fusqlfs_table', 'field'), undef, 'New field is unaccessible by old name';
+is $_tobj->get('fusqlfs_table', 'new_field'), $new_field, 'New field exists';
+is_deeply $_tobj->list('fusqlfs_table'), ['id', 'new_field'], 'New field is listable';
 
 =end testing
 =cut
 sub rename
 {
     my $self = shift;
-    #body ...
+    my ($table, $name, $newname) = @_;
+    my $field = $self->one_row($self->{get_expr}, [$table, $name]);
+    return unless $field;
+    my $fielddef = sprintf('%s %s NULL DEFAULT %s %s',
+                            $field->{Type},
+                            $field->{Null} eq 'YES'? '': 'NOT',
+                            $field->{Default},
+                            $field->{Extra});
+    $self->do($self->{rename_expr}, [$table, $name, $newname, $fielddef]);
 }
 
 =begin testing store after create
@@ -134,6 +153,21 @@ __END__
 =begin testing SETUP
 
 #!class FusqlFS::Backend::MySQL::Table::Test
+
+my $new_field = q{---
+collation: ~
+comment: ''
+default: 0
+extra: ''
+key: ''
+null: 0
+privileges:
+  - select
+  - insert
+  - update
+  - references
+type: int(11)
+};
 
 =end testing
 =cut
