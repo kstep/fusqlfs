@@ -427,7 +427,17 @@ false, then all data is discarded and validation fails, otherwise everything is
 ok.
 
 =cut
+our $FAILURE = [];
+sub is_failed { ($_[0]||'') eq $FAILURE }
+sub fail { $FAILURE }
 sub validate
+{
+    my $self = shift;
+    my $result = $self->_validate(@_);
+    return if is_failed($result);
+    return $result;
+}
+sub _validate
 {
     my $self = shift;
     my ($data, $rule, $overrule) = @_;
@@ -440,7 +450,7 @@ sub validate
         foreach my $subrule (@$rule)
         {
             $result = $self->validate($result, $subrule);
-            return unless defined $result;
+            return fail() if is_failed($result);
         }
     } elsif ($ref eq 'CODE') {
         local $_ = $data;
@@ -448,29 +458,29 @@ sub validate
     } elsif ($ref eq 'HASH') {
         $result = {};
         my $struct = ref $data? $data: $self->load($data);
-        return unless ref $struct eq 'HASH';
+        return fail() unless ref $struct eq 'HASH';
         while (my ($field, $subrule) = each %$rule)
         {
             my $opt = $field =~ s/^-//;
             unless (exists($struct->{$field})
-                and defined($result->{$field} = $self->validate($struct->{$field}, $subrule)))
+                and not is_failed($result->{$field} = $self->validate($struct->{$field}, $subrule)))
             {
                 next if $opt;
-                return;
+                return fail();
             }
         }
     } elsif ($ref eq '') {
-        return unless ref $data eq $rule;
+        return fail() unless ref $data eq $rule;
         $result = $data;
     } else {
-        return unless $data ~~ $rule;
+        return fail() unless $data ~~ $rule;
         $result = $data;
     }
 
     if ($overrule)
     {
         local $_ = $result;
-        return unless $overrule->($data);
+        return fail() unless $overrule->($data);
     }
     return $result;
 }
