@@ -32,6 +32,18 @@ sub init
     $self->{drop_expr} = 'ALTER TABLE `%s` DROP COLUMN `%s`';
 }
 
+sub build_column_def
+{
+    my $data = shift;
+    return sprintf('%s %s %s NULL DEFAULT %s %s %s',
+            $data->{type},
+            $data->{collation}? 'COLLATE '.$data->{collation}: '',
+            $data->{null}? '': 'NOT',
+            defined $data->{default}? $data->{default}: 'NULL',
+            $data->{extra},
+            $data->{comment}? "COMMENT '$data->{comment}'": '');
+}
+
 =begin testing list
 
 is $_tobj->list('unknown'), undef, 'Unknown table';
@@ -128,11 +140,8 @@ sub rename
     my ($table, $name, $newname) = @_;
     my $field = $self->one_row($self->{get_expr}, [$table, $name]);
     return unless $field;
-    my $fielddef = sprintf('%s %s NULL DEFAULT %s %s',
-                            $field->{Type},
-                            $field->{Null} eq 'YES'? '': 'NOT',
-                            defined $field->{Default}? $field->{Default}: 'NULL',
-                            $field->{Extra});
+
+    my $fielddef = build_column_def({ map { lc($_) => $field->{$_} } keys %$field });
     $self->do($self->{rename_expr}, [$table, $name, $newname, $fielddef]);
 }
 
@@ -140,6 +149,7 @@ sub rename
 
 $new_field =~ s/type: int\(11\)/type: varchar(255)/;
 $new_field =~ s/default: 0/default: ~/;
+$new_field =~ s/collation: ~/collation: utf8_general_ci/;
 $new_field =~ s/null: 0/null: 1/;
 isnt $_tobj->store('fusqlfs_table', 'field', $new_field), undef, 'Field changed';
 is $_tobj->get('fusqlfs_table', 'field'), $new_field;
@@ -151,16 +161,14 @@ sub store
     my $self = shift;
     my ($table, $name, $data) = @_;
     $data = $self->validate($data, {
-		type     => '',
-		null     => qr/^\d$/,
-		extra    => '',
-		-default => '',
+		type      => '',
+		null      => qr/^\d$/,
+		extra     => '',
+		collation => '',
+		default   => '',
+                comment   => '',
 	}) or return;
-    my $fielddef = sprintf('%s %s NULL DEFAULT %s %s',
-                            $data->{type},
-                            $data->{null}? '': 'NOT',
-                            defined $data->{default}? $data->{default}: 'NULL',
-                            $data->{extra});
+    my $fielddef = build_column_def($data);
     $self->do($self->{store_expr}, [$table, $name, $fielddef]);
 }
 1;
