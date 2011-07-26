@@ -30,6 +30,7 @@ See L<FusqlFS::Backend::PgSQL::Tables> for details.
 
 use FusqlFS::Backend::MySQL::Table::Struct;
 use FusqlFS::Backend::MySQL::Table::Indices;
+use FusqlFS::Backend::MySQL::Table::Data;
 
 sub init
 {
@@ -43,6 +44,7 @@ sub init
 
     $self->{subpackages} = {
         struct  => FusqlFS::Backend::MySQL::Table::Struct->new(),
+        data    => FusqlFS::Backend::MySQL::Table::Data->new(),
         indices => FusqlFS::Backend::MySQL::Table::Indices->new(),
     };
 }
