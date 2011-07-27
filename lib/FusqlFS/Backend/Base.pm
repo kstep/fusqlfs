@@ -102,12 +102,15 @@ sub new
         charset     => $options{charset}||'',
         fnsep       => $fnsep,
         fnsplit     => qr/[$fnsep]/,
-        dbh         => DBI->connect($dsn, @options{qw(user password)},
-                        {
-                            PrintError => $debug > 0,
-                            PrintWarn  => $debug > 1
-                        }),
+        connect     => sub () {
+                           DBI->connect($dsn, @options{qw(user password)},
+                           {
+                               PrintError => $debug > 0,
+                               PrintWarn  => $debug > 1
+                           });
+                       },
     };
+    $self->{dbh} = $self->{connect}();
 
     given ($options{format})
     {
@@ -142,6 +145,28 @@ sub new
     $FusqlFS::Artifact::instance = $self;
     $self->init();
     return $self;
+}
+
+sub connect
+{
+    my $self = shift;
+    $self->{dbh} = $self->{connect}();
+    while (my ($key, $pkg) = each %{$self->{subpackages}})
+    {
+        $pkg->init();
+    }
+}
+
+sub disconnect
+{
+    $_[0]->{dbh}->disconnect();
+}
+
+sub reconnect
+{
+    my $self = shift;
+    $self->disconnect() if $self->{dbh}->ping();
+    $self->connect();
 }
 
 =item by_path

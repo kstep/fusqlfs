@@ -83,6 +83,7 @@ sub init
 
     FusqlFS::Cache->init(\%cache, @options{qw(cache_strategy cache_threshold)});
     $SIG{USR1} = sub () { %cache = (); };
+    $SIG{HUP} = sub () { %cache = (); $fusqlh->reconnect(); };
 
     return $class;
 }
