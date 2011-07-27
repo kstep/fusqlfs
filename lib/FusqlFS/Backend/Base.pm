@@ -147,14 +147,30 @@ sub new
     return $self;
 }
 
+=item connect, disconnect, reconnect
+
+These methods can be used to control database connection in runtime.
+Please use them instead of direct DBH object access via $fusqlh->{dbh},
+as they make some more work, than simple database {dis,re}connection.
+
+They use credentials, provided on first backend object initialization
+with L</new> method above, so no parameters are required.
+
+C<connect> establish new database connection and reinitializes backend.
+Backend reinitialization is required, because some backends make some
+query preparation, linked to current database connection.
+
+C<disconnect> drops database connection, and C<reconnect> drops database
+connection is it's active (checked with L<DBI::ping> method) and
+then establish connection anew. This method is used in C<HUP>
+signal handler to reset database connection.
+
+=cut
 sub connect
 {
     my $self = shift;
     $self->{dbh} = $self->{connect}();
-    while (my ($key, $pkg) = each %{$self->{subpackages}})
-    {
-        $pkg->init();
-    }
+    $self->init();
 }
 
 sub disconnect
