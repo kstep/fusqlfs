@@ -633,6 +633,20 @@ sub build
     return $sql;
 }
 
+=item pairs
+
+Composes fields into pairs, suitable for UPDATE query or the like.
+
+Input: $glue, @fields.
+Output: $sql_clause.
+
+=cut
+sub pairs
+{
+    my ($self, $glue, @fields) = @_;
+    return join($glue, map { "\"$_\" = ?" } @fields);
+}
+
 =item hprintf
 
 I<Static method>. Extended L<sprintf|perlfunc/sprintf FORMAT, LIST > version.

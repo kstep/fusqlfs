@@ -19,4 +19,10 @@ sub concat
     return "CONCAT_WS('$instance->{fnsep}', `" . join('`, `', @_) . "`)";
 }
 
+sub pairs
+{
+    my ($self, $glue, @fields) = @_;
+    return join($glue, map { "`$_` = ?" } @fields);
+}
+
 1;
