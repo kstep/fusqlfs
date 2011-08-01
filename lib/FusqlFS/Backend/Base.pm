@@ -70,6 +70,24 @@ file paths are mapped to backend objects and how file type is determined.
 use DBI;
 use FusqlFS::Entry;
 
+our %FORMATTERS = (
+    xml => [
+        'XML/Simple.pm',
+        sub () { XMLout($_[0], NoAttr => 1) },
+        sub () { XMLin($_[0], NoAttr => 1) },
+        ],
+    yaml => [
+        'YAML/Tiny.pm',
+        \&YAML::Tiny::Dump,
+        \&YAML::Tiny::Load,
+        ],
+    json => [
+        'JSON/Syck.pm',
+        \&JSON::Syck::Dump,
+        \&JSON::Syck::Load,
+        ],
+);
+
 =item new
 
 Class constructor.
@@ -112,33 +130,10 @@ sub new
     };
     $self->{dbh} = $self->{connect}();
 
-    given ($options{format})
-    {
-        when ('xml')
-        {
-            use XML::Simple;
-            $self->{dumper} = sub () { XMLout($_[0], NoAttr => 1) };
-            $self->{loader} = sub () { XMLin($_[0], NoAttr => 1) };
-        }
-        when ('yaml')
-        {
-            use YAML::Tiny;
-            $self->{dumper} = \&YAML::Tiny::Dump;
-            $self->{loader} = \&YAML::Tiny::Load;
-        }
-        when ('json')
-        {
-            use JSON::Syck;
-            $self->{dumper} = \&JSON::Syck::Dump;
-            $self->{loader} = \&JSON::Syck::Load;
-        }
-        default
-        {
-            use YAML::Tiny;
-            $self->{dumper} = \&YAML::Tiny::Dump;
-            $self->{loader} = \&YAML::Tiny::Load;
-        }
-    }
+    my $formatter = $FORMATTERS{$options{format}} || $FORMATTERS{yaml};
+    require $formatter->[0];
+    $self->{dumper} = $formatter->[1];
+    $self->{loader} = $formatter->[2];
 
     bless $self, $class;
 
