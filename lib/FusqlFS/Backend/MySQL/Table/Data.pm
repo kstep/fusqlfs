@@ -39,13 +39,34 @@ sub get
 {
     my $self = shift;
     my ($table, $name) = @_;
-    my $where_clause = $self->where_clause($table, $name);
-    return unless $where_clause;
+    my ($where_clause, @binds) = $self->where_clause($table, $name);
+    return unless $where_clause || @binds;
 
-    my $query = sprintf('SELECT * FROM `%s` WHERE %s LIMIT 1', $table, $where_clause);
-    my $result = $self->one_row($query);
+    my $result = $self->one_row('SELECT * FROM `%s` WHERE %s LIMIT 1', [$table, $where_clause], @binds);
 
     return $self->dump($result);
+}
+
+sub drop
+{
+    my $self = shift;
+    my ($table, $name) = @_;
+    my ($where_clause, @binds) = $self->where_clause($table, $name);
+    return unless $where_clause || @binds;
+
+    $self->cdo('DELETE FROM `%s` WHERE %s', [$table, $where_clause], @binds);
+}
+
+sub store
+{
+    my $self = shift;
+    my ($table, $name, $data) = @_;
+    my ($where_clause, @binds) = $self->where_clause($table, $name);
+    return unless $where_clause || @binds;
+
+    $data = $self->load($data);
+    my $template = $self->pairs(', ', keys %$data);
+    $self->cdo("UPDATE `%s` SET %s WHERE %s", [$table, $template, $where_clause], values %$data, @binds);
 }
 
 sub where_clause
@@ -56,8 +77,7 @@ sub where_clause
     my @primary_key = $self->get_primary_key($table);
     return unless @primary_key && $#primary_key == $#binds;
 
-    my $result = join(' AND ', map { "`$_` = '%s'" } @primary_key);
-    return sprintf($result, @binds);
+    return $self->pairs(' AND ', @primary_key), @binds;
 }
 
 sub get_primary_key

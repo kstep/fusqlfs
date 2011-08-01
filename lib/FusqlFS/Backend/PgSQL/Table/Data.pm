@@ -42,7 +42,7 @@ sub where_clause
     my @primary_key = $self->get_primary_key($table);
     return unless @primary_key && $#primary_key == $#binds;
 
-    return join(' AND ', map { "\"$_\" = ?" } @primary_key), @binds;
+    return $self->pairs(' AND ', @primary_key), @binds;
 }
 
 =begin testing get
@@ -94,10 +94,10 @@ sub store
     my $self = shift;
     my ($table, $name, $data) = @_;
     my ($where_clause, @binds) = $self->where_clause($table, $name);
-    return unless $where_clause;
+    return unless $where_clause || @binds;
 
     $data = $self->load($data);
-    my $template = join ', ', map { "\"$_\" = ?" } keys %$data;
+    my $template = $self->pairs(', ', keys %$data);
     $self->cdo('UPDATE "%s" SET %s WHERE %s', [$table, $template, $where_clause], values %$data, @binds);
 }
 
