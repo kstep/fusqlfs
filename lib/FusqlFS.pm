@@ -252,7 +252,7 @@ sub unlink
     return -EACCES() unless $entry->writable();
     return -EISDIR() if $entry->isdir();
 
-    clear_cache($path, $entry->depth());
+    clear_cache($path, $entry->depth() + 1);
     $entry->drop();
     return 0;
 }
