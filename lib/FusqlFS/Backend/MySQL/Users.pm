@@ -12,6 +12,7 @@ sub init
     $self->{get_expr} = $self->expr("SELECT * FROM mysql.user WHERE User = ? AND Host = ?");
     $self->{create_expr} = $self->expr("CREATE USER '%(User)s'\@'%(Host)s'");
     $self->{drop_expr} = $self->expr("DROP USER '%(User)s'\@'%(Host)s'");
+    $self->{rename_expr} = $self->expr("RENAME USER '%(User)s'\@'%(Host)s' TO '%(NewUser)s'\@'%(NewHost)s'");
 }
 
 sub list
@@ -60,6 +61,15 @@ sub drop
     return unless $user || $host;
 
     $self->do($self->{drop_expr}, {User => $user, Host => $host});
+}
+
+sub rename
+{
+    my $self = shift;
+    my ($user, $host) = split(/@/, shift, 2);
+    my ($newuser, $newhost) = split(/@/, shift, 2);
+
+    $self->do($self->{rename_expr}, {User => $user, Host => $host, NewUser => $newuser, NewHost => $newhost});
 }
 
 __END__
