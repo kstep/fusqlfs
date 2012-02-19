@@ -6,12 +6,14 @@ our $VERSION = "0.005";
 use parent 'FusqlFS::Backend::Base';
 
 use FusqlFS::Backend::MySQL::Tables;
+use FusqlFS::Backend::MySQL::Users;
 
 sub init
 {
     my $self = shift;
     $self->{subpackages} = {
         tables => new FusqlFS::Backend::MySQL::Tables(),
+        users  => new FusqlFS::Backend::MySQL::Users(),
     };
 }
 
