@@ -10,9 +10,9 @@ sub init
     my $self = shift;
     $self->{list_expr} = $self->expr("SELECT CONCAT(User, '\@', Host) FROM mysql.user");
     $self->{get_expr} = $self->expr("SELECT * FROM mysql.user WHERE User = ? AND Host = ?");
-    $self->{create_expr} = $self->expr("CREATE USER '%(User)s'\@'%(Host)s'");
-    $self->{drop_expr} = $self->expr("DROP USER '%(User)s'\@'%(Host)s'");
-    $self->{rename_expr} = $self->expr("RENAME USER '%(User)s'\@'%(Host)s' TO '%(NewUser)s'\@'%(NewHost)s'");
+    $self->{create_expr} = "CREATE USER '%(User)\$s'\@'%(Host)\$s'";
+    $self->{drop_expr} = "DROP USER '%(User)\$s'\@'%(Host)\$s'";
+    $self->{rename_expr} = "RENAME USER '%(User)\$s'\@'%(Host)\$s' TO '%(NewUser)\$s'\@'%(NewHost)\$s'";
 }
 
 sub list
