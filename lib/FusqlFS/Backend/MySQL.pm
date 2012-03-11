@@ -11,6 +11,10 @@ use FusqlFS::Backend::MySQL::Users;
 sub init
 {
     my $self = shift;
+    $self->do('SET character_set_results = ?'   , $self->{charset});
+    $self->do('SET character_set_client = ?'    , $self->{charset});
+    $self->do('SET character_set_connection = ?', $self->{charset});
+
     $self->{subpackages} = {
         tables => new FusqlFS::Backend::MySQL::Tables(),
         users  => new FusqlFS::Backend::MySQL::Users(),

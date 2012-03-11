@@ -76,7 +76,7 @@ privileges:
   - update
   - references
 type: int(11)
-};
+}, 'Known field';
 
 =end testing
 =cut
@@ -152,7 +152,7 @@ $new_field =~ s/default: 0/default: ~/;
 $new_field =~ s/collation: ~/collation: utf8_general_ci/;
 $new_field =~ s/null: 0/null: 1/;
 isnt $_tobj->store('fusqlfs_table', 'field', $new_field), undef, 'Field changed';
-is $_tobj->get('fusqlfs_table', 'field'), $new_field;
+is $_tobj->get('fusqlfs_table', 'field'), $new_field, 'Field changed correctly';
 
 =end testing
 =cut
