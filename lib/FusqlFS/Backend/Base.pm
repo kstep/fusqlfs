@@ -112,25 +112,25 @@ sub new
     {
         when ('xml')
         {
-            use XML::Simple;
+            require('XML/Simple.pm');
             $self->{dumper} = sub () { XMLout($_[0], NoAttr => 1) };
             $self->{loader} = sub () { XMLin($_[0], NoAttr => 1) };
         }
         when ('yaml')
         {
-            use YAML::Tiny;
+            require('YAML/Tiny.pm');
             $self->{dumper} = \&YAML::Tiny::Dump;
             $self->{loader} = \&YAML::Tiny::Load;
         }
         when ('json')
         {
-            use JSON::Syck;
+            require('JSON/Syck.pm');
             $self->{dumper} = \&JSON::Syck::Dump;
             $self->{loader} = \&JSON::Syck::Load;
         }
         default
         {
-            use YAML::Tiny;
+            require('YAML/Tiny.pm');
             $self->{dumper} = \&YAML::Tiny::Dump;
             $self->{loader} = \&YAML::Tiny::Load;
         }
