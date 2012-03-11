@@ -102,6 +102,20 @@ sub mount
     my $mountpoint = shift;
     my $mountopts = shift||'';
 
+    my $fusermount = (grep { -f "$_/fusermount" } split /:/, $ENV{PATH})[0] . '/fusermount';
+    if (-x $fusermount) {
+        carp "fusermount found at `$fusermount' and will be used to autounmount when daemon terminated.";
+        $SIG{QUIT} = $SIG{INT} = $SIG{TERM} = sub () {
+            carp "Running `$fusermount' to unmount `$mountpoint'...";
+            chdir '/';
+            $mountpoint =~ s/(['\\])/\\$1/g;
+            system(sprintf(q{fusermount -u -z '%s'}, $mountpoint));
+            exit(0);
+        };
+    } else {
+        carp "fusermount is not found or non-executable, won't autounmount when daemon terminated!";
+    }
+
     Fuse::main(
         mountpoint => $mountpoint,
         mountopts  => $mountopts,
@@ -129,6 +143,7 @@ sub mount
         fsync      => \&fsync,
         utime      => \&utime,
     );
+
 }
 
 =item Fuse hooks
