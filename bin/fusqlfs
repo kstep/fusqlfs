@@ -183,13 +183,13 @@ separator to glue field values together. Defaults to single dot (.). You may
 wish to change it if you have table with text fields in primary key with a dot
 in them.
 
-For tables without primary keys, see L</--namemap|--namemap, -n> options below.
+For tables without primary keys, see L<--namemap|/--namemap, -n> options below.
 
 =item B<--namemap, -n>
 
 Table-to-fields map to format filenames for data rows.
 Normally data records filenames are composed from primary key fields
-concatenated with fields separator (see L</--fnsep|--fnsep, -s> option
+concatenated with fields separator (see L<--fnsep|/--fnsep, -s> option
 above). But sometimes you can have tables without primary keys, so
 this algorithm will not work and you won't be able to look inside such
 tables data. To enable data lookup feature for such tables you can
