@@ -72,6 +72,7 @@ sub init
     $threaded = $options{threaded}||0;
     $debug    = $options{debug}||0;
     $def_time = mktime(localtime());
+
     $fusqlh   = FusqlFS::Backend->new(@_);
     croak "Unable to initialize database backend" unless defined $fusqlh;
 

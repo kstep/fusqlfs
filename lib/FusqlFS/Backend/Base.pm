@@ -135,6 +135,8 @@ sub new
     $self->{dumper} = $formatter->[1];
     $self->{loader} = $formatter->[2];
 
+    $self->{namemap} = $options{namemap};
+
     bless $self, $class;
 
     $FusqlFS::Artifact::instance = $self;

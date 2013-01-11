@@ -17,7 +17,7 @@ sub list
 {
     my $self = shift;
     my ($table) = @_;
-    my @primary_key = $self->get_primary_key($table);
+    my @primary_key = $self->get_key_fields($table);
     return undef unless @primary_key;
 
     my $sth = $self->cexpr('SELECT %s FROM %s %s', $self->concat(@primary_key), $self->{field_quote}.$table.$self->{field_quote}, $self->limit);
@@ -29,7 +29,7 @@ sub where_clause
     my $self = shift;
     my ($table, $name) = @_;
     my @binds = $self->asplit($name);
-    my @primary_key = $self->get_primary_key($table);
+    my @primary_key = $self->get_key_fields($table);
     return unless @primary_key && $#primary_key == $#binds;
 
     return $self->pairs(' AND ', @primary_key), @binds;
@@ -101,7 +101,7 @@ sub create
 {
     my $self = shift;
     my ($table, $name) = @_;
-    my @primary_key = $self->get_primary_key($table);
+    my @primary_key = $self->get_key_fields($table);
     my $qtable = $self->{field_quote}.$table.$self->{field_quote};
     return unless @primary_key;
 
@@ -114,11 +114,17 @@ sub rename
 {
     my $self = shift;
     my ($table, $name, $newname) = @_;
-    my @primary_key = $self->get_primary_key($table);
+    my @primary_key = $self->get_key_fields($table);
     return unless @primary_key;
 
     my %data = map { shift(@primary_key) => $_ } $self->asplit($newname);
     $self->store($table, $name, \%data);
+}
+
+sub get_key_fields {
+    my @fields = @{$FusqlFS::Artifact::instance->{namemap}->{$_[1]} || []};
+    @fields = $_[0]->get_primary_key($_[1]) unless @fields;
+    return @fields;
 }
 
 sub get_primary_key { }
