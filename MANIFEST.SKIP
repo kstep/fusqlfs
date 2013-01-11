@@ -56,4 +56,5 @@
 ^doc.*
 ^debian
 \.log$
-^MYMETA.yml$
+^MYMETA\.yml$
+^MYMETA\.json$
