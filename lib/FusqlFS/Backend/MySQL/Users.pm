@@ -5,14 +5,72 @@ package FusqlFS::Backend::MySQL::Users;
 our $VERSION = "0.005";
 use parent 'FusqlFS::Artifact';
 
+our @USER_PRIVILEGES = (
+    'Select'            ,
+    'Insert'            ,
+    'Update'            ,
+    'Delete'            ,
+    'Create'            ,
+    'Drop'              ,
+    'Reload'            ,
+    'Shutdown'          ,
+    'Process'           ,
+    'File'              ,
+    'Grant'             ,
+    'References'        ,
+    'Index'             ,
+    'Alter'             ,
+    'Show db'           ,
+    'Super'             ,
+    'Create tmp table'  ,
+    'Lock tables'       ,
+    'Execute'           ,
+    'Repl slave'        ,
+    'Repl client'       ,
+    'Create view'       ,
+    'Show view'         ,
+    'Create routine'    ,
+    'Alter routine'     ,
+    'Create user'       ,
+    'Event'             ,
+    'Trigger'           ,
+    'Create tablespace' ,
+);
+our @TABLE_PRIVILEGES = (
+    'Select'      ,
+    'Insert'      ,
+    'Update'      ,
+    'Delete'      ,
+    'Create'      ,
+    'Drop'        ,
+    'Grant'       ,
+    'References'  ,
+    'Index'       ,
+    'Alter'       ,
+    'Create view' ,
+    'Show view'   ,
+    'Trigger'     ,
+);
+our @COLUMN_PRIVILEGES = (
+    'Select'     ,
+    'Insert'     ,
+    'Update'     ,
+    'References' ,
+);
+our @ROUTINE_PRIVILEGES = (
+    'Execute'       ,
+    'Alter routine' ,
+    'Grant'         ,
+);
+
 sub init
 {
     my $self = shift;
     $self->{list_expr} = $self->expr("SELECT CONCAT(User, '\@', Host) FROM mysql.user");
     $self->{get_expr} = $self->expr("SELECT * FROM mysql.user WHERE User = ? AND Host = ?");
-    $self->{create_expr} = "CREATE USER '%(User)\$s'\@'%(Host)\$s'";
-    $self->{drop_expr} = "DROP USER '%(User)\$s'\@'%(Host)\$s'";
-    $self->{rename_expr} = "RENAME USER '%(User)\$s'\@'%(Host)\$s' TO '%(NewUser)\$s'\@'%(NewHost)\$s'";
+    $self->{create_expr} = q{CREATE USER '%(User)$s'@'%(Host)$s'};
+    $self->{drop_expr} = q{DROP USER '%(User)$s'@'%(Host)$s'};
+    $self->{rename_expr} = q{RENAME USER '%(User)$s'@'%(Host)$s' TO '%(NewUser)$s'@'%(NewHost)$s'};
 }
 
 sub list
@@ -35,6 +93,7 @@ sub get
     while (my ($name, $value) = each %$data) {
         if ($name =~ /_priv$/) {
             $name =~ s/_priv$//;
+            $name =~ s/_/ /g;
             push @privileges, $name if $value == 'Y';
         } else {
             $result{$name} = $value;
@@ -70,6 +129,31 @@ sub rename
     my ($newuser, $newhost) = split(/@/, shift, 2);
 
     $self->do($self->{rename_expr}, {User => $user, Host => $host, NewUser => $newuser, NewHost => $newhost});
+}
+
+sub store
+{
+    my $self = shift;
+    my ($user, $host) = split(/@/, shift, 2);
+    return unless $user || $host;
+
+    my $priv_re = join('|', @USER_PRIVILEGES);
+    $priv_re = qr/^$priv_re$/i;
+
+    my $data = $self->validate(shift, {
+        max_connections      => qr/^\d+$/,
+        max_questions        => qr/^\d+$/,
+        max_updates          => qr/^\d+$/,
+        max_user_connections => qr/^\d+$/,
+        priviledges          => ['ARRAY', sub{ [ grep { $_ =~ $priv_re } @$_ ] }],
+    }) or return;
+
+    $data->{User} = $user;
+    $data->{Host} = $host;
+    $data->{privileges} = join ',', @{$data->{privileges}};
+
+    $self->do(q{REVOKE ALL ON *.* FROM '%(User)$s'@'%(Host)$s'}, {User => $user, Host => $host});
+    $self->do(q{GRANT %(privileges)$s ON *.* TO '%(User)$s'@'%(Host)$s' WITH MAX_QUERIES_PER_HOUR %(max_questions)$d MAX_UPDATES_PER_HOUR %(max_updates)$d MAX_CONNECTIONS_PER_HOUR %(max_connections)$d MAX_USER_CONNECTIONS %(max_user_connections)$d}, $data);
 }
 
 __END__
