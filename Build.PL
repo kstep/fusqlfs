@@ -94,7 +94,9 @@ my $build = $class->new(
     requires => {
         'perl'         => '5.010',
 
-        'Getopt::Long' => 0,
+        'Getopt::Long'     => 0,
+        'Getopt::ArgvFile' => 0,
+
         'Pod::Usage'   => 0,
         'Carp'         => 0,
         'Cwd'          => 0,

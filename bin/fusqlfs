@@ -4,6 +4,7 @@ use strict;
 use 5.010;
 
 use Getopt::Long;
+use Getopt::ArgvFile justload => 1;
 use Pod::Usage;
 use Carp;
 use Cwd;
@@ -42,6 +43,7 @@ my %options = (
 );
 
 Getopt::Long::Configure('no_ignore_case');
+Getopt::ArgvFile::argvFile(default => 1);
 GetOptions(
     'host|h:s'        => \$options{'host'},
     'port|P:i'        => \$options{'port'},
