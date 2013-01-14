@@ -114,6 +114,7 @@ sub new
     my $dsn = 'DBI:'.$class->dsn(@options{qw(host port database)});
     my $debug = $options{debug}||0;
     my $fnsep = $options{fnsep}||'.';
+    my $format = $options{format}||'yaml';
     my $self = {
         subpackages => {},
         limit       => 0 + ($options{limit}||0),
@@ -130,7 +131,7 @@ sub new
     };
     $self->{dbh} = $self->{connect}();
 
-    my $formatter = $FORMATTERS{$options{format}} || $FORMATTERS{yaml};
+    my $formatter = $FORMATTERS{$format} || $FORMATTERS{yaml};
     require $formatter->[0];
     $self->{dumper} = $formatter->[1];
     $self->{loader} = $formatter->[2];
