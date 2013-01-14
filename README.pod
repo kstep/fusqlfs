@@ -261,7 +261,7 @@ it as DB admin tool.
 
 =head1 AUTHOR
 
-E<copy> 2010, Konstantin Stepanov E<lt>I<mailto:kstep@p-nut.info>E<gt>
+E<copy> 2010, Konstantin Stepanov E<lt>I<mailto:me@kstep.me>E<gt>
 
 =head1 LICENSE
 
