@@ -2,7 +2,8 @@ use strict;
 use 5.010;
 
 package FusqlFS::Backend;
-our $VERSION = "0.005";
+use FusqlFS::Version;
+our $VERSION = $FusqlFS::Version::VERSION;
 
 =head1 NAME
 

@@ -2,7 +2,8 @@ use strict;
 use 5.010;
 
 package FusqlFS::Artifact::Table::Data;
-our $VERSION = "0.005";
+use FusqlFS::Version;
+our $VERSION = $FusqlFS::Version::VERSION;
 use parent 'FusqlFS::Artifact';
 
 sub init

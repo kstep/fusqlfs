@@ -53,7 +53,8 @@ our $threaded;
 our %cache;
 our %inbuffer;
 
-our $VERSION = "0.005";
+use FusqlFS::Version;
+our $VERSION = $FusqlFS::Version::VERSION;
 
 =item init
 

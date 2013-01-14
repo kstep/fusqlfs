@@ -56,7 +56,8 @@ Synlink to language owner role in F<../../roles>.
 =cut
 
 package FusqlFS::Backend::PgSQL::Languages;
-our $VERSION = "0.005";
+use FusqlFS::Version;
+our $VERSION = $FusqlFS::Version::VERSION;
 use parent 'FusqlFS::Artifact';
 
 use FusqlFS::Backend::PgSQL::Role::Owner;

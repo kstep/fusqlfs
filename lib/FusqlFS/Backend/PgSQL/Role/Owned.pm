@@ -2,7 +2,8 @@ use strict;
 use 5.010;
 
 package FusqlFS::Backend::PgSQL::Role::Owned;
-our $VERSION = "0.005";
+use FusqlFS::Version;
+our $VERSION = $FusqlFS::Version::VERSION;
 use base 'FusqlFS::Backend::PgSQL::Role::Base';
 
 =head1 NAME

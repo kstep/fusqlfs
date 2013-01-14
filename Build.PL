@@ -91,6 +91,7 @@ my $build = $class->new(
     license       => 'gpl3',
     dist_author   => 'Konstantin Stepanov <kstep@p-nut.info>',
     dist_abstract => 'fusqlfs - FUSE file system to mount DB and provide tools to control and admin it',
+    dist_version_from => 'lib/FusqlFS/Version.pm',
     requires => {
         'perl'         => '5.010',
 
