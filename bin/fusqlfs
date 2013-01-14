@@ -329,6 +329,17 @@ wish to use it as C<--nodeamon> to debug the program.
 
 =back
 
+=head2 Store options into configuration files
+
+FusqlFS leverages L<Getopt::ArgvFile> package to load configuration from files.
+
+Long story short, you can put C<@filename> on command line, it will interpolate
+contents of the file into command line. You can place as many @-clauses into
+command line as you want. This way you can store some common options into a
+file and use it in C<fusqlfs> invocation. For instance, you can place
+credentials and database name into F<databaserc> file and then just call
+C<fusqlfs @databaserc> to mount it.
+
 =head1 DESCRIPTION
 
 This FUSE-daemon allows to mount any DB as a simple filesystem. Unlike other
