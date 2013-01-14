@@ -182,7 +182,7 @@ increment_by: 1
 is_called: 0
 is_cycled: 0
 last_value: 1
-log_cnt: 1
+log_cnt: 0
 max_value: 9223372036854775807
 min_value: 1
 sequence_name: fusqlfs_sequence
@@ -213,7 +213,7 @@ increment_by: 2
 is_called: 0
 is_cycled: 1
 last_value: 6
-log_cnt: 1
+log_cnt: 0
 max_value: 1000
 min_value: '-10'
 sequence_name: fusqlfs_sequence

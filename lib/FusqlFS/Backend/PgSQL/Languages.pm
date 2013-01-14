@@ -136,7 +136,7 @@ sub get
 
 my $list = $_tobj->list();
 isa_ok $list, 'ARRAY';
-cmp_set $list, [ qw(c internal sql) ];
+cmp_set $list, [ qw(c internal sql plpgsql) ];
 
 =end testing
 =cut
@@ -151,7 +151,7 @@ sub list
 =begin testing drop after rename
 
 isnt $_tobj->drop('plperl1'), undef;
-cmp_set $_tobj->list(), [ qw(c internal sql) ];
+cmp_set $_tobj->list(), [ qw(c internal sql plpgsql) ];
 is $_tobj->get('plperl1'), undef;
 
 =end testing
@@ -169,7 +169,7 @@ sub drop
 
 isnt $_tobj->create('plperl'), undef;
 is_deeply $_tobj->get('plperl'), $new_lang;
-cmp_set $_tobj->list(), [ qw(c internal sql plperl) ];
+cmp_set $_tobj->list(), [ qw(c internal sql plpgsql plperl) ];
 
 =end testing
 =cut
@@ -185,7 +185,7 @@ sub create
 =begin testing rename after store
 
 isnt $_tobj->rename('plperl', 'plperl1'), undef;
-cmp_set $_tobj->list(), [ qw(c internal sql plperl1) ];
+cmp_set $_tobj->list(), [ qw(c internal sql plpgsql plperl1) ];
 is $_tobj->get('plperl'), undef;
 is_deeply $_tobj->get('plperl1'), $new_lang;
 
