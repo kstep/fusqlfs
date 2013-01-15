@@ -26,6 +26,7 @@ sub init
 
     $self->{list_expr} = 'SHOW COLUMNS FROM `%s`';
     $self->{get_expr} = 'SHOW FULL COLUMNS FROM `%s` LIKE "%s"';
+    $self->{get_create_expr} = 'SHOW CREATE TABLE `%s`';
 
     $self->{create_expr} = 'ALTER TABLE `%s` ADD COLUMN `%s` INT NOT NULL DEFAULT 0';
     $self->{rename_expr} = 'ALTER TABLE `%s` CHANGE COLUMN `%s` `%s` %s';
@@ -48,7 +49,7 @@ sub build_column_def
 =begin testing list
 
 is $_tobj->list('unknown'), undef, 'Unknown table';
-cmp_set $_tobj->list('fusqlfs_table'), ['id'], 'Test table listable';
+cmp_set $_tobj->list('fusqlfs_table'), ['id', 'create.sql'], 'Test table listable';
 
 =end testing
 =cut
@@ -58,6 +59,8 @@ sub list
     my ($table) = @_;
     my $list = $self->all_col($self->{list_expr}, [$table]);
     return unless $list && @$list;
+
+    push @$list, 'create.sql';
     return $list
 }
 
@@ -85,6 +88,12 @@ sub get
 {
     my $self = shift;
     my ($table, $name) = @_;
+
+    if ($name eq 'create.sql')
+    {
+        return $self->one_row($self->{get_create_expr}, [$table])->{'Create Table'};
+    }
+
     my $result = $self->one_row($self->{get_expr}, [$table, $name]);
     if ($result)
     {
