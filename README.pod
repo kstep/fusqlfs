@@ -191,7 +191,12 @@ and L<FusqlFS::Cache::Limited> for detailed description of cache strategies.
 =item B<--format, -f>
 
 Format used to output different text data, like rows, columns description etc.
-Can be "xml", "json" or "yaml" for now, defaults to "yaml".
+Can be "xml", "json", "yaml" or "native" for now, defaults to "yaml".
+
+Note a special case of "native" format: it doesn't encode data into any
+specific text-based format, instead it preserves inner Perl structures.
+The effect is all formatted files are represented as directories,
+each field value being regular file with data.
 
 =back
 
