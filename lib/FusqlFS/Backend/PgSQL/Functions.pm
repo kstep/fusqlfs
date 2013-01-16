@@ -68,35 +68,35 @@ sub init
 
     if ($pgver < 80400)
     {
-        $get_func_args = 'CASE WHEN p.proallargtypes IS NOT NULL THEN
+        $get_func_args = q{CASE WHEN p.proallargtypes IS NOT NULL THEN
     pg_catalog.array_to_string(ARRAY(
       SELECT
         CASE
-          WHEN p.proargmodes[s.i] = \'i\' THEN \'\'
-          WHEN p.proargmodes[s.i] = \'o\' THEN \'OUT \'
-          WHEN p.proargmodes[s.i] = \'b\' THEN \'INOUT \'
-          WHEN p.proargmodes[s.i] = \'v\' THEN \'VARIADIC \'
+          WHEN p.proargmodes[s.i] = 'i' THEN ''
+          WHEN p.proargmodes[s.i] = 'o' THEN 'OUT '
+          WHEN p.proargmodes[s.i] = 'b' THEN 'INOUT '
+          WHEN p.proargmodes[s.i] = 'v' THEN 'VARIADIC '
         END ||
         CASE
-          WHEN COALESCE(p.proargnames[s.i], \'\') = \'\' THEN \'\'
-          ELSE p.proargnames[s.i] || \' \'
+          WHEN COALESCE(p.proargnames[s.i], '') = '' THEN ''
+          ELSE p.proargnames[s.i] || ' '
         END ||
         pg_catalog.format_type(p.proallargtypes[s.i], NULL)
       FROM
         pg_catalog.generate_series(1, pg_catalog.array_upper(p.proallargtypes, 1)) AS s(i)
-    ), \', \')
+    ), ', ')
   ELSE
     pg_catalog.array_to_string(ARRAY(
       SELECT
         CASE
-          WHEN COALESCE(p.proargnames[s.i+1], \'\') = \'\' THEN \'\'
-          ELSE p.proargnames[s.i+1] || \' \'
+          WHEN COALESCE(p.proargnames[s.i+1], '') = '' THEN ''
+          ELSE p.proargnames[s.i+1] || ' '
           END ||
         pg_catalog.format_type(p.proargtypes[s.i], NULL)
       FROM
         pg_catalog.generate_series(0, pg_catalog.array_upper(p.proargtypes, 1)) AS s(i)
-    ), \', \')
-  END';
+    ), ', ')
+  END};
         $get_func_res = 'pg_catalog.format_type(p.prorettype, NULL)';
     }
 
