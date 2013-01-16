@@ -161,7 +161,7 @@ our %SUBCLASSES = (
     HASH   => '::Dir',
     SCALAR => '::Symlink',
     CODE   => '::Code',
-    undef, '::File',
+    '', '::File',
 );
 
 sub new
