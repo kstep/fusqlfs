@@ -128,7 +128,7 @@ sub store
     $self->drop($name);
     $self->do($self->{create_expr}, {
         name     => $name,
-        params   => join(', ', @{$struct->{struct}->{parameters}}),
+        params   => join(', ', @{$struct->{struct}->{parameters}||[]}),
         returns  => $struct->{struct}->{returns},
         sql_mode => $sql_modes{lc($struct->{struct}->{sql})} || '',
         security => uc($struct->{struct}->{security}),
