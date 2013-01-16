@@ -102,13 +102,13 @@ sub store
             immutable  => '',
             parameters => ['ARRAY', sub {
                     foreach my $v (@$_) {
-                        return 0 if $v !~ /^(?:in|out)\s+\w+\s+[\w\s(),]+$/i;
+                        die 'INVALID' if $v !~ /^(?:in|out)\s+\w+\s+[\w\s(),]+$/i;
                     }
-                    return 1;
+                    return $_;
                 }],
         },
         code => undef,
-        definer => \('users/' . $self->dbh()->{Username} . '@%'),
+        definer => ['SCALAR', sub{ $$_ =~ m{^users/\w+} }],
         comment => undef,
     }) or return;
 

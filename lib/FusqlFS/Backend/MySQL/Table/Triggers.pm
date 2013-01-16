@@ -122,7 +122,7 @@ sub store
             event => qr/^(insert|delete|update)$/i,
         },
         code    => undef,
-        definer => ['SCALAR', sub{ $$_ =~ m{^users/} }],
+        definer => ['SCALAR', sub{ $$_ =~ m{^users/\w+} }],
     }) or return;
 
     $self->drop($table, $name);
