@@ -63,6 +63,7 @@ sub init
 
     $self->{template} = {
         'code'    => '',
+        'definer' => \('users/' . $self->dbh()->{Username} . '@%'),
         'struct'  => '---
 event: insert
 when: after
@@ -131,7 +132,7 @@ sub store
         event => uc $struct->{struct}->{event},
         when  => uc $struct->{struct}->{when},
         code  => $struct->{code},
-    }) or $self->SUPER::store($table, $name, $struct);
+    }) or $self->SUPER::store($table, $name, $data);
 }
 
 sub rename
