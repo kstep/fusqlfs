@@ -283,7 +283,7 @@ sub mkdir
     return -EEXIST() unless $entry->get() == $newdir;
 
     $entry->create();
-    clear_cache($path, $entry->depth());
+    clear_cache($path, $entry->depth() + 1);
     return 0;
 }
 
@@ -296,7 +296,7 @@ sub rmdir
     return -ENOTDIR() unless $entry->isdir();
 
     $entry->drop();
-    clear_cache($path, $entry->depth());
+    clear_cache($path, $entry->depth() + 1);
     return 0;
 }
 
