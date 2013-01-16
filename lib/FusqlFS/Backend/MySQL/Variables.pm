@@ -21,7 +21,9 @@ FusqlFS::Backend::MySQL::Variables - expose all MySQL variables
 sub get
 {
     my $self = shift;
-    return $self->dump({ map { $_->{Variable_name} => $_->{Value} } @{$self->all_row('SHOW VARIABLES')} });
+    my $name = shift;
+    my %vars = map { $_->{Variable_name} => $_->{Value} } @{$self->all_row('SHOW VARIABLES')};
+    return $name? $vars{$name}: $self->dump(\%vars);
 }
 
 sub store
