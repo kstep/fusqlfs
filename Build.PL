@@ -119,6 +119,7 @@ my $build = $class->new(
     },
     recommends => {
         'DBD::mysql'   => 0,
+        'DBD::SQLite'  => 0,
 
         'XML::Simple'  => 0,
         'JSON::Syck'   => 0,
