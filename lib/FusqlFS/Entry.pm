@@ -156,17 +156,25 @@ create new files/directories/etc.
 
 =cut
 
+our %SUBCLASSES = (
+    ARRAY  => '::Dir',
+    HASH   => '::Dir',
+    SCALAR => '::Symlink',
+    CODE   => '::Code',
+    undef, '::File',
+);
+
 sub new
 {
     my ($class, $fs, $path, $leaf_absent) = @_;
 
-    my $subclass = '::File';
+    my $subclass = '';
     $path =~ s{^/}{};
     $path =~ s{/$}{};
     my @path = split /\//, $path;
 
     my $entry = $fs->{subpackages};
-    my $pkg = $entry;
+    my $pkg = $fs;
     my @names = ();
     my @tail = ();
     foreach my $p (@path)
@@ -202,27 +210,14 @@ sub new
             $subclass = '::Dir';
         } else {
             $entry = $pkg->get(@names);
-            if (my $ref = ref $entry)
-            {
-                given ($ref)
-                {
-                    when ('SCALAR') { $subclass = '::Symlink' }
-                    when ('CODE')   { $subclass = '::Pipe' }
-                }
-            }
+            $subclass = $SUBCLASSES{ref $entry};
         }
+    } else {
+        $subclass = $SUBCLASSES{ref $entry};
     }
-    elsif (my $ref = ref $entry)
-    {
-        given ($ref)
-        {
-            when ('HASH')   { $subclass = '::Dir' }
-            when ('ARRAY')  { $subclass = '::Dir' }
-            when ('SCALAR') { $subclass = '::Symlink' }
-            when ('CODE')   { $subclass = '::Pipe' }
-        }
-    }
+
     my $self = [ $pkg, \@names, $entry, $list, \@tail, undef ];
+
     bless $self, $class.$subclass;
     $self->init(@path);
     return $self;
