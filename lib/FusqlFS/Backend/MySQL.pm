@@ -9,7 +9,7 @@ use parent 'FusqlFS::Backend::Base';
 use FusqlFS::Backend::MySQL::Tables;
 use FusqlFS::Backend::MySQL::Users;
 use FusqlFS::Backend::MySQL::Procedures;
-#use FusqlFS::Backend::MySQL::Functions;
+use FusqlFS::Backend::MySQL::Functions;
 
 sub init
 {
@@ -23,7 +23,7 @@ sub init
         users  => new FusqlFS::Backend::MySQL::Users(),
 
         procedures => FusqlFS::Backend::MySQL::Procedures->new(),
-        #functions  => FusqlFS::Backend::MySQL::Functions->new(),
+        functions  => FusqlFS::Backend::MySQL::Functions->new(),
     };
 }
 
