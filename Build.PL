@@ -103,7 +103,6 @@ my $build = $class->new(
         'Cwd'          => 0,
 
         'DBI'          => '1.600',
-        'DBD::Pg'      => 0,
 
         'YAML::Tiny'   => 0,
 
@@ -119,6 +118,7 @@ my $build = $class->new(
     },
     recommends => {
         'DBD::mysql'   => 0,
+        'DBD::Pg'      => 0,
         'DBD::SQLite'  => 0,
 
         'XML::Simple'  => 0,
