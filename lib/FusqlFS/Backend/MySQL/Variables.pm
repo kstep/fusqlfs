@@ -8,7 +8,7 @@ use parent 'FusqlFS::Artifact';
 
 =head1 NAME
 
-FusqlFS::Backend::MySQL::Variables - 
+FusqlFS::Backend::MySQL::Variables - expose all MySQL variables
 
 =head1 SYNOPSIS
 
@@ -18,3 +18,21 @@ FusqlFS::Backend::MySQL::Variables -
 
 =cut
 
+sub get
+{
+    my $self = shift;
+    return $self->dump({ map { $_->{Variable_name} => $_->{Value} } @{$self->all_row('SHOW VARIABLES')} });
+}
+
+sub store
+{
+    my $self = shift;
+    my $data = $self->load(shift);
+    return unless $data;
+
+    foreach my $varname (keys %$data) {
+        $self->do('SET `%s` = ?', [$varname], $data->{$varname});
+    }
+}
+
+1;
