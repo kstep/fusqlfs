@@ -30,8 +30,9 @@ You better look at one of underlying classes for detailed description.
 use Carp;
 
 our %Engines = (
-    pgsql => '::PgSQL',
-    mysql => '::MySQL',
+    pgsql  => '::PgSQL',
+    mysql  => '::MySQL',
+    sqlite => '::SQLite',
 );
 
 sub new
