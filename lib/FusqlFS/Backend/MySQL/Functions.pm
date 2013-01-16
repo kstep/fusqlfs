@@ -88,8 +88,9 @@ sub create
             security   => 'definer',
             immutable  => 'yes',
             parameters => [],
+            returns    => 'int',
         },
-        code => 'BEGIN SELECT 1; END',
+        code => 'BEGIN RETURN 1; END',
         definer => \('users/' . $self->dbh()->{Username} . '@%'),
         comment => '',
     })
@@ -106,7 +107,7 @@ sub store
             immutable  => '',
             parameters => ['ARRAY', sub {
                     foreach my $v (@$_) {
-                        die 'INVALID' if $v !~ /^(?:in|out)\s+\w+\s+[\w\s(),]+$/i;
+                        die 'INVALID' if $v !~ /^\w+\s+[\w\s(),]+$/i;
                     }
                     return $_;
                 }],
@@ -127,10 +128,10 @@ sub store
     $self->drop($name);
     $self->do($self->{create_expr}, {
         name     => $name,
-        params   => join(', ', $struct->{struct}->{parameters}),
+        params   => join(', ', @{$struct->{struct}->{parameters}}),
         returns  => $struct->{struct}->{returns},
         sql_mode => $sql_modes{lc($struct->{struct}->{sql})} || '',
-        security => $struct->{struct}->{security},
+        security => uc($struct->{struct}->{security}),
         mutable  => $struct->{struct}->{immutable}? '': 'NOT',
         code     => $struct->{code},
     });
@@ -157,14 +158,15 @@ sub get
     my $self = shift;
     my $name = shift;
 
+    my $data = $self->one_row($self->{get_expr}, $name);
+    return unless $data;
+
     my %sql_modes = (
         NO_SQL            => 'no',
         CONTAINS_SQL      => 'contains',
         READS_SQL_DATA    => 'reads',
         MODIFIES_SQL_DATA => 'modifies',
     );
-
-    my $data = $self->one_row($self->{get_expr}, $name);
 
     my $param_list = $data->{param_list};
     $param_list =~ s/^\s+//;

@@ -122,9 +122,9 @@ sub store
     $self->drop($name);
     $self->do($self->{create_expr}, {
         name     => $name,
-        params   => join(', ', $struct->{struct}->{parameters}),
+        params   => join(', ', @{$struct->{struct}->{parameters}}),
         sql_mode => $sql_modes{lc($struct->{struct}->{sql})} || '',
-        security => $struct->{struct}->{security},
+        security => uc($struct->{struct}->{security}),
         mutable  => $struct->{struct}->{immutable}? '': 'NOT',
         code     => $struct->{code},
     });
@@ -151,14 +151,15 @@ sub get
     my $self = shift;
     my $name = shift;
 
+    my $data = $self->one_row($self->{get_expr}, $name);
+    return unless $data;
+
     my %sql_modes = (
         NO_SQL            => 'no',
         CONTAINS_SQL      => 'contains',
         READS_SQL_DATA    => 'reads',
         MODIFIES_SQL_DATA => 'modifies',
     );
-
-    my $data = $self->one_row($self->{get_expr}, $name);
 
     my $param_list = $data->{param_list};
     $param_list =~ s/^\s+//;
