@@ -62,7 +62,8 @@ sub init
     $self->{drop_expr} = 'DROP TRIGGER `%s`';
 
     $self->{template} = {
-        'struct' => '---
+        'code'    => '',
+        'struct'  => '---
 event: insert
 when: after
 ',
@@ -81,14 +82,15 @@ sub get
 
         my $result = {
             struct => $self->dump({
-                'event' => $data->{Event},
-                'when'  => $data->{Timing},
+                'event' => lc $data->{Event},
+                'when'  => lc $data->{Timing},
             }),
             definer => \"users/$data->{Definer}",
             code => $data->{Statement},
             'create.sql' => $self->one_row($self->{get_create_expr}, [$name])->{'SQL Original Statement'},
         };
 
+        return $result;
     }
 }
 
@@ -96,7 +98,8 @@ sub list
 {
     my $self = shift;
     my ($table) = @_;
-    return [ @{$self->all_col($self->{list_expr}, $table)}, @{$self->SUPER::list($table)} ];
+    my @list = @{$self->SUPER::list($table)};
+    return [ (@{$self->all_col($self->{list_expr}, $table)}, @list) ];
 }
 
 sub drop
@@ -121,15 +124,14 @@ sub store
         definer => ['SCALAR', sub{ $$_ =~ m{^users/} }],
     }) or return;
 
-    my $definition = {
+    $self->drop($table, $name);
+    $self->do($self->{store_expr}, {
         name  => $name,
         table => $table,
-        event => uc($struct->{struct}->{event}),
-        when  => uc($struct->{struct}->{when}),
+        event => uc $struct->{struct}->{event},
+        when  => uc $struct->{struct}->{when},
         code  => $struct->{code},
-    };
-
-    $self->drop($table, $name) and $self->do($self->{store_expr}, $definition);
+    }) or $self->SUPER::store($table, $name, $struct);
 }
 
 sub rename
