@@ -70,29 +70,7 @@ file paths are mapped to backend objects and how file type is determined.
 
 use DBI;
 use FusqlFS::Entry;
-
-our %FORMATTERS = (
-    native => [
-        undef,
-        sub () { $_[0] },
-        sub () { $_[0] },
-        ],
-    xml => [
-        'XML/Simple.pm',
-        sub () { XMLout($_[0], NoAttr => 1) },
-        sub () { XMLin($_[0], NoAttr => 1) },
-        ],
-    yaml => [
-        'YAML/Tiny.pm',
-        \&YAML::Tiny::Dump,
-        \&YAML::Tiny::Load,
-        ],
-    json => [
-        'JSON/Syck.pm',
-        \&JSON::Syck::Dump,
-        \&JSON::Syck::Load,
-        ],
-);
+use FusqlFS::Formatter;
 
 =item new
 
@@ -136,12 +114,7 @@ sub new
                        },
     };
     $self->{dbh} = $self->{connect}();
-
-    my $formatter = $FORMATTERS{$format} || $FORMATTERS{yaml};
-    require $formatter->[0] if $formatter->[0];
-    $self->{dumper} = $formatter->[1];
-    $self->{loader} = $formatter->[2];
-
+    ($self->{dumper}, $self->{loader}) = FusqlFS::Formatter->init($format);
     $self->{namemap} = $options{namemap};
 
     bless $self, $class;
