@@ -6,21 +6,13 @@ use FusqlFS::Version;
 our $VERSION = $FusqlFS::Version::VERSION;
 use parent 'FusqlFS::Artifact';
 
-use FusqlFS::Backend::SQLite::Table::Indices;
-use FusqlFS::Backend::SQLite::Table::Data;
-use FusqlFS::Backend::SQLite::Table::Struct;
-
 sub init
 {
     my $self = shift;
     $self->{list_expr} = $self->expr('SELECT name FROM sqlite_master WHERE type = "table"');
     $self->{get_expr} = $self->expr('SELECT sql, rootpage FROM sqlite_master WHERE type = "table" AND name = ?');
 
-    $self->{subpackages} = {
-        indices => new FusqlFS::Backend::SQLite::Table::Indices(),
-        data    => new FusqlFS::Backend::SQLite::Table::Data(),
-        struct  => new FusqlFS::Backend::SQLite::Table::Struct(),
-    };
+    $self->autopackages('indices', 'data', 'struct');
 }
 
 sub list

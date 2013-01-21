@@ -57,7 +57,8 @@ hashref which describes root of fusqlfs subsystem: its keys will be file names,
 and values will be these files' content (well, the values are usually
 L<FusqlFS::Artifact> instances interfacing to different database artifacts, so
 "file" here means not only plain file, but directories, symlinks and
-pseudopipes as well).
+pseudopipes as well). See L<FusqlFS::Artifact/autopackages> for a way to
+automate this process.
 
 See also L<FusqlFS::Entry> to learn how this instance variable is used, how
 file paths are mapped to backend objects and how file type is determined.

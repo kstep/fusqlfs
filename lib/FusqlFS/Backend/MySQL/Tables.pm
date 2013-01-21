@@ -29,11 +29,6 @@ See L<FusqlFS::Backend::PgSQL::Tables> for details.
 
 =cut
 
-use FusqlFS::Backend::MySQL::Table::Struct;
-use FusqlFS::Backend::MySQL::Table::Indices;
-use FusqlFS::Backend::MySQL::Table::Data;
-use FusqlFS::Backend::MySQL::Table::Triggers;
-
 sub init
 {
     my $self = shift;
@@ -44,12 +39,11 @@ sub init
     $self->{list_expr} = 'SHOW TABLES';
     $self->{get_expr} = 'SHOW TABLES LIKE "%s"';
 
-    $self->{subpackages} = {
-        struct   => FusqlFS::Backend::MySQL::Table::Struct->new(),
-        data     => FusqlFS::Backend::MySQL::Table::Data->new(),
-        indices  => FusqlFS::Backend::MySQL::Table::Indices->new(),
-        triggers => FusqlFS::Backend::MySQL::Table::Triggers->new(),
-    };
+    $self->autopackages(
+        'struct',
+        'data',
+        'indices',
+        'triggers');
 }
 
 =begin testing get

@@ -6,18 +6,13 @@ use FusqlFS::Version;
 our $VERSION = $FusqlFS::Version::VERSION;
 use parent 'FusqlFS::Backend::Base';
 
-use FusqlFS::Backend::SQLite::Tables;
-
 sub init
 {
-    $_[0]->{subpackages} = {
-        tables  => new FusqlFS::Backend::SQLite::Tables(),
-    };
+    $_[0]->autopackages('tables');
 }
 
 sub dsn
 {
-    say STDERR "SQLite:dbname=$_[3]";
     return "SQLite:dbname=$_[3]";
 }
 

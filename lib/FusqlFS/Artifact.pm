@@ -750,6 +750,62 @@ sub extend
     return wantarray? %$hash: $hash;
 }
 
+=item autopackages
+
+Automagically plug all designated packages and plug them in as subpackages.
+
+It takes a list of names, each of them will be put to lower case and used as
+subpackages hash key (so it will be subdirectory name in mounted filesystem).
+Package name for each of the name will be formed with current package name put
+to singular form appended with the name with first letter put to upper case.
+All absent packages (which couldn't be imported without errors) will be
+ignored.
+
+Each such subpackage will be instantiated with C<new()> method call without
+arguments.
+
+Singular form of current package name is produced by removing last "s"
+from package name, which can be quite naive for some cases.
+
+For example if you run C<$self-E<gt>autopackages("indices", "struct")> from
+C<FusqlFS::Backend::SomeEngine::Tables> package, two packages will be imported
+and instantiated with C<new()> method call (without arguments):
+C<FusqlFS::Backend::SomeEngine::Table::Indices> and
+C<FusqlFS::Backend::SomeEngine::Table::Struct>. Each instance will be put into
+C<$self-E<gt>{subpackages}> hash under C<indices> and C<struct> keys
+correspondingly.
+
+The method returns subpackages hashref in scalar context and linearized version
+of subpackages hash in list context.
+
+See also: L<FusqlFS::Backend::Base> for information about subpackages hash,
+L<FusqlFS::Entry> for more information about file path resolution algorithm.
+
+Input: $name, ...
+Output: $hashref | %hash
+
+=cut
+sub autopackages
+{
+    my $self = shift;
+    my $class = ref $self;
+    $class =~ s/s$//;
+
+    $self->{subpackages} ||= {};
+
+    foreach my $name (@_) {
+        my $name = lc $name;
+        my $package = $class . '::' . ucfirst $name;
+        eval qq{use $package};
+
+        next if $@;
+        
+        $self->{subpackages}->{$name} = $package->new();
+    }
+
+    return wantarray? %{$self->{subpackages}}: $self->{subpackages};
+}
+
 1;
 
 __END__

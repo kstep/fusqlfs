@@ -68,11 +68,6 @@ L<FusqlFS::Backend::PgSQL::Role::Acl> for details.
 
 use FusqlFS::Backend::PgSQL::Role::Owner;
 use FusqlFS::Backend::PgSQL::Role::Acl;
-use FusqlFS::Backend::PgSQL::Table::Indices;
-use FusqlFS::Backend::PgSQL::Table::Struct;
-use FusqlFS::Backend::PgSQL::Table::Data;
-use FusqlFS::Backend::PgSQL::Table::Constraints;
-use FusqlFS::Backend::PgSQL::Table::Triggers;
 
 sub init
 {
@@ -84,15 +79,18 @@ sub init
     $self->{list_expr} = $self->expr("SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname = 'public'");
     $self->{get_expr} = $self->expr("SELECT 1 FROM pg_catalog.pg_tables WHERE schemaname = 'public' AND tablename = ?");
 
-    $self->{subpackages} = {
-        indices     => FusqlFS::Backend::PgSQL::Table::Indices->new(),
-        struct      => FusqlFS::Backend::PgSQL::Table::Struct->new(),
-        data        => FusqlFS::Backend::PgSQL::Table::Data->new(),
-        constraints => FusqlFS::Backend::PgSQL::Table::Constraints->new(),
-        triggers    => FusqlFS::Backend::PgSQL::Table::Triggers->new(),
-        owner       => FusqlFS::Backend::PgSQL::Role::Owner->new('r'),
-        acl         => FusqlFS::Backend::PgSQL::Role::Acl->new('r'),
-    };
+    $self->extend(
+        $self->autopackages(
+            'indices',
+            'struct',
+            'data',
+            'constraints',
+            'triggers'
+        ), {
+            owner => FusqlFS::Backend::PgSQL::Role::Owner->new('r'),
+            acl   => FusqlFS::Backend::PgSQL::Role::Acl->new('r'),
+        }
+    );
 }
 
 =begin testing get
