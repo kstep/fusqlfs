@@ -36,7 +36,7 @@ my %options = (
     'engine'          => 'PgSQL',
     'innodb'          => 0,
     'limit'           => 0,
-    'format'          => 'yaml',
+    'format'          => 'native',
     'cache_strategy'  => 'memory',
     'cache_threshold' => 0,
     'namemap'         => [],
@@ -299,12 +299,21 @@ and L<FusqlFS::Cache::Limited> for detailed description of cache strategies.
 =item B<--format, -f>
 
 Format used to output different text data, like rows, columns description etc.
-Can be "xml", "json", "yaml" or "native" for now, defaults to "yaml".
+Can be "xml", "json", "yaml", "html", "htmltable" or "native" for now, defaults
+to "native".
 
 Note a special case of "native" format: it doesn't encode data into any
-specific text-based format, instead it preserves inner Perl structures.
-The effect is all formatted files are represented as directories,
-each field value being regular file with data.
+specific text-based format, instead it preserves inner Perl structures. The
+effect is all formatted files are represented as directories, each field value
+being regular file with data. For details see L<FusqlFS::Formatter::Native>.
+
+Other special formats are "html" and "htmltable". They are dump-only formats,
+they produce HTML output (HTML lists for "html" or tables for "htmltable") but
+don't parse this format back into Perl structures, so you can't edit and save
+database data while using these formats. For details see
+L<FusqlFS::Formatter::Html> and L<FusqlFS::Formatter::Htmltable>.
+
+For writing your own formatters see L<FusqlFS::Formatter>.
 
 =back
 
