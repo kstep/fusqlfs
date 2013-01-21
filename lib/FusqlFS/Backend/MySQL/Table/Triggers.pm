@@ -64,10 +64,10 @@ sub init
     $self->{template} = {
         'code'    => '',
         'definer' => \('users/' . $self->dbh()->{Username} . '@%'),
-        'struct'  => '---
-event: insert
-when: after
-',
+        'struct'  => $self->dump({
+            event => 'insert',
+            when => 'after',
+        }),
     };
 }
 

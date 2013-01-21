@@ -104,14 +104,15 @@ sub init
     $self->{store_expr} = 'CREATE TRIGGER %s %s %s ON %s FOR EACH %s EXECUTE PROCEDURE %s';
 
     $self->{template} = {
-        'struct' => '---
-events:
-  - insert
-  - update
-  - delete
-for_each: row
-when: before
-',
+        'struct' => $self->dump({
+            events => [
+                'insert',
+                'update',
+                'delete',
+            ],
+            for_each => 'row',
+            when => 'before',
+        }),
     };
 }
 
