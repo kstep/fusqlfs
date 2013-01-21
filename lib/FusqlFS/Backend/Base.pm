@@ -98,7 +98,7 @@ sub new
     my $dsn = 'DBI:'.$class->dsn(@options{qw(host port database)});
     my $debug = $options{debug}||0;
     my $fnsep = $options{fnsep}||'.';
-    my $format = $options{format}||'yaml';
+    my $format = $options{format}||'native';
     my $self = {
         subpackages => {},
         limit       => 0 + ($options{limit}||0),

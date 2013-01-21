@@ -7,11 +7,12 @@ pkgdesc="${perlname} module which implements FUSE file system for database manag
 arch=('any')
 url="http://search.cpan.org/dist/${perlname}"
 license=('GPL' 'PerlArtistic')
-depends=('perl>=5.10.0' 'perl-fuse' 'perl-dbi' 'perl-yaml-tiny' 'perl-getopt-argvfile')
+depends=('perl>=5.10.0' 'perl-fuse' 'perl-dbi' 'perl-getopt-argvfile')
 makedepends=('perl-module-build' 'perl-test-deep')
 optdepends=('perl-dbd-mysql: MySQL backend support'
             'perl-dbd-pg: PgSQL backend support'
             'perl-dbd-sqlite: SQLite backend support'
+            'perl-yaml-tiny: YAML output format support'
             'perl-xml-simple: XML output format support'
             'perl-yaml-syck: JSON output format support')
 provides=()

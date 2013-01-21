@@ -104,8 +104,6 @@ my $build = $class->new(
 
         'DBI'          => '1.600',
 
-        'YAML::Tiny'   => 0,
-
         'POSIX'        => 0,
         'Fcntl'        => 0,
         'Fuse'         => '0.09',
@@ -123,6 +121,7 @@ my $build = $class->new(
 
         'XML::Simple'  => 0,
         'JSON::Syck'   => 0,
+        'YAML::Tiny'   => 0,
     },
     add_to_cleanup => [ '*.bak', 'FusqlFS-*' ],
 );
