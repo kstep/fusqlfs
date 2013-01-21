@@ -8,6 +8,7 @@ use parent 'FusqlFS::Artifact';
 
 use FusqlFS::Backend::SQLite::Table::Indices;
 use FusqlFS::Backend::SQLite::Table::Data;
+use FusqlFS::Backend::SQLite::Table::Struct;
 
 sub init
 {
@@ -18,6 +19,7 @@ sub init
     $self->{subpackages} = {
         indices => new FusqlFS::Backend::SQLite::Table::Indices(),
         data    => new FusqlFS::Backend::SQLite::Table::Data(),
+        struct  => new FusqlFS::Backend::SQLite::Table::Struct(),
     };
 }
 
