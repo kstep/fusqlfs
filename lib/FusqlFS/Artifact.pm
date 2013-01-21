@@ -730,6 +730,25 @@ sub fnsep
     return $instance->{fnsep};
 }
 
+=item extend
+
+Extend one hash with other hash inplace.
+
+Input: $hashref, ...
+Output: $hashref
+
+=cut
+sub extend
+{
+    my $self = shift;
+    my $hash = shift;
+    foreach my $other (@_) {
+        while (my ($key, $value) = each %$other) {
+            $hash->{$key} = $value;
+        }
+    }
+    return wantarray? %$hash: $hash;
+}
 
 1;
 

@@ -7,6 +7,7 @@ our $VERSION = $FusqlFS::Version::VERSION;
 use parent 'FusqlFS::Artifact';
 
 use FusqlFS::Backend::SQLite::Table::Indices;
+use FusqlFS::Backend::SQLite::Table::Data;
 
 sub init
 {
@@ -16,6 +17,7 @@ sub init
 
     $self->{subpackages} = {
         indices => new FusqlFS::Backend::SQLite::Table::Indices(),
+        data    => new FusqlFS::Backend::SQLite::Table::Data(),
     };
 }
 
@@ -32,7 +34,7 @@ sub get
     my $data = $self->one_row($self->{get_expr}, $table);
     return unless $data;
 
-    $data->{indices} = $self->{subpackages}->{indices};
+    $self->extend($data, $self->{subpackages});
     $data->{sql} ||= '';
     return $data;
 }
