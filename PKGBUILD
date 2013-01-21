@@ -22,7 +22,7 @@ backup=()
 options=('!emptydirs')
 install=
 source=("http://search.cpan.org/CPAN/authors/id/K/KS/KSTEPME/${perlname}-${pkgver}.tar.gz")
-md5sums=('88e591984b9247c36564855943c917b2')
+md5sums=('0697c93f073b52a45005827416a1cea6')
 
 build() {
     cd "$srcdir/$perlname-$pkgver"
