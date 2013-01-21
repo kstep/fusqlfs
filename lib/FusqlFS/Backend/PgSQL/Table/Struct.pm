@@ -55,12 +55,12 @@ sub list
 =begin testing get
 
 is $_tobj->get('fusqlfs_table', 'unknown'), undef;
-is $_tobj->get('fusqlfs_table', 'id'), q{---
-default: "nextval('fusqlfs_table_id_seq'::regclass)"
-dimensions: 0
-nullable: 0
-order: 1
-type: integer
+is_deeply $_tobj->get('fusqlfs_table', 'id'), {
+    default => "nextval('fusqlfs_table_id_seq'::regclass)",
+    dimensions => 0,
+    nullable => 0,
+    order => 1,
+    type => 'integer',
 };
 
 =end testing
@@ -92,12 +92,12 @@ sub drop
 
 isnt $_tobj->create('fusqlfs_table', 'field'), undef;
 is_deeply $_tobj->list('fusqlfs_table'), [ 'id', 'field' ];
-is $_tobj->get('fusqlfs_table', 'field'), q{---
-default: 0
-dimensions: 0
-nullable: 0
-order: 2
-type: integer
+is_deeply $_tobj->get('fusqlfs_table', 'field'), {
+    default => 0,
+    dimensions => 0,
+    nullable => 0,
+    order => 2,
+    type => 'integer',
 };
 
 =end testing
@@ -114,7 +114,7 @@ sub create
 isnt $_tobj->rename('fusqlfs_table', 'field', 'new_field'), undef;
 is_deeply $_tobj->list('fusqlfs_table'), [ 'id', 'new_field' ];
 is $_tobj->get('fusqlfs_table', 'field'), undef;
-is $_tobj->get('fusqlfs_table', 'new_field'), $new_field;
+is_deeply $_tobj->get('fusqlfs_table', 'new_field'), $new_field;
 
 =end testing
 =cut
@@ -128,7 +128,7 @@ sub rename
 =begin testing store after create
 
 isnt $_tobj->store('fusqlfs_table', 'field', $new_field), undef;
-is $_tobj->get('fusqlfs_table', 'field'), $new_field;
+is_deeply $_tobj->get('fusqlfs_table', 'field'), $new_field;
 
 =end testing
 =cut
@@ -169,12 +169,12 @@ __END__
 
 #!class FusqlFS::Backend::PgSQL::Table::Test
 
-my $new_field = q{---
-default: "''::character varying"
-dimensions: 0
-nullable: 1
-order: 2
-type: 'character varying(255)'
+my $new_field = {
+    default => "''::character varying",
+    dimensions => 0,
+    nullable => 1,
+    order => 2,
+    type => 'character varying(255)',
 };
 
 =end testing
