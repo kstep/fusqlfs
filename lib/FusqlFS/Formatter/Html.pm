@@ -36,10 +36,10 @@ sub _Dump
 
     given ($ref) {
         when ('ARRAY') {
-            return '<ol><li>' . join('</li><li>', map Dump($_), @$value) . '</li></ol>';
+            return '<ol><li>' . join('</li><li>', map _Dump($_), @$value) . '</li></ol>';
         }
         when ('HASH') {
-            return '<dl>' . join('', map "<dt>$_</dt><dd>${\Dump($value->{$_})}</dd>", sort keys %$value) . '</dl>';
+            return '<dl>' . join('', map "<dt>$_</dt><dd>${\_Dump($value->{$_})}</dd>", sort keys %$value) . '</dl>';
         }
         when ('SCALAR') {
             return $$value;

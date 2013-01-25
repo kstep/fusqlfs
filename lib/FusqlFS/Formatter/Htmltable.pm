@@ -35,10 +35,10 @@ sub _Dump
     given ($ref) {
         when ('ARRAY') {
             my $index = 0;
-            return '<table class="table"><thead><tr><th>#</th><th>Value</th></tr></thead><tbody><tr>' . join('</tr><tr>', map "<th>${\(++$index)}</th><td>${\Dump($_)}</td>", @$value) . '</tr></table>';
+            return '<table class="table"><thead><tr><th>#</th><th>Value</th></tr></thead><tbody><tr>' . join('</tr><tr>', map "<th>${\(++$index)}</th><td>${\_Dump($_)}</td>", @$value) . '</tr></table>';
         }
         when ('HASH') {
-            return '<table class="table"><tbody><tr>' . join('</tr><tr>', map "<th>$_</th><td>${\Dump($value->{$_})}</td>", sort keys %$value) . '</tr></tbody></table>';
+            return '<table class="table"><tbody><tr>' . join('</tr><tr>', map "<th>$_</th><td>${\_Dump($value->{$_})}</td>", sort keys %$value) . '</tr></tbody></table>';
         }
         when ('SCALAR') {
             return $$value;
