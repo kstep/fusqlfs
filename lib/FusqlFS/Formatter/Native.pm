@@ -15,6 +15,14 @@ FusqlFS::Formatter::Native - native formatter class
 This is a native formatter, it doesn't format data in any way. This is kind of
 pass-through filter.
 
+=begin testing
+
+#!noinst
+my $value = { a => 1, b => 2, c => 3 };
+is {_tpkg}::Load({_tpkg}::Dump($value)), $value, "pass-through formatter";
+
+=end testing
+
 =cut
 
 sub Dump

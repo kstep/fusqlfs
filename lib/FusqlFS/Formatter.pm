@@ -50,6 +50,14 @@ Initialize dumper and loader for given output format.
 Input: $format
 Output: &dumper, &loader
 
+=begin testing init
+
+#!noinst
+my ($dump, $load) = FusqlFS::Formatter->init('native');
+is ref $dump, 'CODE', 'Dumper defined';
+is ref $load, 'CODE', 'Loader defined';
+
+=end testing
 =cut
 sub init
 {
