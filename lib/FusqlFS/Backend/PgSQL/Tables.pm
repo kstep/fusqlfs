@@ -80,13 +80,13 @@ sub init
     $self->{get_expr} = $self->expr("SELECT 1 FROM pg_catalog.pg_tables WHERE schemaname = 'public' AND tablename = ?");
 
     $self->extend(
-        scalar($self->autopackages(
+        $self->autopackages(
             'indices',
             'struct',
             'data',
             'constraints',
             'triggers'
-        )), {
+        ), {
             owner => FusqlFS::Backend::PgSQL::Role::Owner->new('r'),
             acl   => FusqlFS::Backend::PgSQL::Role::Acl->new('r'),
         }

@@ -782,7 +782,7 @@ See also: L<FusqlFS::Backend::Base> for information about subpackages hash,
 L<FusqlFS::Entry> for more information about file path resolution algorithm.
 
 Input: $name, ...
-Output: $hashref | %hash
+Output: $hashref
 
 =cut
 sub autopackages
@@ -803,7 +803,7 @@ sub autopackages
         $self->{subpackages}->{$name} = $package->new();
     }
 
-    return wantarray? %{$self->{subpackages}}: $self->{subpackages};
+    return $self->{subpackages};
 }
 
 1;
