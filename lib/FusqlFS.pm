@@ -163,8 +163,8 @@ sub getdir
 
     my ($path) = @_;
     my $entry = by_path($path);
-    return -ENOENT() unless $entry;
-    return -ENOTDIR() unless $entry->isdir();
+    return - ENOENT unless $entry;
+    return - ENOTDIR unless $entry->isdir();
     return ('.', '..', @{$entry->list()}, 0);
 }
 
@@ -172,7 +172,7 @@ sub getattr
 {
     my ($path) = @_;
     my $entry = by_path($path);
-    return -ENOENT() unless $entry;
+    return - ENOENT unless $entry;
     return file_struct($entry);
 }
 
@@ -180,8 +180,8 @@ sub readlink
 {
     my ($path) = @_;
     my $entry = by_path($path);
-    return -ENOENT() unless $entry;
-    return -EINVAL() unless $entry->islink();
+    return - ENOENT unless $entry;
+    return - EINVAL unless $entry->islink();
     return $entry->read();
 }
 
@@ -189,8 +189,8 @@ sub read
 {
     my ($path, $size, $offset) = @_;
     my $entry = by_path($path);
-    return -ENOENT() unless $entry;
-    return -EINVAL() unless $entry->isfile();
+    return - ENOENT unless $entry;
+    return - EINVAL unless $entry->isfile();
 
     return $entry->read($offset, $size);
 }
@@ -199,10 +199,10 @@ sub write
 {
     my ($path, $buffer, $offset) = @_;
     my $entry = by_path($path);
-    return -ENOENT() unless $entry;
-    return -EISDIR() if $entry->isdir();
-    return -EINVAL() unless $entry->isfile();
-    return -EACCES() unless $entry->writable();
+    return - ENOENT unless $entry;
+    return - EISDIR if $entry->isdir();
+    return - EINVAL unless $entry->isfile();
+    return - EACCES unless $entry->writable();
 
     $inbuffer{$path} ||= $entry->get();
     substr($inbuffer{$path}, $offset, length($buffer)) = $buffer;
@@ -213,7 +213,7 @@ sub flush
 {
     my ($path) = @_;
     my $entry = by_path($path);
-    return -ENOENT() unless $entry;
+    return - ENOENT unless $entry;
 
     flush_inbuffer($path, $entry);
     clear_cache($path, $entry->depth()) unless $entry->ispipe();
@@ -224,8 +224,8 @@ sub open
 {
     my ($path, $mode) = @_;
     my $entry = by_path($path);
-    return -ENOENT() unless $entry;
-    return -EISDIR() if $entry->isdir();
+    return - ENOENT unless $entry;
+    return - EISDIR if $entry->isdir();
     return 0;
 }
 
@@ -233,9 +233,9 @@ sub truncate
 {
     my ($path, $offset) = @_;
     my $entry = by_path($path);
-    return -ENOENT() unless $entry;
-    return -EINVAL() unless $entry->isfile();
-    return -EACCES() unless $entry->writable();
+    return - ENOENT unless $entry;
+    return - EINVAL unless $entry->isfile();
+    return - EACCES unless $entry->writable();
 
     $entry->write($offset);
     clear_cache($path, $entry->depth()) unless $entry->ispipe();
@@ -245,15 +245,15 @@ sub truncate
 sub symlink
 {
     my ($path, $symlink) = @_;
-    return -EOPNOTSUPP() if $path =~ /^\//;
+    return - EOPNOTSUPP if $path =~ /^\//;
 
     $path = fold_path($symlink, '..', $path);
     my $origin = by_path($path);
-    return -ENOENT() unless $origin;
+    return - ENOENT unless $origin;
 
     $path =~ s{^/}{};
     my $entry = $fusqlh->by_path($symlink, \$path);
-    return -EEXIST() unless $entry->get() == \$path;
+    return - EEXIST unless $entry->get() == \$path;
 
     $entry->store();
     say STDERR "depth = ",$entry->depth(), "; height = ", $entry->height();
@@ -265,9 +265,9 @@ sub unlink
 {
     my ($path) = @_;
     my $entry = by_path($path);
-    return -ENOENT() unless $entry;
-    return -EACCES() unless $entry->writable();
-    return -EISDIR() if $entry->isdir();
+    return - ENOENT unless $entry;
+    return - EACCES unless $entry->writable();
+    return - EISDIR if $entry->isdir();
 
     clear_cache($path, $entry->depth() + 1);
     $entry->drop();
@@ -279,8 +279,8 @@ sub mkdir
     my ($path, $mode) = @_;
     my $newdir = {};
     my $entry = $fusqlh->by_path($path, $newdir);
-    return -ENOENT() unless $entry;
-    return -EEXIST() unless $entry->get() == $newdir;
+    return - ENOENT unless $entry;
+    return - EEXIST unless $entry->get() == $newdir;
 
     $entry->create();
     clear_cache($path, $entry->depth() + 1);
@@ -291,9 +291,9 @@ sub rmdir
 {
     my ($path) = @_;
     my $entry = by_path($path);
-    return -ENOENT() unless $entry;
-    return -EACCES() unless $entry->writable();
-    return -ENOTDIR() unless $entry->isdir();
+    return - ENOENT unless $entry;
+    return - EACCES unless $entry->writable();
+    return - ENOTDIR unless $entry->isdir();
 
     $entry->drop();
     clear_cache($path, $entry->depth() + 1);
@@ -304,8 +304,8 @@ sub mknod
 {
     my ($path, $mode, $dev) = @_;
     my $entry = $fusqlh->by_path($path, '');
-    return -ENOENT() unless $entry;
-    return -EEXIST() unless $entry->get() eq '';
+    return - ENOENT unless $entry;
+    return - EEXIST unless $entry->get() eq '';
 
     $entry->create();
     clear_cache($path, $entry->depth());
@@ -316,14 +316,14 @@ sub rename
 {
     my ($path, $name) = @_;
     my $entry = by_path($path);
-    return -ENOENT() unless $entry;
-    return -EACCES() unless $entry->writable();
+    return - ENOENT unless $entry;
+    return - EACCES unless $entry->writable();
 
     my $target = $fusqlh->by_path($name, $entry->get());
-    return -ENOENT() unless $target;
-    return -EEXIST() unless $entry->get() == $target->get();
-    return -EACCES() unless $target->writable();
-    return -EOPNOTSUPP() unless $entry->pkg()    == $target->pkg()
+    return - ENOENT unless $target;
+    return - EEXIST unless $entry->get() == $target->get();
+    return - EACCES unless $target->writable();
+    return - EOPNOTSUPP unless $entry->pkg()    == $target->pkg()
                              && $entry->depth()  == $target->depth()
                              && $entry->height() == $target->height();
 
@@ -336,7 +336,7 @@ sub fsync
 {
     my ($path, $flags) = @_;
     my $entry = by_path($path);
-    return -ENOENT() unless $entry;
+    return - ENOENT unless $entry;
 
     flush_inbuffer($path, $entry);
     clear_cache($path, $flags? $entry->depth(): undef);
@@ -347,7 +347,7 @@ sub utime
 {
     my ($path, $atime, $mtime) = @_;
     my $entry = by_path($path);
-    return -ENOENT() unless $entry;
+    return - ENOENT unless $entry;
     return 0;
 }
 
