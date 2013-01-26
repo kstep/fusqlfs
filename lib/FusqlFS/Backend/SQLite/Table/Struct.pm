@@ -11,6 +11,8 @@ sub init
     my $self = shift;
 
     $self->{list_expr} = "PRAGMA table_info(%s)";
+    $self->{get_create_expr} = $self->expr('SELECT sql FROM sqlite_master WHERE type = "table" AND name = ?');
+
     $self->{tables_cache} = {};
 }
 
@@ -28,9 +30,13 @@ sub list
         order    => $_->{cid},
         pk       => !!$_->{pk},
     } } @$list;
+    my @columns = keys %table_info;
+
+    $table_info{'create.sql'} = $self->one_col($self->{get_create_expr}, $table) || '';
+
     $self->{tables_cache}->{$table} = \%table_info;
 
-    return [ keys %table_info ];
+    return \@columns;
 }
 
 sub get
@@ -51,3 +57,9 @@ sub get
 1;
 
 __END__
+
+=begin testing SETUP
+
+#!class FusqlFS::Backend::SQLite::Table::Test
+
+=end testing
