@@ -111,10 +111,11 @@ sub new
                            {
                                PrintError => $debug > 0,
                                PrintWarn  => $debug > 1
-                           });
+                           }) or die "Failed to connect to $dsn";
                        },
     };
     $self->{dbh} = $self->{connect}();
+
     ($self->{dumper}, $self->{loader}) = FusqlFS::Formatter->init($format);
     $self->{namemap} = $options{namemap};
 
