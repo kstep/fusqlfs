@@ -111,7 +111,7 @@ sub new
                            {
                                PrintError => $debug > 0,
                                PrintWarn  => $debug > 1
-                           }) or die "Failed to connect to $dsn";
+                           }) or die "Failed to connect to $dsn: $DBI::err $DBI::state $DBI::errstr";
                        },
     };
     $self->{dbh} = $self->{connect}();
