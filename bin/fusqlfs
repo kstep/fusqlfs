@@ -69,11 +69,11 @@ GetOptions(
 $options{'database'} ||= shift @ARGV;
 $options{'mountpoint'} ||= shift @ARGV;
 
-$options{namemap} = { map { my ($table, $names) = split /:/; $table => [ split /,/, $names ] } @{$options{namemap} || []} };
-
 pod2usage(1) unless !$options{'help'} && $options{'database'} && $options{'mountpoint'};
 
 $options{'mountpoint'} = getcwd().'/'.$options{'mountpoint'} unless $options{'mountpoint'} =~ m{^/};
+
+$options{'namemap'} = { map { my ($table, $names) = split /:/; $table => [ split /,/, $names ] } @{$options{'namemap'} || []} };
 
 daemonize($options{'logfile'}) if $options{'daemon'};
 
