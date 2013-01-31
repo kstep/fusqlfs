@@ -11,7 +11,7 @@ FusqlFS - FUSE filesystem to work with database via DBI interface
 
     use FusqlFS;
 
-    FusqlFS::init(
+    FusqlFS->init(
         engine   => 'PgSQL',
         host     => 'localhost',
         database => 'postgres',
@@ -22,7 +22,7 @@ FusqlFS - FUSE filesystem to work with database via DBI interface
         threaded => 0,
     );
 
-    FusqlFS::mount(
+    FusqlFS->mount(
         '/path/to/mount/point',
         'allow_other',
     );
