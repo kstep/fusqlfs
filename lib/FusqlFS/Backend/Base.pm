@@ -101,7 +101,7 @@ sub new
     my $dsn = 'DBI:'.$class->dsn(@options{qw(host port database)});
     my $debug = $options{debug}||0;
     my $fnsep = $options{fnsep}||'.';
-    my $format = $options{format}||'native';
+    my $format = $options{format}||'';
 
     $Carp::Verbose = $debug > 2;
     my $self = {
