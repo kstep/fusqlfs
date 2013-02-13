@@ -43,7 +43,7 @@ my %options = (
 );
 
 Getopt::Long::Configure('no_ignore_case');
-Getopt::ArgvFile::argvFile(default => 1);
+Getopt::ArgvFile::argvFile(default => 1, fileOption => '--config');
 GetOptions(
     'host|h:s'        => \$options{'host'},
     'port|P:i'        => \$options{'port'},
@@ -353,6 +353,20 @@ command line as you want. This way you can store some common options into a
 file and use it in C<fusqlfs> invocation. For instance, you can place
 credentials and database name into F<databaserc> file and then just call
 C<fusqlfs @databaserc> to mount it.
+
+As an alternative to @-prefix you can use C<--config> option instead to load
+configuration from given file, so you can write C<--config filename> instead
+of C<@filename>. This is useful to put into shebang line in fusqlfs config
+file:
+
+    #!/usr/bin/fusqlfs --config
+    --user=root
+    --password=pa$$w0rd
+    --host=localhost
+    --engine=mysql
+
+Then you need to give execute permission to the config file with C<chmod a+x>
+and run it directly from anywhere.
 
 =head1 DESCRIPTION
 
