@@ -27,6 +27,7 @@ my %options = (
     'user'            => 'root',
     'password'        => '',
     'mountpoint'      => '',
+    'mkdir'           => 0,
     'debug'           => 0,
     'help'            => 0,
     'charset'         => $locale,
@@ -51,6 +52,7 @@ GetOptions(
     'user|u:s'        => \$options{'user'},
     'password|p:s'    => \$options{'password'},
     'mountpoint|m:s'  => \$options{'mountpoint'},
+    'mkdir|k!'        => \$options{'mkdir'},
     'debug|D+'        => \$options{'debug'},
     'help'            => \$options{'help'},
     'charset|C:s'     => \$options{'charset'},
@@ -72,6 +74,19 @@ $options{'mountpoint'} ||= shift @ARGV;
 pod2usage(1) unless !$options{'help'} && $options{'database'} && $options{'mountpoint'};
 
 $options{'mountpoint'} = getcwd().'/'.$options{'mountpoint'} unless $options{'mountpoint'} =~ m{^/};
+
+if (!-e $options{'mountpoint'}) {
+    if ($options{'mkdir'}) {
+        use File::Path;
+        File::Path::make_path($options{'mountpoint'}) or croak "Unable to create mountpount `$options{mountpoint}'";
+
+    } else {
+        croak "Mountpoint `$options{mountpoint}' does not exist";
+    }
+
+} elsif (!-d $options{'mountpoint'}) {
+    croak "Mountpoint `$options{mountpoint}' is not a directory";
+}
 
 $options{'namemap'} = { map { my ($table, $names) = split /:/; $table => [ split /,/, $names ] } @{$options{'namemap'} || []} };
 
@@ -340,6 +355,11 @@ no matter how many C<-D>s you put in command line.
 
 Boolean, if set the program will daemonize itself. Defaults to true. You may
 wish to use it as C<--nodeamon> to debug the program.
+
+=item B<--mkdir, -k>
+
+Boolean, if set the program will try to create mountpoint directory if it doesn't
+exist yet. Default is false.
 
 =back
 

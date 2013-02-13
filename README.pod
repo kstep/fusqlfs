@@ -233,6 +233,11 @@ no matter how many C<-D>s you put in command line.
 Boolean, if set the program will daemonize itself. Defaults to true. You may
 wish to use it as C<--nodeamon> to debug the program.
 
+=item B<--mkdir, -k>
+
+Boolean, if set the program will try to create mountpoint directory if it doesn't
+exist yet. Default is false.
+
 =back
 
 =head2 Store options into configuration files
