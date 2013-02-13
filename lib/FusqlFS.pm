@@ -122,7 +122,7 @@ sub mount
         mountpoint => $mountpoint,
         mountopts  => $mountopts,
         threaded   => $threaded,
-        debug      => $debug > 2,
+        debug      => $debug > 3,
 
         getdir     => \&getdir,
         getattr    => \&getattr,

@@ -73,6 +73,8 @@ use DBI;
 use FusqlFS::Entry;
 use FusqlFS::Formatter;
 
+use Carp;
+
 =item new
 
 Class constructor.
@@ -100,6 +102,8 @@ sub new
     my $debug = $options{debug}||0;
     my $fnsep = $options{fnsep}||'.';
     my $format = $options{format}||'native';
+
+    $Carp::Verbose = $debug > 2;
     my $self = {
         subpackages => {},
         limit       => 0 + ($options{limit}||0),
@@ -109,8 +113,9 @@ sub new
         connect     => sub () {
                            DBI->connect($dsn, @options{qw(user password)},
                            {
-                               PrintError => $debug > 0,
-                               PrintWarn  => $debug > 1
+                               PrintError  => $debug > 0,
+                               PrintWarn   => $debug > 1,
+                               HandleError => sub { carp(shift); },
                            }) or die "Failed to connect to $dsn: $DBI::err $DBI::state $DBI::errstr";
                        },
     };
