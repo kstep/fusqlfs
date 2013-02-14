@@ -8,7 +8,6 @@ use Getopt::ArgvFile justload => 1;
 use Pod::Usage;
 use Carp;
 use Cwd;
-use File::Path qw(make_path remove_tree);
 
 use POSIX qw(locale_h setsid);
 use FusqlFS;
@@ -78,28 +77,14 @@ pod2usage(1) unless !$options{'help'} && $options{'database'} && $options{'mount
 
 $options{'mountpoint'} = getcwd().'/'.$options{'mountpoint'} unless $options{'mountpoint'} =~ m{^/};
 
-if (!-e $options{'mountpoint'}) {
-    if ($options{'mkdir'}) {
-        make_path($options{'mountpoint'}) or croak "Unable to create mountpount `$options{mountpoint}'";
-
-    } else {
-        croak "Mountpoint `$options{mountpoint}' does not exist";
-    }
-
-} elsif (!-d $options{'mountpoint'}) {
-    croak "Mountpoint `$options{mountpoint}' is not a directory";
-}
-
-END {
-    remove_tree($options{'mountpoint'}) if $options{'rmdir'};
-}
-
 $options{'namemap'} = { map { my ($table, $names) = split /:/; $table => [ split /,/, $names ] } @{$options{'namemap'} || []} };
 
 daemonize($options{'logfile'}) if $options{'daemon'};
 
 my $fusqlfs = FusqlFS->init(%options);
-$fusqlfs->mount($options{'mountpoint'});
+$fusqlfs->mount($options{'mountpoint'},
+    mkdir => $options{'mkdir'},
+    rmdir => $options{'rmdir'});
 
 sub daemonize {
     my $logfile = shift;

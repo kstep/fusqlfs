@@ -38,7 +38,8 @@ and mount it with L<Fuse>.
 
 =cut
 
-use POSIX qw(:fcntl_h :errno_h mktime);
+use POSIX qw(:fcntl_h :errno_h mktime SIGQUIT SIGTERM SIGINT);
+use File::Path qw(make_path remove_tree);
 use Fcntl qw(:mode);
 use Carp;
 use Fuse;
@@ -102,25 +103,50 @@ sub mount
 {
     my $class = shift;
     my $mountpoint = shift;
-    my $mountopts = shift||'';
+    my %mountopts = @_;
+
+    if (!-e $mountpoint) {
+        if ($mountopts{mkdir}) {
+            make_path($mountpoint) or croak "Unable to create mountpoint `$mountpoint'";
+        } else {
+            croak "Mountpoint `$mountpoint' does not exist";
+        }
+
+    } elsif (!-d $mountpoint) {
+        croak "Mountpoint `$mountpoint' is not a directory";
+    }
 
     my $fusermount = (grep { -f "$_/fusermount" } split /:/, $ENV{PATH})[0] . '/fusermount';
     if (-x $fusermount) {
         carp "fusermount found at `$fusermount' and will be used to autounmount when daemon terminated.";
-        $SIG{QUIT} = $SIG{INT} = $SIG{TERM} = sub () {
-            carp "Running `$fusermount' to unmount `$mountpoint'...";
-            chdir '/';
-            $mountpoint =~ s/(['\\])/\\$1/g;
-            system(sprintf(q{fusermount -u -z '%s'}, $mountpoint));
-            exit(0);
-        };
     } else {
         carp "fusermount is not found or non-executable, won't autounmount when daemon terminated!";
+        $fusermount = undef;
+    }
+
+    if ($fusermount || $mountopts{rmdir}) {
+        my $rmdir = $mountopts{rmdir} || 0;
+        my $quithandler = POSIX::SigAction->new(sub {
+            if ($fusermount) {
+                carp "Running `$fusermount' to unmount `$mountpoint'...";
+                chdir '/';
+                $mountpoint =~ s/(['\\])/\\$1/g;
+                system(sprintf(q{fusermount -u -z '%s'}, $mountpoint));
+            }
+
+            remove_tree($mountpoint) if $rmdir;
+
+            exit(0);
+        });
+
+        POSIX::sigaction(SIGQUIT, $quithandler);
+        POSIX::sigaction(SIGTERM, $quithandler);
+        POSIX::sigaction(SIGINT, $quithandler);
     }
 
     Fuse::main(
         mountpoint => $mountpoint,
-        mountopts  => $mountopts,
+        mountopts  => $mountopts{options}||'',
         threaded   => $threaded,
         debug      => $debug > 3,
 
