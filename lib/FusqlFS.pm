@@ -124,8 +124,8 @@ sub mount
         $fusermount = undef;
     }
 
-    if ($fusermount || $mountopts{rmdir}) {
-        my $rmdir = $mountopts{rmdir} || 0;
+    my $rmdir = $mountopts{rmdir} || 0;
+    if ($fusermount || $rmdir) {
         my $quithandler = POSIX::SigAction->new(sub {
             if ($fusermount) {
                 carp "Running `$fusermount' to unmount `$mountpoint'...";
@@ -172,6 +172,7 @@ sub mount
         utime      => \&utime,
     );
 
+    remove_tree($mountpoint) if $rmdir;
 }
 
 =item Fuse hooks
