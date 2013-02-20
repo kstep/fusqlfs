@@ -148,7 +148,7 @@ sub mount
         mountpoint => $mountpoint,
         mountopts  => $mountopts{options}||'',
         threaded   => $threaded,
-        debug      => $debug > 3,
+        debug      => $debug > 4,
 
         getdir     => \&getdir,
         getattr    => \&getattr,

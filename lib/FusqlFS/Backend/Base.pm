@@ -103,7 +103,7 @@ sub new
     my $fnsep = $options{fnsep}||'.';
     my $format = $options{format}||'';
 
-    $Carp::Verbose = $debug > 2;
+    $Carp::Verbose = $debug > 3;
     my $self = {
         subpackages => {},
         limit       => 0 + ($options{limit}||0),
@@ -115,6 +115,7 @@ sub new
                            {
                                PrintError  => $debug > 0,
                                PrintWarn   => $debug > 1,
+                               ShowErrorStatement => $debug > 2,
                                HandleError => sub { carp(shift); },
                            }) or die "Failed to connect to $dsn: $DBI::err $DBI::state $DBI::errstr";
                        },

@@ -220,13 +220,27 @@ backend, MyISAM is used otherwise. Defaults to false (MyISAM).
 
 =item B<--debug, -D>
 
-Incremental, output debug info. You can repeat this option up to four times. If
-it is mentioned once you will see critical DB errors, two C<-D>s in a line
-enable DB warnings, three times make errors show full stack, four times means
-show FUSE debug tracing output (really noisy). Default is no debug messages.
-See also L<--logfile|/--logfile, -l> to enable debug output logging in daemon
-mode. If you don't set logfile in daemon mode you won't see any debug output,
-no matter how many C<-D>s you put in command line.
+Incremental, output debug info. You can repeat this option up to five times.
+There're following debug levels:
+
+=over
+
+=item 1. show critical DB errors,
+
+=item 2. show DB warnings as well,
+
+=item 3. show full SQL statements which caused errors,
+
+=item 4. show full stack trace on errors,
+
+=item 5. show FUSE debug tracing output (really noisy).
+
+=back
+
+Default is no debug messages. See also L<--logfile|/--logfile, -l> to enable
+debug output logging in daemon mode. If you don't set logfile in daemon mode
+you won't see any debug output, no matter how many C<-D>s you put in command
+line.
 
 =item B<--daemon>
 
