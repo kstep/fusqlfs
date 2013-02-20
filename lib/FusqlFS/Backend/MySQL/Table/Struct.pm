@@ -32,6 +32,7 @@ sub init
     $self->{rename_expr} = 'ALTER TABLE `%s` CHANGE COLUMN `%s` `%s` %s';
     $self->{store_expr} = 'ALTER TABLE `%s` MODIFY COLUMN `%s` %s';
     $self->{drop_expr} = 'ALTER TABLE `%s` DROP COLUMN `%s`';
+    $self->{default_expr} = 'ALTER TABLE `%s` ALTER COLUMN `%s` %s DEFAULT %s';
 }
 
 sub build_column_def
@@ -154,6 +155,8 @@ sub rename
 
     my $fielddef = build_column_def({ map { lc($_) => $field->{$_} } keys %$field });
     $self->do($self->{rename_expr}, [$table, $name, $newname, $fielddef]);
+    $self->do($self->{default_expr}, [$table, $newname,
+        defined $field->{Default}? 'SET': 'DROP', $field->{Default}]);
 }
 
 =begin testing store after create
@@ -181,6 +184,8 @@ sub store
 	}) or return;
     my $fielddef = build_column_def($data);
     $self->do($self->{store_expr}, [$table, $name, $fielddef]);
+    $self->do($self->{default_expr}, [$table, $name,
+        defined $data->{default}? 'SET': 'DROP', $data->{default}]);
 }
 1;
 
