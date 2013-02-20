@@ -38,11 +38,11 @@ sub init
 sub build_column_def
 {
     my $data = shift;
-    return sprintf('%s %s %s NULL DEFAULT %s %s %s',
+    return sprintf('%s %s %s NULL %s %s',
             $data->{type},
             $data->{collation}? 'COLLATE '.$data->{collation}: '',
             $data->{null}? '': 'NOT',
-            defined $data->{default}? $data->{default}: 'NULL',
+            #defined $data->{default}? $data->{default}: 'NULL',
             $data->{extra},
             $data->{comment}? "COMMENT '$data->{comment}'": '');
 }
