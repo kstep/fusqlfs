@@ -23,7 +23,7 @@ sub set_up
     $dbh->disconnect;
 
     use FusqlFS::Backend::MySQL;
-    $fusqlh = FusqlFS::Backend::MySQL->new(host => '', port => '', database => 'fusqlfs_test', user => 'root', password => '');
+    $fusqlh = FusqlFS::Backend::MySQL->new(host => '', port => '', database => 'fusqlfs_test', user => 'root', password => '', format => 'native');
 }
 
 sub tear_down

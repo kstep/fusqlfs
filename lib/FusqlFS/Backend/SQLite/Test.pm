@@ -10,7 +10,7 @@ our $fusqlh;
 sub set_up
 {
     use FusqlFS::Backend::SQLite;
-    $fusqlh = FusqlFS::Backend::SQLite->new(host => '', port => '', database => '/tmp/fusqlfs_test.sqlite', user => '', password => '');
+    $fusqlh = FusqlFS::Backend::SQLite->new(host => '', port => '', database => '/tmp/fusqlfs_test.sqlite', user => '', password => '', format => 'native');
 }
 
 sub tear_down

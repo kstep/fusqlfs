@@ -23,7 +23,7 @@ sub set_up
     $dbh->disconnect;
 
     use FusqlFS::Backend::PgSQL;
-    $fusqlh = FusqlFS::Backend::PgSQL->new(host => '', port => '', database => 'fusqlfs_test', user => 'postgres', password => '');
+    $fusqlh = FusqlFS::Backend::PgSQL->new(host => '', port => '', database => 'fusqlfs_test', user => 'postgres', password => '', format => 'native');
 }
 
 sub tear_down
