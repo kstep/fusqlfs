@@ -54,6 +54,24 @@ dist: cleanall README.pod changelog buildtests test manifest
 cpan: dist
 	cpan-upload FusqlFS-*.tar.gz
 
+aur: dist
+	rm -f perl-fusqlfs-*.src.tar.gz
+	sed -i \
+		-e 's/^pkgver=.*$$/pkgver='$$(perl -I./lib -MFusqlFS::Version -e 'print $$FusqlFS::Version::VERSION;')'/' \
+		-e 's/^md5sums=.*$$/md5sums=('$$(md5sum FusqlFS-*.tar.gz | cut -f1 -d" ")')/' \
+		-e 's/^pkgrel=.*$$/pkgrel=1/' \
+		PKGBUILD
+	git commit -m "PKGBUILD version update" PKGBUILD
+	makepkg --source
+	burp -c daemons -u kstep perl-fusqlfs-*.src.tar.gz
+
+version:
+	@echo "Please confirm you have updated your lib/FusqlFS/Version.pm and created git tag."
+	@echo "Press Ctrl-C to abort now and do necessary preparations."
+	@echo "Press Enter to continue..."
+	@read
+	make dist cpan aur
+
 clean:
 	test ! -e Build || ./Build $@
 
