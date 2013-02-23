@@ -9,9 +9,11 @@ use parent 'FusqlFS::Backend::Base';
 sub init
 {
     my $self = shift;
-    $self->do('SET character_set_results = ?'   , $self->{charset});
-    $self->do('SET character_set_client = ?'    , $self->{charset});
-    $self->do('SET character_set_connection = ?', $self->{charset});
+
+    my $charset = $self->{charset}||'utf8';
+    $self->do('SET character_set_results = ?'   , $charset);
+    $self->do('SET character_set_client = ?'    , $charset);
+    $self->do('SET character_set_connection = ?', $charset);
 
     $self->autopackages(
         'tables',
