@@ -70,7 +70,7 @@ sub init
     my $formatter;
 
     $formatter = $FORMATTERS{$format} || [
-        $package = 'FusqlFS::Formatter::'.ucfirst(lc($format)),
+        package_file($package = 'FusqlFS::Formatter::'.ucfirst(lc($format))),
         eval qq{\\&${package}::Dump},
         eval qq{\\&${package}::Load},
     ];
@@ -91,6 +91,13 @@ sub init
     }
 
     return $formatter->[1], $formatter->[2];
+}
+
+sub package_file {
+    my $package = shift;
+    $package =~ s{::}{/}g;
+    $package .= '.pm';
+    return $package;
 }
 
 1;
