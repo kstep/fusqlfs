@@ -11,7 +11,7 @@ sub dbi_connect
 {
     use DBI;
     my $debug = 0;
-    DBI->connect('DBI:Pg:database=postgres', 'postgres', '', { PrintError => $debug, PrintWarn => $debug });
+    DBI->connect('DBI:Pg:host=127.0.0.1;database=postgres', 'postgres', '', { PrintError => $debug, PrintWarn => $debug });
 }
 
 sub set_up
@@ -23,7 +23,7 @@ sub set_up
     $dbh->disconnect;
 
     use FusqlFS::Backend::PgSQL;
-    $fusqlh = FusqlFS::Backend::PgSQL->new(host => '', port => '', database => 'fusqlfs_test', user => 'postgres', password => '', format => 'native');
+    $fusqlh = FusqlFS::Backend::PgSQL->new(host => '127.0.0.1', port => '', database => 'fusqlfs_test', user => 'postgres', password => '', format => 'native');
 }
 
 sub tear_down

@@ -11,7 +11,7 @@ sub dbi_connect
 {
     use DBI;
     my $debug = 0;
-    DBI->connect('DBI:mysql:', 'root', '', { PrintError => $debug, PrintWarn => $debug });
+    DBI->connect('DBI:mysql:host=127.0.0.1', 'root', '', { PrintError => $debug, PrintWarn => $debug });
 }
 
 sub set_up
@@ -23,7 +23,7 @@ sub set_up
     $dbh->disconnect;
 
     use FusqlFS::Backend::MySQL;
-    $fusqlh = FusqlFS::Backend::MySQL->new(host => '', port => '', database => 'fusqlfs_test', user => 'root', password => '', format => 'native');
+    $fusqlh = FusqlFS::Backend::MySQL->new(host => '127.0.0.1', port => '', database => 'fusqlfs_test', user => 'root', password => '', format => 'native');
 }
 
 sub tear_down
