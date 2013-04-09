@@ -5,7 +5,9 @@ perl:
     - "5.12"
     - "5.10"
 before_install:
+    - sudo apt-get update -qq
     - sudo apt-get install -qq libfuse-dev
+    - sudo apt-get install -qq postgresql-plperl
     - cpanm --quiet --notest DBD::mysql DBD::Pg DBD::SQLite
 after_failure:
     - cat /home/travis/.cpanm/build.log
