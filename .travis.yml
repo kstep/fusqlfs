@@ -8,3 +8,5 @@ before_install:
     - sudo apt-get install -qq libfuse-dev
 after_failure:
     - cat /home/travis/.cpanm/build.log
+before_script: "make buildtests"
+script: "make test"
