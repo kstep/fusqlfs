@@ -20,7 +20,7 @@ my $new_role = {
         create_role => 1,
         inherit => 0,
         superuser => 1,
-        valid_until => '2010-01-01 00:00:00+02',
+        valid_until => '2009-12-31 22:00:00+00',
     },
     postgres => \"roles/postgres",
     owned => $_tobj->{owned},
