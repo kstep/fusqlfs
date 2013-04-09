@@ -5,7 +5,8 @@ perl:
     - "5.12"
     - "5.10"
 before_install:
-    - sudo apt-get install -qq libfuse-dev libdbd-sqlite3-perl libdbd-pg-perl libdbd-mysql-perl
+    - sudo apt-get install -qq libfuse-dev
+    - cpanm --quiet --notest DBD::mysql DBD::Pg DBD::SQLite
 after_failure:
     - cat /home/travis/.cpanm/build.log
 before_script: "make buildtests"
