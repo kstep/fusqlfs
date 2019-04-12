@@ -191,7 +191,7 @@ sub EXISTS
 sub FIRSTKEY
 {
     my ($self) = @_;
-    my $_ = keys %{$self->[0]};
+    my $a = keys %{$self->[0]};
     each %{$self->[0]};
 }
 
