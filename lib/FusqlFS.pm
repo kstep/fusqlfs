@@ -482,10 +482,10 @@ sub clear_cache
         my $re = "/[^/]+" x $_[1];
         $key =~ s{$re$}{} if $re;
         my $lk  = length($key);
-        while (my $_ = each %cache)
+        while (my $a = each %cache)
         {
-            next unless substr($_, 0, $lk) eq $key;
-            delete $cache{$_};
+            next unless substr($a, 0, $lk) eq $key;
+            delete $cache{$a};
         }
     }
 }
